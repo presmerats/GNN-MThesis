@@ -5,13 +5,15 @@ ok- registre TFM
 ok- email inici TFM
 ok- llegir normes TFM
 
+ok- setup repo
 
-- setup repo
 - Wiki setup
-	- github pages?
-	- markdown
-	- gitlab like wiki
-	- github wiki
+	https://help.github.com/articles/adding-or-editing-wiki-pages/
+	ko- github pages? not a WIKI!
+	ko- simple portable markdown
+	ko- gitlab like wiki
+	ok- github wiki (similar to gitlab)
+	- unify wiki
 
 - references list (Wiki)
 	links with checkbox for read/summarized
@@ -20,7 +22,7 @@ ok- llegir normes TFM
 	goals
 	planning
 
-- llegir doc TFM, continguts etc..
+- llegir doc normes TFM, continguts etc..
 - reunio inici TFM dilluns 15h00 omega 322
 - llegir papers
 - mirar videos
