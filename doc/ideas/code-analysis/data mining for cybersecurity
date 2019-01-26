@@ -1,0 +1,64 @@
+Essai projects:
+		overview
+			main applications
+				PROJECT 1: Log analytics
+					- SOC(SSH log, dns+webserver, etc...)
+					- Malw dynamic executable behaviour (Cuckoo logs)
+				PROJECT 2: code analysis
+				 	- pattern matching in source code, assembly
+				 	- predefined and interesting patterns: obfuscation, bugs, etc..
+
+			main families of techniques
+				graph algorithms
+				association rules, 
+				sequential patter mining,
+				time series
+				classification
+				outlier detection (mainly as classification)
+				process mining
+				graph mining
+
+			main subgoals
+				frequent patterns (baselining)
+				outlier detection
+				pattern matching / plagiarism / obfuscated 
+
+		strategy
+			- someone to publish with?
+				- project/company to test
+					- maltiverse
+					- MISP
+					- Cuckoo
+				- professor to publish
+			- credits for SIRI
+
+		background
+			gather books, papers (logs, code)
+			read/search
+				techniques used
+				specific goals for each technique
+				successfullness
+					technique used?
+					real dataset?real world application
+					citing index
+
+		technical tasks
+			datasets
+				logs mining soc
+					gather logs from partner
+					create logs from playground
+				logs mining cuckoo
+					prepare UCL data repository
+					parse Cuckoo dataset
+				graph reversing
+					extract graph from IDA pro
+					extract graph from Radare
+					exract graph from source code
+			tests
+				log  mining: R ?
+				graph reversing: Node4j
+				graph mining: R? 
+				process mining: ProM
+
+
+	

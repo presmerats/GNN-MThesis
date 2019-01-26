@@ -1,0 +1,594 @@
+# Representation Learning on Graphs: Methods and Applications
+
+
+Hamilton 2017
+
+
+Abstract
+--------
+
+Representation learning on graphs:
+	encoding graph structure in low-dimensional embeddings
+
+	methods reviewed:
+		- matrix factorization
+		- random walk
+		- graph neural networks
+
+
+Introduction
+---------------
+
+node2vec embedding method
+
+challenge: encode high-dimensional non-Euclidean information about a graph:
+	- link prediction: pairwise properties between nodes, relationship strength or the number of common friends
+	- node classification: global position of a node in the graph, the structure of the node's local graph neighborhood
+
+traditional approaches: 
+	- summary graph statistics: degrees, clustering coefficients,
+	- kernel funcs
+	- engineered features to measure local neighborhood structs (no flexible and not adaptable)
+
+recent approaches:
+	- idea: learn a mapping that embeds nodes, or subgraphs or entire graphs as points in a low-dimensional vector space Rd
+	- geometric features in the embedding space reflect the structure of the original graph
+	- these embeddings  are used as features for downstream ml tasks
+
+	- embeddings are no longer hand.engineered -> they are learn in a data driven learning approach
+
+	-approaches:
+		- node embeddings 
+		- graph convolutional networks
+
+	- selection:
+		- scalable methods to massive graphs
+
+	- non selected methods:
+		- latent space models of social networks
+		- embedding methods for statistical relational learning
+		- manifold learning algorithms
+		- geometric deep learning
+		->surveys of those 33,43,38, 7
+
+1.1 Notation and assumptions
+	
+	- primary input to our representation learning algo is:
+		- an undirected graph G=(V,E) 
+		- with binary adjacency  matrix A
+		- with Real valued node attributes matrix X in Rmx|V|
+
+	embeddings:
+		use info in A and X to map each node or a subgraph to a vetor z in Rd, where d <<|V|
+
+	- methods will optimize this mapping in an unsupervised manner
+	- some methods use supervised representation learing, where clasification or regression labels are used to optimize the embeddings
+	- classificaiton labels of nodes or subgraphs, and are the prediction targets for downstream machine learning tasks
+
+
+
+2 Embedding nodes
+
+methods for node embedding
+goal
+	-encode nodes on a low-dimensional vectors
+	-summarizing their graph position and the structure of their local graph neighborhood
+
+-> encoding or projecting into a latent space
+	where geometric relations in this laten space correspond to interactions in the original graph (e.g. edges)
+
+2.1 overview of approaches: encoder-decoder perspective
+
+	recent years a lot of work in node-embeddings
+	first encoder-decoder framework to structure this.
+
+	mapping funcs:
+		- encoder: map each node to a low-dimensional vector or embedding
+
+		- decoder: decodes structural information about the graph from the learned embeddings
+
+	if we can decode high-dimensional graph info from encoded low-dimensional embeddings -> then this embeddings contain all info necessary for downstream machine learning tasks
+
+
+	ENC: V -> Rd
+		zi in Rd, is the embedding for node vi in V
+
+	DEC: 
+		accepts a set of node embeddings and decodes user-specififed graph statistics from these embeddings
+
+		ex: predict edges between nodes based on embedding
+			predict community of a node
+
+		basic pairwise decoder
+			Rd x Rd -> R+
+
+			map pairs of node embeddings to a real-valued node similarity measure, which quantifies the similarity of the t2o nodes in the original graph
+
+
+
+		pairwise dec to (zi,zj) -> we reconstrcut the similarity betweeb vi and vj in the original graph
+			goal is to optimize the encoder /decoder to minimize the error or loss
+
+			DEC(ENC(vi,ENC(vj)))=DEC(zi,zj)~=sG(vi,vj)
+
+		sG() user defined graph-based similarity measure between nodes
+			ex: sG(vi,vj) = Aij so 1 if vi,vj adjacent 0 otherwise
+			ex: sg() the prob of vi, vj to co-occur on a fixed length random walk over G
+
+		Empirical loss used
+			L = SUM{vi,vj in D} l(DEC(zi,zj),sG(vi,vj)))
+
+			l: RxR-> R user-specified loss function
+					that measures the discrepancy between the decoded similarity values DEC() and the true values sg()
+
+	once ENC and DEC system is optimized, we use the ENC to produce embeddings that will be input to downstream ml tasks
+		ex: feed embedding to a logistic regression to predict the community of a node
+		ex: use distances between the embeddings to recommend friendship links in a social network
+
+organization
+	1) pairwise similarity function:
+		 sG: VxV -> R+ defined over graph G
+	2) encoder func:
+		ENC generates node embeddings
+		contains a number of trainable parameters that are optimized during training
+	3) decoder func:
+		DEC, reconstructs pairwise similarity values from the generated embeddings. 
+		No trainable parameters usually
+
+	4) loss function, l:
+		determines how the quality of the pairwiser reconstruction is evalueated in order to train the model
+
+
+2.1.1 notes on optimization and implementation details
+	all of the methods we review involve optimizing the params of the encoder algo, O_ENC by minimizing a loss like previous
+
+	SGD used in most cases
+	some algos permit closed-form via matrix decomposition.
+
+	here high-level differences between different embedding methods, independent of the optimization approach.
+
+2.2 Shallow embedding approaches
+	
+	encoder is simply and embedding lookup
+		ENC(vi)=Z_vi
+
+	Z in R dx|V| is a matrix containing the embedding vectors for all nodes and vi in IIv is a one-hot indicator vector indicating the column of Z corresponding to node vi
+
+	trainable parameters O_enc = {Z} -> Z matrix is optimized directly
+
+	matrix factorization inspired techniques for dimensionality reduction and multi-dimensional scaling
+		some of them are just reinterpreted
+
+table 1
+
+matrix factorization     
+	Laplacian Eigenmaps       
+	Graph Factorization
+	GraRep
+	HOPE
+
+Random Walk
+	DeepWalk
+	node2vec
+
+
+
+2.2.1 Factorization-based approaches
+	Early methods based on matrix-factorization approahces inspired by classic techniques for dimensionality reduction
+
+	Laplacian eigenmaps
+		DEC(zi,zj)=||zi-zj||2^2
+		L=SUM DEC(zi,zj)·sG(vi,vj)
+
+	Inner-product methods:
+		DEC()=zi^T·zj
+		L=SUM||DEC(zi,zj)-sG(vi,vj)||2^²
+
+		methods:
+		GraphFactorization (GF)
+			sG() = A
+		GraRep
+			sG() =A^2
+				captures higher order similarity
+		HOPE
+			sg() jaccard neighborhood overlaps
+
+		they differ on how they define sG
+		L ~= ||Z^tZ - S||2^2
+
+
+2.2.2 Random Walk approaches
+	based on random walk statistics
+
+	embedding similarity if they co-occur on short random walks over the graph
+
+	not a deterministic measure of node similarity
+	but a flexible, stochastic measure of node similiarity -> superior performance in a number of settings 
+
+	DeepWalk & node2vec
+
+	they decode (based on inner product) an embedding optimized to encode statistics of random walks
+
+		DEC()..
+			pG,T(vj|vi)
+			both stocahstic and asymmetric
+
+		L= cross-entropy loss
+			SUM{vi,vj in D} - log(DEC(zi,zj))
+
+			where D is generated by a sampling random walks starting from each node
+
+			cost
+			O(|D||V|) prohibitively expensive
+			-> approximations to compute the loss
+
+		node2vec vs Deepwalk diff
+			- approx of the pGT() denominator
+			- node2vec flexible random walk definition, p and q , prob of visiting one-hop neighbor and 2-hop neighbor. Averages between breadth-first search and depth-fisrt search.
+			- deepwalk simple unbised random walks over the graph
+
+
+	LINE: Large-scale information network embeddings
+		shallow embedding approach
+		not absed on random walk.
+		combines 2 encoder-decoder objectives
+			first-order and second-order node similialrity 
+
+	HARP: extending random-walk embeddings viagraph pre-processing
+		meta-strategy for improving random-walk approaches via preprocessing step
+		collapse related nodes into super-nodes
+
+
+2.3 Generalized encoder-decoder architectures
+
+drawbacks of shallow embedding methods 
+	simple embedding lookup for each node independently
+
+	1 no shared params between nodes in the encoder
+		-> statistically inefficient:  no regularization
+		-> computationally inefficient
+
+	2 fail to leverage notde attributes during enconding
+		attributes not used
+
+	3 inherently transductive
+		only generate embeddings for nodes present during training
+		-> no evolving graphs
+		-> massive graphs
+		-> or domains where generalization is required
+
+	recent approaches in encoder-decoder framework but using more complex encoders (deep neural networks depending on more structure and attribtues of the graph)
+
+2.3.1 Neighborhood autoencoder methods
+
+DNGR: Deep Neural graph representation and
+SDNE: Structural Deep Network Embeddings 
+	
+	- incorporate graph structure into the encoder algorithm using DNN
+	- they use Autoencoders to compress info about a node's local neighborhood
+	- they use a Unary decoder instead of pairwise
+
+
+	how they encode:
+	- S matrix of similarities to nodes and functions -> high dim vector
+	- Sij = sG(vi,vj)
+	- each node vi associated with a neighborhood vecotr si in R|v|, wchi corresponds to vi's row in S matrix
+	- si = similarities with all other nodes and functions as a high dim vector.
+	- Autoencoder objective is to emvved nodes using si such that the si vector can then be reconstructed from these embeddings
+		DEC(ENC(si))=DEC(zi)~=si
+		L=sum||dec(zi) - si||2^2
+
+	- dim of zi is much smaller than |V|
+
+	- diff DNGR: pointwise mutual info of 2 nodes co-occurring (~ random walk , so DeepWalk and node2vec)
+
+	- diff SDNE: si ~= Ai 
+	- also diff in how Autoencoder is optimized
+
+	- SDNE and DNGR  depend on si so can include node's local neigborhood info, as a form of regularization (not possible with shallow embedding approaches)
+
+	Drawbacks:
+		- input dimension to AE is |V|, intractable for massive graphs
+		- struct and size of AE is fixed so SDNE and DNGR are transductive and cannot cope with evolving graphs, nor generalize accross graphs
+
+
+2.3.2 Neighborhood aggregation and convolutional encoders
+	
+	approach to solve lmitations of the shallow embeddings and autoencoders that rely on node's local neighborhood but not necessarily the entire graph.
+
+	-> approach: generate embeddings for a node by aggregating info from tis local neighborhood
+
+	-> rely on node attributes
+	-> this methods use attribute to inform their embeddings
+	-> missing data can be estimated by graph statistics as attributes (ex: node degrees) or assign each node a one-hot indicator vector as an attrbiute.
+
+	-> methods called convolutional because they represent a node as a func of its surrounding neighborhood
+
+	-> encoding phase embedding is buil int an iterative/recursive fashion
+
+	-> neighborhood agregation encoder algorithm
+		- initialization embeddings to node attrib
+		- agreagtes the embedings of their neighbors (aggr over sets of vectors)
+		- new embedding of node: comvbine aggregated neighborhood embedding + previous node embedding
+		- fed to a NN -> final embedding for the node
+		-
+	-> approaches
+		GCN,
+			combine by weighted supervisionm
+		column networks,
+			combine by weighted sum
+		GraphSAGE
+			combines by concatenation
+
+	-> Wk (nn weigs) and aggr functions : are trainable and shared accross nodes
+
+	-> parm sharing improves efficiency, regularization, and allows for nodes not observed in training
+
+	-> consistent gains compared to shallow embeding in node classificationa dn link prediction
+	-> they solve the 4 main limitations of shallow embeddings: incorporate graphs struct into th encoder, they leverage node attr, parameter dimesion can be made sublinear in|v|, and they can generate embeddings for ndoes that were not present during training
+
+
+
+
+
+2.4 Incorporating trask-specific supervision
+
+until now, unsupervised trainign of model to reconstruct pairwise simliarity values depending only on the graph G.
+
+
+neighborhood aggregation approaches can also incorporate task-specific supervision.
+	-> ex: node classification label
+
+Loss is corss-entropy loss between predicted class probs:
+	L=SUM yi·log(sigm(ENC(vi)^TO))+(1-yi)log(1 - sigm(ECN(vi)^TO))
+
+	gradient backprop
+
+
+2.5 Extensions to multi-modal graphs
+
+	here undirecte simpe graphs
+	but other works on multi-modal, multi-layer structures
+
+	2.5.2 differnt node and edge types
+
+		recommender systems: users and content nodes
+
+		biological networks: manylayers with distinct  interactions bteween them (genes, drugs, diseases)
+
+		strategy: use different encoders for nodes of different types
+
+		strategy2: extend pairwise decoders with type-specific parameters
+
+		Varying edges types graphs (Knowledge graphs for ex)
+			DEC_tau(zi,zj)=z^T·A_tau·z
+
+			tau indextes edge type
+			Atai is learnied param specific to edges ot type tay
+
+			Atau can be regularised
+				eg to be diagonal , useful when large num of edge types (knowledge graphs)
+
+				-> literature on knowledge-graph completion
+
+		other strategy: random walk sampling only transition from node7edge types
+
+
+
+	2.5.2 Tying node embeddings accros layers
+
+	multiple layers that contain copies of the same nodes
+		ex: proteins in different tissues
+
+	beneficial to share info accross layers
+		node embedding in one layer can be informed by the embedding in another layer
+
+	OhmNet
+		node2vec with a regularizastion penalty , -> new loss
+
+2.6 Embedding structural roles
+
+so far approaches optimize embeddins so that nearby nodes in the graph have similar embeddings
+
+in other tasks it is important to learn representations that correspond to the structural roles of the nodes, independent of their global positions
+	ex: communication or transportation networks
+
+node2vec offers one solution
+	biasin the random walks allows their model to better caputre structural roles
+
+struc2vec 
+	Ribeiro node embeddign approaches specifically designed to capture structural roles
+	
+	generating a series of weighted auxiliary graphs G'k from G
+	capturing structural similarities between nodes' k-hop neighborhoods.
+
+
+	after computing this weighted axuiliarry graphs , struc2vec runs biased random walks over them an sues these walks as input to the node2vec optimization algorithm
+
+GraphWave
+	spectral graph wavelets and heat kernels
+
+
+2.7 Applications of node embedings
+
+Visualization and pattern discovery
+	visualize graphs in 2D
+		-> data mining
+		-> social sciences
+		-> biology
+
+	node embeddings are powerful paraadigm for such task.
+		node embedding combined with t-SNE, or PCA
+
+	useful for communities and hidden struc discovery
+
+Clustering and community detection
+	computational biology (related drugs)
+	marketing (related products)
+
+	from node embedding real value -> clustering algorithms
+		K-means, DB-scan, ..
+
+	also node embeddings can capture functional or structural roels played by nodes not just community structure
+
+Node Classification and semi-supervised learning
+	most cases a form of semi-supervised leraning
+		labesl are only abailable for a small proportion of nodes.
+
+		goal to label the full graph based on the initial small set.
+
+		applications
+			classifying proteins according to their biological funcs
+			classifying documents, videos, web pages or indiviaudls
+
+			-> Hamilton inductive node classification, on evolging graphs or generalizing to unseen protein-protetin interaction networks
+
+Link prediction
+	oreduct nussubg edges or edges that are likely to form in the future
+
+	recommender systems 
+		missing friendship links
+		affinities between users andmodives
+
+
+	computational biology
+		many graphs are incomplete (protein interactions or drug or disease)
+
+		predicting links in noisy graphs
+
+	statistcial relational learning
+		common task is to predict missing relations between entities in a knowledge graph
+
+
+3 Embedding subgraphs
+
+goal: encode a set of nodes and edges into a low-dimensional vector embedding.
+	learn a continuous vector repr. zs in Rd, of an induced subgraph G[S] of the full graph G, 
+	S included in V
+	can also embed entire graph
+
+related to design of graph kernels (distance measures between subgraphs)
+
+but differ in that useful representation are learn from data rather than pre-specifying feature representation through a kernel
+
+most subgraph embedding techniques are fully supervised
+	used for subgraphs classification, 
+	predict a label associated with a particular subgraph
+
+approaches to generalize the zs embeddings, embeddings fed through a cross-entropy loss function 
+
+
+3.1 Sets of node embeddings and convolutional approaches
+
+extensions to the convolutional node embedding algorithms
+	-equate subgraphs with sets of node embeddings
+	-use convolutional neighborhood aggregation idea to generate embeddings for nodes 
+	-use additioanl modules to aggregate sets of node embeddings for subgraphs
+
+
+primary distinction is how they aggreate the set of node embeddings for the subgraph
+	-sum-based approaches
+		convollutional molecular fingerprints
+	-meanfield inference alike (Deep belief net)
+	- Loopy Belief Propagation
+		intermediate embddings for edges
+		then aggregate these to create embeddings for nodes
+		then element wise sum
+
+3.1.2 graph-coarsening approaches
+
+-convolutional approach
+-instead of summing node embeddinfs for whole graph, they stack convolutiona and graph coarsening layers
+-nodes are clustered together -> then element-wise max-pooling in the nodes embeddings of the cluster
+
+- conv. encoders based on the graph Fourier transform : costly -> approximations to spectral approaches (using chebyshed polynomials)  -> bronstein 7 
+
+3.1.3 further variations
+
+alternative methods for aggregating stes of node embeddings corresponding to subgraphs
+	- using fuzzy histograms
+	- edge embedding layers
+	- ordeering of the nodes or vertex-coloring algorithm  then concatenate node embeddings thrpighh a CNN arch.
+
+
+3.2 Graph Neural Networks
+
+GNN related to algorithm 1 but:
+
+	1)message passing instead of aggregation from neighbors
+	   -> message passing requires convergence
+	   -> random embedding initialized nodes , then iterative algorithm to make all node embeddings converge according to a func that accumulated inputs from their neighbors
+	   -> h contraction map and diff.
+	   -> once converged -> final embeddings computed (FORWARD pass)
+	   -> then BACK WARD pass to compute gradients and update weight (also convergence is needed here)
+
+
+	2) improvement1: Gated Graph Neural Networks Li [39] -> Gated Recurrent Units and Back propagation
+			- removes convergene needs
+
+	3) improvement2: MPNN Message Passing Neural Network Gilmer [25]
+
+	-> can be used for node-level embedding tasks
+	-> USUALLY used for subgraph-level embedding tasks
+		procedures in 3.1
+		or introduce a "dummy" super-node that is connected to all nodes in the target subgraph
+
+3.3 Applications of subgraphs embeddings
+	
+	- subgraph classification
+	- classify properties of graphs of diff. molecules
+		predict efficacity of solar cell materials
+		predict therapeutic effect of candidate drugs
+
+	- classify images (after converting them to graph repr)
+	- predict whether a program satisfies certain formal properties
+	- perform logic reasoning tasks
+
+
+4 Conclusions
+
+representation learning approaches for ml on graphs  powerful alternative to traditional feature engineering.
+	-> state of the art in node classification and link prediction
+
+performance needs to be improved, 
+consistent theoretical frameworks must be developed
+
+
+4.1 future progress challenges
+
+lack of consistent theoretical framework
+	or set of frameworks
+
+need to delineate the goals of representation learning on graphs
+
+curently: 	generate representaion that preform well on a praticular set of classification or link prediciton benchmarks
+
+disparate benchmarks and conceptual models appearing -> risk to progress
+
+
+4.2 important open problems
+
+scalability
+	to truly massive datasets e.g. billions of nodes and edges
+	-> assuming they fit in memory..
+
+decoding higher-order motifs
+	still pairwise, lower order structuraes
+	-> evolve into higher order  structural motifs
+
+modeling dynamic temporal graphs
+	instant messageing networks
+	financial transatcion graphs
+	->incorporating timing in edges,
+
+reasoning about large sets of candidate subgraphs
+	current etechniques subgraph is pre-specified
+
+	->tasks that seek to discover subgraphs with certain properties
+	-> combinatoriallly  large space of possible candidate subgraphs
+
+improving interpretability
+	represntationi learning unburdens the feature design but comes at the cost of interpretability
+
+	truly relevant graph info and not jsut statistical tendencies of benchmarks
+

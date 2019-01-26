@@ -1,0 +1,11 @@
+ Registre Projecte
+
+Machine learning algorithms for Graphs
+
+
+Goal: Study and application of the novel machine learning/representation learning techniques derived from the Graph Neural Network model (Scarcelli 2009) that are in vogue nowadays, to solve real life problems or improve solutions in Biochemistry, Relational learning, Recommendation systems, and code analysis to name a few.
+The study will be related to the Graph Neural Network model, Graph Convolutional Network model and Graph Network model and their variations. 
+
+The application will consist in adapting these novel models to solve a problem in one of the mentioned areas, and measure the improvement in terms of cost, size and generalization of the solution.
+
+marias@cs.upc.edu

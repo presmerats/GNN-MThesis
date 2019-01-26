@@ -1,0 +1,10 @@
+Cuckoo logs
+===========
+
+
+Goals 
+------
+
+1. Best Techniques to cluster/identify patterns within dynamic analysis cuckoo reports
+2. Demo tool where input=cuckoo log in xml, process=clustering/pattern mining, output=class
+3. Demo tool where input=cuckoo logs of various files, process=clustering/pattern mining, output=groups/similarities/

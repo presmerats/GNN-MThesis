@@ -1,0 +1,57 @@
+Graph Reversing - IDA tests
+==========================
+
+ok- vm with IDA pro 6.8
+ok- Ida python test -> book examples
+
+- test 1
+	ok- simple call graph -> to csv file
+	ok- import into node4j
+		ok- reopen/reinstall node4j
+			-dbms.security.procedures.unrestricted=algo.*
+		ok- import script creation (lab2)
+			ok- transform csv into a suitable format (header, sort links)
+			ok- copy csv into /var/lib/neo4j/import
+			ok- cql file
+			ok- neo4j-shell
+
+
+	ok- visualize and query
+		MATCH (f1:sub)--(f2:sub) RETURN f1,f2
+	- Graph Algorithms 
+		ok- install algorithms: https://neo4j.com/docs/graph-algorithms/current/introduction/#_installation
+		- betweenness centrality
+			CALL algo.betweenness.sampled(
+			'sub',
+			'calls',
+			{strategy:'random' , write:true, maxDepth:10, concurrency: 4})
+		- query sorting by centrality property
+			MATCH (s:sub)--(s2:sub)
+			WHERE s.centrality > 0 and s2.centrality > 0 
+			RETURN s,s2
+
+			MATCH (s:sub)--(s2:sub)
+			WHERE s.centrality > 100 and s2.centrality > 100 
+			RETURN s,s2
+
+		- pagerank
+			CALL algo.pageRank('sub', 'calls',
+			  {iterations:20, dampingFactor:0.85, write: true,writeProperty:"pagerank"})
+			YIELD nodes, iterations, loadMillis, computeMillis, writeMillis, dampingFactor, write, writeProperty
+
+			MATCH (s:sub)--(s2:sub) 
+			RETURN s,s2
+			ORDER by  s.pagerank DESC LIMIT 20;
+
+			MATCH (s:sub)--(s2:sub) 
+			RETURN s,s2
+			ORDER by  s.pagerank DESC LIMIT 100;
+
+		- closeness centrality
+
+
+- test 2
+	- instructions and xrefs -> instr. graph 
+	- write to csv file
+	- import into node4j
+	- visualize and query

@@ -1,0 +1,67 @@
+# LLista lectura
+
+## SURVEYS
+
+Get lists of algorithms, applications, pros & cons
+
+- 2019 survey
+- 2018 Battaglia survey
+	- -> list other surveys
+- 2017 hamilton survey
+- ... other surveys...
+
+- https://www.youtube.com/watch?v=lDRb3CjESmM
+- https://www.youtube.com/watch?v=zuzO9JqeWN0
+- https://www.youtube.com/watch?v=ZSIZSVRvd4Q
+- https://www.youtube.com/watch?v=8XJes6XFjxM&list=PLDqJLdFxm-jMwIvvvdoEZ2UZ6j1wtSvXs
+
+- awesome github lists about Graph Neural Networks
+
+## Algorithms
+
+- 2009 Scarcelli GNN
+	- https://www.youtube.com/watch?v=uuu6XnU6PUM
+- 2016 Kipf GCN
+	- https://www.youtube.com/watch?v=v3jZRkvIOIM GCN
+	- https://www.youtube.com/watch?v=LFSR27BaNIQ
+
+- GraphSAGE
+	- https://www.youtube.com/watch?v=oQL4E1gK3VU&t=964s
+- Gated Graph
+	- https://www.youtube.com/watch?v=_Uj-tNjhVDQ
+- MPNN
+- 2018 Battaglia Graph Network
+
+## Background
+
+- linear algebra
+- CSN background review
+- Networks book
+- Recurrent neural networks & gated units
+- Autoencoders
+
+## Alternative methods
+
+- Random Walks
+	- node2vec
+	- DeepWalk
+	- struct2vec
+- Matrix Factorization
+- Graph Kernels
+
+## Recommender systems
+
+- pinterests paper
+- recommender systems theory
+
+## Code analysis
+
+- youtube microsoft https://www.youtube.com/watch?v=AVvagxSeP2Q
+
+## Relational learning
+
+-  video Vylinx Woodward
+
+## Reinforcement learning
+
+-https://www.youtube.com/watch?v=ImSlirW1EI8

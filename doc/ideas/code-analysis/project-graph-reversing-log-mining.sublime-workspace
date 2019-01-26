@@ -1,0 +1,969 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"par",
+				"parse_args\tfunction"
+			],
+			[
+				"parametriz",
+				"parametrized_sql_pruning"
+			],
+			[
+				"FeatureEx",
+				"FeatureExtractionDDI\tclass"
+			],
+			[
+				"prepare",
+				"prepareFeatures\tfunction"
+			],
+			[
+				"chunk",
+				"chunkGroup"
+			],
+			[
+				"e1w",
+				"e1word\tstatement"
+			],
+			[
+				"e2o",
+				"e2offset_original\tstatement"
+			],
+			[
+				"e1off",
+				"e1offset_original\tstatement"
+			],
+			[
+				"entity",
+				"entity1_features_template\tstatement"
+			],
+			[
+				"shortest",
+				"shortestpathDep"
+			],
+			[
+				"process",
+				"processSentences\tfunction"
+			],
+			[
+				"shor",
+				"shortestpathDep"
+			],
+			[
+				"sho",
+				"shortestpathDep"
+			],
+			[
+				"proces",
+				"ProcessSentences\tfunction"
+			],
+			[
+				"offset",
+				"offsetstart"
+			],
+			[
+				"re",
+				"registerError\tfunction"
+			],
+			[
+				"test",
+				"testdata"
+			],
+			[
+				"wei",
+				"weightsVector\tfunction"
+			],
+			[
+				"window_1_",
+				"window_1_before\tstatement"
+			],
+			[
+				"result",
+				"resultFeatures\tstatement"
+			],
+			[
+				"coutn",
+				"countWindow\tfunction"
+			],
+			[
+				"algo",
+				"algo\tstatement"
+			],
+			[
+				"trainin",
+				"training_set_name\tstatement"
+			],
+			[
+				"Key",
+				"KeyboardKey\tmodule"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "data mining for cybersecurity",
+			"settings":
+			{
+				"buffer_size": 1485,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "Essai projects:"
+			}
+		},
+		{
+			"file": "/home/pau/Projectes/graph-reversing/documentation/Graph Reversing - IDA tests",
+			"settings":
+			{
+				"buffer_size": 6411,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/pau/Projectes/graph-reversing/shared-folder/IDA_pro_book/test04.cql",
+			"settings":
+			{
+				"buffer_size": 3559,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "// extract (unique) sub names file -> script in ID"
+			}
+		},
+		{
+			"file": "/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-tempRestric.cql",
+			"settings":
+			{
+				"buffer_size": 1783,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "// extract (unique) sub names file -> script in ID"
+			}
+		},
+		{
+			"file": "/home/pau/Projectes/graph-reversing/documentation/Datamining techniques for reversing",
+			"settings":
+			{
+				"buffer_size": 875,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "Datamining techniques for reversing"
+			}
+		},
+		{
+			"file": "graph reversing/Reversing with PROPERTY GRAPHS",
+			"settings":
+			{
+				"buffer_size": 1984,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/pau/gdrive/MIRI-DS/Extr/Projects/SOC log analysis",
+			"settings":
+			{
+				"buffer_size": 2931,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "Cuckoo logs\n===========\n\n\nGoals \n------\n\n1. Best Techniques to cluster/identify patterns within dynamic analysis cuckoo reports\n2. Demo tool where input=cuckoo log in xml, process=clustering/pattern mining, output=class\n3. Demo tool where input=cuckoo logs of various files, process=clustering/pattern mining, output=groups/similarities/",
+			"file": "cuckoo logs/Cuckoo logs",
+			"file_size": 337,
+			"file_write_time": 131761507211824328,
+			"settings":
+			{
+				"buffer_size": 337,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "Cuckoo logs"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 192.0,
+		"last_filter": "preview",
+		"selected_items":
+		[
+			[
+				"preview",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"boxy",
+				"Boxy Theme: Configuration"
+			],
+			[
+				"json",
+				"JSON Reindent: reindent file or selection"
+			],
+			[
+				"set syntax:json",
+				"Set Syntax: JSON"
+			],
+			[
+				"mark",
+				"Markdown Preview: Preview in Browser"
+			]
+		],
+		"width": 515.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/pau/Projectes/harmonyTrainer/consoleTrainer.py",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L8 Advanced pattern minig topics",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L7 Mining quality phrases from text",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L6 Pattern mining Applications",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L5 Sequential pattern mining",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L4 Mining diverse patterns",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L3 Pattern Evaluation",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L2 Efficient Pattern mining methods",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/L1 Pattern discovery",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/N0 - Pattern mining orientation",
+		"/home/pau/gdrive/MIRI-DS/Time Series/week1/Scatterplot.r",
+		"/home/pau/gdrive/MIRI-DS/Time Series/week6/monthly-sales-for-a-souvenir-sho.csv",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera - week6",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera - week1",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera - week2",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera - week3",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera-week4",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera - week5",
+		"/home/pau/gdrive/MIRI-DS/Time Series/week3/Summary",
+		"/home/pau/gdrive/MIRI-DS/Time Series/Time series coursera - intro",
+		"/home/pau/coses/menorca18/llista",
+		"/home/pau/gdrive/MIRI-DS/Time Series/week6/volume-of-money-abs-definition-m.csv",
+		"/home/pau/gdrive/MIRI-DS/Time Series/practice/cryptocurrencies/coinmarketcap-btc-5year-july2013.csv",
+		"/home/pau/gdrive/MIRI-DS/Time Series/week6/monthly-milk-production-pounds-p.csv",
+		"/home/pau/gdrive/MIRI-DS/Time Series/week2/MA.R",
+		"/run/user/1000/gvfs/smb-share:server=retropie,share=disk/Musica/grabacio/MUSICA/desembre2009/Untitled.ses",
+		"/run/user/1000/gvfs/smb-share:server=retropie,share=disk/Musica/grabacio/MUSICA/desembre2009/Track 1.pk",
+		"/run/user/1000/gvfs/smb-share:server=retropie,share=disk/Musica/grabacio/MUSICA/divendresfendertendres/baseFeb.pk",
+		"/home/pau/Projectes/graph-reversing/documentation/Reversing with PROPERTY GRAPHS",
+		"/home/pau/Projectes/pattern-mining-coursera/assignment1/assignment1.py",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/Research papers",
+		"/home/pau/gdrive/MIRI-DS/Pattern mining/projects/Pattern discovery in jazz harmony",
+		"/home/pau/gdrive/MIRI-DS/planning/Career3",
+		"/home/pau/gdrive/MIRI-DS/planning/HOMEWORK-2018",
+		"/home/pau/gdrive/MIRI-DS/planning/mails-pendents-20180727",
+		"/home/pau/coses/previsio/Opcions_2018",
+		"/home/pau/gdrive/MIRI-DS/OD/lab/lab1/notes",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/importcallgraph_dragons.cql",
+		"/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-TempRestricAnalysis_xrefs.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-TempRestricAnalysis_subroutines.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-TempRestricAnalysis_instructions.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-TempRestricAnalysis_codeaddr.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-TempRestricAnalysis_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/importcallgraph.cql",
+		"/home/pau/gdrive/MIRI-DS/planning/Knowledge map",
+		"/home/pau/gdrive/MIRI-DS/planning/Research pros and cons",
+		"/home/pau/gdrive/MIRI-DS/planning/tasques-20180628",
+		"/home/pau/Projectes/graph-reversing/shared-folder/IDA_pro_book/kernel32_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/IDA_pro_book/kernel32_callgraph2.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/IDA_pro_book/kernel32_subroutines.csv",
+		"/home/pau/gdrive/MIRI-DS/OD/lab/lab1/delivery/Lab01-pau-partD.cql",
+		"/home/pau/gdrive/MIRI-DS/OD/lab/lab1/delivery/Lab01-pau-partD.txt",
+		"/home/pau/gdrive/MIRI-DS/Essai/graph reversing/Graph Reversing - IDA tests",
+		"/home/pau/gdrive/MIRI-DS/Essai/graph reversing/Reversing with PROPERTY GRAPHS",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/ctfncn2014_cannabinoid_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/dragons_subroutines.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/dragons_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/importcallgraph_lab05-01.cql",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/kernel32_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/kernel32_subroutines.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/lab05-01_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/lab05-01_subroutines.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/levelncn2013_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/levelncn2013_subroutines.csv",
+		"/home/pau/Projectes/graph-reversing/IDA-neo4j/MiniPiano_callgraph.csv",
+		"/home/pau/Projectes/graph-reversing/shared-folder/IDA_pro_book/test01_callgraph.py",
+		"/home/pau/gdrive/MIRI-DS/Career/cover letter/Cover letter-2018",
+		"/home/pau/gdrive/MIRI-DS/Time Series/practice/cryptocurrencies/coinmarketcap-btc-2year-july2016.csv",
+		"/home/pau/gdrive/MIRI-DS/Time Series/practice/cryptocurrencies/coinmarketcap-eth-2year-july2016.csv",
+		"/home/pau/gdrive/MIRI-DS/Time Series/practice/cryptocurrencies/testkraken.py",
+		"/home/pau/Projectes/pattern-mining-coursera/assignment1.py",
+		"/home/pau/gdrive/MIRI-DS/Extr/MLprojects/Crypto trading ",
+		"/home/pau/gdrive/MIRI-DS/Extr/MLprojects/Sparql engine - cybersec ontologies",
+		"/home/pau/gdrive/MIRI-DS/Extr/MLprojects/Ideas for Applied ML projects",
+		"/home/pau/gdrive/MIRI-DS/Extr/MLprojects/SOC log analysis",
+		"/home/pau/gdrive/MIRI-DS/ML/project/ML project",
+		"/home/pau/gdrive/MIRI-DS/ML/project/Project ideas",
+		"/home/pau/gdrive/MIRI-DS/ML/project/Tasks-ideas",
+		"/home/pau/gdrive/MIRI-DS/Career/Mthesis/DRL Cisco/DRL interview 01",
+		"/home/pau/gdrive/MIRI-DS/Career/Mthesis/DRL Cisco/paper Knowledge-Defined Networking - notes",
+		"/home/pau/gdrive/MIRI-DS/Career/Mthesis/DRL Cisco/email",
+		"/home/pau/gdrive/MIRI-DS/Career/Mthesis/DRL Cisco/DeepReinforcementLearningCisco",
+		"/home/pau/gdrive/MIRI-DS/planning/tasques-20180222",
+		"/home/pau/gdrive/g/trainingi",
+		"/home/pau/gdrive/MIRI-DS/ML/notes/ML-11-12-NN-notes",
+		"/home/pau/gdrive/MIRI-DS/MVA/MVA PCA 1",
+		"/home/pau/gdrive/MIRI-DS/MVA/MVA PCA 2.index",
+		"/home/pau/gdrive/MIRI-DS/MVA/MVA_PCA2.R",
+		"/home/pau/gdrive/MIRI-DS/MVA/MVA_PCA2_interpretation of biplots",
+		"/home/pau/gdrive/MIRI-DS/MVA/Clustering",
+		"/home/pau/gdrive/MIRI-DS/MVA/MVA_Clustering.notes",
+		"/home/pau/gdrive/MIRI-DS/CPDS/Parallelism/CUDA_intro",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/AHLT summary",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/AHLT -Session 5",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/AHLT - Session4 - Parsing - Robust parsing Chunking",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/AHLTMAI - session 3",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/AHLT sess 2",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/AHLT sess1",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/Project/Dataset-description",
+		"/home/pau/gdrive/MIRI-DS/AHLT-MAI/Project/classnotes",
+		"/home/pau/gdrive/MIRI-DS/OD/11_-_descriptionlogs-ontology",
+		"/home/pau/gdrive/MIRI-DS/OD/12_-_TRiple store",
+		"/home/pau/gdrive/MIRI-DS/OD/11_-_notes2-exercice11",
+		"/home/pau/gdrive/MIRI-DS/OD/09_-_Knowledge graphs",
+		"/home/pau/gdrive/MIRI-DS/OD/lab/lab3/od-lab3-personaltries",
+		"/home/pau/gdrive/MIRI-DS/OD/OD _session_20180323",
+		"/home/pau/gdrive/MIRI-DS/planning/Summer 2018",
+		"/home/pau/Projectes/AHLT-mai/src/FeatureExtraction.py",
+		"/home/pau/Projectes/AHLT-mai/src/FreelingFeatures.py",
+		"/home/pau/Projectes/AHLT-mai/data/batches/dnr22/d30tDBmNERaCRFw1m10.yaml",
+		"/home/pau/Projectes/AHLT-mai/data/batches/dnr22/d30tMDmNERaCRFw1m10.yaml",
+		"/home/pau/Projectes/AHLT-mai/data/batches/dnr22/d23tDBmBERaLSVMw3m0.yaml",
+		"/home/pau/Projectes/AHLT-mai/data/batches/dnr22/d23tMDmBERaLSVMw3m0.yaml",
+		"/home/pau/Projectes/AHLT-mai/data/batches/svmdebug/d23tDBmNERaSVMw3.yaml",
+		"/home/pau/Projectes/AHLT-mai/data/batches/b0524/d24tMDmNERaCRFw1.yaml",
+		"/home/pau/Projectes/AHLT-mai/data/reports/_NER_scores.tex",
+		"/home/pau/Projectes/AHLT-mai/data/reports/_NER_scores2.tex",
+		"/home/pau/Projectes/AHLT-mai/data/reports/_DDI_scores2.tex",
+		"/home/pau/Projectes/AHLT-mai/src/templates/score2.j2",
+		"/home/pau/Projectes/AHLT-mai/data/reports/_DDI_scores.tex",
+		"/home/pau/Projectes/AHLT-mai/src/BIOFeatures.py",
+		"/home/pau/Projectes/AHLT-mai/data/features/features.json",
+		"/home/pau/Projectes/AHLT-mai/data/features/dataall.json",
+		"/home/pau/Projectes/AHLT-mai/data/LaboCase/Test/Test for DrugNER task/DrugBank/Misoprostol.xml",
+		"/home/pau/Projectes/AHLT-mai/planning/AHLT project tasks2",
+		"/home/pau/Projectes/AHLT-mai/planning/DDI_notes",
+		"/home/pau/Projectes/AHLT-mai/src/07-DDI_preprocess_DrugBank.py",
+		"/home/pau/Projectes/AHLT-mai/src/07-DDI_preprocess_Medline.py"
+	],
+	"find":
+	{
+		"height": 26.0
+	},
+	"find_in_files":
+	{
+		"height": 130.0,
+		"where_history":
+		[
+			"../batches/",
+			"../batches/*.yaml",
+			".",
+			"../data/batches"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"detection",
+			"progressions",
+			"x2",
+			"down",
+			"straigth",
+			",",
+			".",
+			"14606.50",
+			",",
+			".",
+			",",
+			":",
+			",",
+			".",
+			",",
+			"\t\t",
+			"bi·bi",
+			"roseta",
+			"gam",
+			"walk",
+			"CONTIGUOUS",
+			"kert",
+			"mutual",
+			"malw01-TempRestricAnalysis",
+			" ",
+			" ; ",
+			" ",
+			" ; ",
+			" , ",
+			";",
+			"xlim",
+			",",
+			".",
+			",",
+			".",
+			"confi",
+			"correlated",
+			"resid",
+			"b1·xavg",
+			"intercomunicador",
+			"print",
+			"insert",
+			"usually",
+			"line",
+			"activa",
+			"regularization",
+			"distance",
+			"product",
+			",\n",
+			"linear",
+			"link",
+			"Regulari",
+			"regulari",
+			"asu",
+			"www",
+			"http://www.sersc.org",
+			"www",
+			"cvtra",
+			"cv",
+			"no C",
+			"self.scores",
+			"macro: {F1",
+			"limitTraining: 1000",
+			"featuresLists",
+			"window",
+			"www",
+			"extractFeatures",
+			"crf",
+			"trainTestModel",
+			"newModelPipeline",
+			"verifyOffsets",
+			"self.verification",
+			"verification",
+			"newModelPipeline",
+			"pipeline",
+			"done",
+			"pprint",
+			"^ mmm",
+			"^  m",
+			"pprint",
+			"prepareDDIFeatures",
+			"prepareFeatures",
+			"prepareSentenceFeatures",
+			"prepareEntityWordFeatures",
+			"prepareSentenceFeatures",
+			"sefe_",
+			"finalizeFeatures",
+			"featureExtractionDDIstep2",
+			"filterEntityWordFeatures",
+			"filterWordFeatures",
+			"FILTER",
+			"wordFeaturesExtension",
+			"modeltype",
+			"parallelBatch",
+			"trainTestModel",
+			"print(\"p",
+			"print(\"parseSing",
+			"parsePredictionOutput",
+			"prasePrediction",
+			"loadDDIFeatures",
+			"window",
+			"Exception:",
+			"prepareDDIFeatures",
+			"prepareFe",
+			"exception",
+			"finalize",
+			"predict",
+			"topcount=topcount",
+			"loadDDIFeatures",
+			"loadDDIFeaturesFile",
+			"finalizeFeatures",
+			"prepareDDIFeatures",
+			"loadDDIFeaturesFile",
+			"trainFeatures",
+			"trainingFolder",
+			"testBDDIfile",
+			"parallelDDIbatchTraining",
+			"total_time",
+			"modeltype: DDI",
+			"total_time",
+			"0,42",
+			"0.42",
+			"limittraining: 1000",
+			"^  m",
+			"  m",
+			"status: done",
+			"     wordfeatures:",
+			": DDI"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			".",
+			"",
+			".",
+			"",
+			",",
+			".",
+			":",
+			".",
+			"idaprodb",
+			"",
+			",",
+			"",
+			",",
+			".",
+			"",
+			".",
+			"",
+			"limitTraining: null",
+			"  mmm",
+			"^ mmm",
+			"modeltype: BDDI",
+			"limitTraining: null",
+			"  mm",
+			"status: pending",
+			": BDDI",
+			"DDI",
+			"]",
+			"",
+			"+str(word2)+",
+			"+str(word1)+",
+			"''.join(tree)",
+			"",
+			"    ",
+			"DDImodel",
+			"",
+			"modeltype: ER",
+			"gc.collect()\\ntime.sleep(60)",
+			"algorithm: svm",
+			"modeltype: NER",
+			"modeltype: ER",
+			"algorithm: svm",
+			"modeltype: ER",
+			"wordStruc",
+			"resultsold:\\n",
+			"\", params,",
+			"\",",
+			"\"",
+			"",
+			"fcurrent:",
+			"fcurrent",
+			"    fbefore",
+			"    fafter",
+			"    fbefore",
+			"    fafter",
+			"wafter",
+			"fafter",
+			"fbefore",
+			"fafter",
+			"\":+",
+			"\":-",
+			":-",
+			"  mod\\1:\\n    algorithm: crf\\n",
+			"  mod\\$1:\\n    algorithm: crf\\n",
+			"m0",
+			"",
+			"status: pending",
+			"\",",
+			"\"",
+			"resultstring[",
+			"self.",
+			"    word",
+			"    ",
+			"jobconf[",
+			"status: done",
+			"status: pending",
+			"    word",
+			"modeltype: NER",
+			"pos,",
+			"lemma, pos,",
+			"lemma,",
+			"pos, lookup, chunk",
+			"pos, lookup, chunkGroup",
+			"chunk",
+			"  mod",
+			"",
+			"chunkGroup",
+			"pos,isLo",
+			"lemma,",
+			"pos",
+			"lemma",
+			"pos",
+			"lemma",
+			"",
+			"    ",
+			"feature[\"pos\"]",
+			"features[\"pos\"]",
+			"features[\"lemma\"]",
+			"feature[\"lemma\"]",
+			"feature[\"word\"]",
+			"features[\"word\"]",
+			"'drugtype'",
+			"'biotag'",
+			"feature[\"pos\"]",
+			"feature[\"lemma\"]",
+			"feature[\"word\"]",
+			"beforefeature[\"word\"]",
+			"beforefeature[\"lemma\"]",
+			"beforefeature[\"pos\"]",
+			"wordfeatures[\"pos\"]",
+			"wordfeatures[\"lemma\"]",
+			"wordfeatures[\"word\"]",
+			"]",
+			"[",
+			"\"",
+			"",
+			" "
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "data mining for cybersecurity",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1485,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1113,
+								1113
+							]
+						],
+						"settings":
+						{
+							"auto_name": "Essai projects:",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 285.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/home/pau/Projectes/graph-reversing/documentation/Graph Reversing - IDA tests",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6411,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6238,
+								6238
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 267.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/home/pau/Projectes/graph-reversing/shared-folder/IDA_pro_book/test04.cql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3559,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2202,
+								2202
+							]
+						],
+						"settings":
+						{
+							"auto_name": "// extract (unique) sub names file -> script in ID",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 951.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/home/pau/Projectes/graph-reversing/shared-folder/Malw-case01/estudiThreadStart_CnCcomm/malw01-tempRestric.cql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1783,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								222,
+								222
+							]
+						],
+						"settings":
+						{
+							"auto_name": "// extract (unique) sub names file -> script in ID",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/home/pau/Projectes/graph-reversing/documentation/Datamining techniques for reversing",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 875,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								91,
+								91
+							]
+						],
+						"settings":
+						{
+							"auto_name": "Datamining techniques for reversing",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "graph reversing/Reversing with PROPERTY GRAPHS",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1984,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1432,
+								1432
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 627.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "/home/pau/gdrive/MIRI-DS/Extr/Projects/SOC log analysis",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2931,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								679,
+								679
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 285.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "cuckoo logs/Cuckoo logs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 337,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								337,
+								337
+							]
+						],
+						"settings":
+						{
+							"auto_name": "Cuckoo logs",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "project-graph-reversing-log-mining.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 107.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

@@ -1,0 +1,73 @@
+Reversing with PROPERTY GRAPHS
+==============================
+
+
+Part 1 - Applicability
+----------------------
+
+### Goal:
+
+Convert a code/db code to a property graph
+
+### Steps:
+
+1. Extract code db from IDA
+	* ok-vm with IDA
+	* plugins:
+		0. Manually with IDA python?
+			* see examples of IDApython scripts
+			* choose an easy model:
+				1. ok-simple call graph
+					* ok-create/compile a small code to test
+					* ok-extract instructions to txt/csv
+					* ok-import into node4j
+					* ok-perform basic pattern matching queries 
+				2. instruction level graph
+					* addr level (code-addr, maddr, register)
+					* instruction-addr (code-func, mem-addr, func)
+					* add register to the formula?
+				3. pattern matching, navigational, reachability
+				4. taint analysis ?
+	
+
+
+Part 2 - State of the art
+--------------------------
+
+1. Read papers
+	* types of code applied to
+	* types of representations
+	* sizes, dimensions, applicability
+	* graph databases used
+
+2. libraries
+	1. IDA + Sark 
+		* sark + get_nx_graph -> NetworkX.digraph with shortpetst path
+	2. Kam1n0 : graph isomorphism problem + papers
+	3. IDA + IDA2SQL
+	4. Graph Slick
+
+
+Part 3 - Research
+------------------
+
+1. Select 2,3 representations/goals/setups to test
+2. extract and import differebt representations into node4j
+	* by code blocks (flow charts)
+	* by instruction & registers & mem adresses
+	* by mem addresses only
+	* by call graph only with some properties
+3. test & time time/memory cost of each on basic queries
+4. Look for new use cases
+	* function/code identification
+		* example: printf function
+		* example: FLIRT signatures transformed to pattern matching. 
+			1. Get a code/function graph
+			2. derive the pattern matching query
+			3. query over another code graph to detect it
+	* taint analysis
+		* what is taint analysis?
+		* translation to graph queries?
+			* maybe reachability = where is this mem address used = where is this parameter used
+			* maybe adjacency
+5. Develop a version for Radare2?

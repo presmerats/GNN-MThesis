@@ -1,0 +1,782 @@
+Relational inductive biases, deep learning, and graph networks
+
+
+Abstract
+	AI that is out of reach
+		- generalizing beyond one's experience
+
+	-combinatorial generalization top priority
+	-structured representations and computations are key
+
+	- explores how relational inductive biases within deep learning architectures facilitate learning about entities, relations, and rules for composing them
+
+	-new building block:
+		graph network
+			- generalizes and extends approaches for neural networks that operate on graphs
+
+			- straight-forward interface for manipulating structured knowledge and producing structured behaviors
+
+	- graph networks can support
+		- relational reasoning
+		- combinatorial generalization
+
+	- software library
+
+
+Intro
+
+	combinatorial generalization
+		- infinite use of finite means
+		- constructing new inferences, predictions and behaviors from known building blocks
+
+	biasing learning towards structured representations and computations -> in systems that operate on graphs
+
+	cognitive capacity:
+		-entities and their interactions
+		-hierarchies hide fine-grained differences and capture general commonalities
+		-solve novel problems by composing familiar procedures and objectives
+		-draw analogies by aligning the relational structure between 2 domains
+		-draw inferences about one based on corresponding knowledge about the other
+
+	world is compositional
+		- when learning we adjust new knowledge into our existing structured representations
+		- or adjust the structure itself to better accomodate and make use of the new and the old
+
+	comb. generalization = at the heart of the AI
+		- logic, grammars, classic planning, graphical models, causal reasoning, bayesian nonparameterics and probabilistic programming
+
+	relational reinforcement learning
+	statistical relational learning
+		focus on explicit entity-and relation-centric learning
+
+
+	end-to-end design philosophy
+		- minimal a priori representational and computational assumptions
+		- seeks to avoid explicit structure and hand-engineering+
+
+		- advanced in image process, nlp (sequence to sequence models without parse trees), game play (Mnih et al. 2015, Silver 2016, Moravcik 2017)
+
+		-deep learning faces challenges IN complex language and scene understanding, reasoning about structured data, transferring learning beyond the training conditions, and learning from small amounts of experience.
+
+	subsymbolic approahces for representaing and reasoning about structured objects:
+		- analogy making
+		- linguistic analysis
+		- symbol manipulation
+		....
+
+		-> vector representation in deep learning
+			capture rich semantic content (text, graphs, albegraic and logic expr. and programs)
+
+	advocate for integrating combinatorial generalization with flexibility
+		structure-based methods and deep learning
+
+		recent models on graphs
+			scarseli 2009b
+			bronstein 2018
+			gilmer 2018
+			wang 2018c
+			Li 2018
+			Kipf 2018
+			Gulcehre 2018
+
+			-> capacity for performing computation over discrete entities and the relations between them.
+			-> carry strong relational inductive bias (Mitchell 1980)
+				in the form of architectural assumptions, which guide this models to learn about entities and relations
+
+
+	Box 1: Relational reasoning
+		structure = product of composing a set of known building blocks
+
+		structured representations  -> capture this composition
+		structured computations -> operate over the elemes and their composition as a whole
+
+		relational reasoning: manipulating structured representations of entities and relations using rules for how they can be composed.
+
+			- entity: elem with attributes
+			- relation: property between entities, 
+				- ex: same size as, heavier than, distance from, 
+				- can have attributes as well. ex: more than X times, X is the attribute
+				- sensitive to the content, ex IN AIR vs IN VACUUM
+			- rule: function (non-binary logical predicate) that maps entites and relations to other entities and relations
+				- is entity X large
+				- is entit X heavier than entity y
+				- rules that take 1 or 2 arguments and return a unary property value
+
+		Ex graphical models in machine learning
+			complex joint distributions by making explicit random conditional independences among random variables
+			success: capture sparse struct that underlies many real-world generative processes
+					 they support efficient algorithms for learing and reasoning.
+			ex: hidden Markov models
+
+			explicitly expressing the sparse dependencies among vars provides for efficient inference and reasoning algorithms
+				- message-passing
+
+
+	remainder of paper
+		- examining deep learning methods throguh the lens of their relational inductive biases , showing that existing methods often carry relational assumptions which are not alwyas explicit or immediately eviden.
+
+		then general framework for entity- and relation-based reasoning (graph networks)
+
+		github.com/deepmind/graph_nets
+
+
+
+2 Relational inductive biases
+
+	Box 2: Inductive Bias
+		learning = process of aprehending useuful knowledge by observing and interacting with the world
+		
+		searching a space of solutions for one expected to provide better explanation of the data or achieve higher rewards
+		
+		very often several solutions that are equally good
+
+		inductive bias: allows a learning algorithm to prioritize one solution (or interpretation) over another, independent of the observed data (Mitchell 1980)
+
+		Bayesian model, inductive bias = choice and parametrization of the prior
+
+		Freq. stats -> regularization term to avoid overfitting
+					-> might be encoded in the architecture of the algorithm itself
+
+		bias-variance trade-off
+			inductive bias often trade flexibility for improved sample complexity, can be understood as the bias-variance trade-off
+
+		ideally: inductive biases both improve search for sols without substantially diminishing performance and help find sols that generalize better
+
+			mismatched inductive biases -> suboptimal performance by introducing constraints that are too strong
+
+		can express:
+			- assumptions about data-generating process
+			- assumptions about the space of solutions
+
+			ex: L2 regularization forces small param values -> can induce unique solutions and global struct to ill-posed problems
+
+			ex: 1D func fitting -> linear least squares follows the constraint that the approximating func bbe a linear model and approx errors be minimal under quadratic penalty -> assump data generating process is a line process corrupted by additivbe Gaussian noise
+
+		meta assumption:
+			assumption about the learning process -> that searching for good sols is easier when there is less ambiguity among solutions
+
+
+	building blocks of more complex deep computational hierarchies and graphs
+		Fully connected layers
+			form -> multilayer perceptron
+
+		convolutional layers -> CNNs
+
+		image processing usually -> CNNs with MLP
+			
+		->inductive bias: 
+			hierarchical processing, where computations are performed in stages , typically resulting in increasingly long range interactions among information in the input signal
+
+		->inductive biases of building blocks:
+			non-relational inductibve biases in deep learning
+				activation non-linearities
+				weight decay
+				dropout
+				batch and layer normalization
+				data augmentation
+				training curricula ?=
+				optimization algorithms 
+
+			all impose constraints on the trajectory and outcome of learning
+
+		key in inductive biases
+			entities, relations, rules
+
+			deep learning:
+				entites = distributed representations
+				rules = neural network func approximators
+
+		to differenciate
+			arguments to the rule func:
+			1)how the rule function is reused or shared across the computational graph
+			2)how the architecture defines interactions versus isolation among represenations
+
+
+	2.1 Relational inductive biases in standard deep learning building blocks
+
+		Fully connected
+			entities:units  
+				dot product vector and weight vector + bias term then all in a non-linearity func (like ReLU)
+			relations: all-to-all  
+
+			rules: weights and biases
+
+			arg. to the rule: full input signal
+				no reuse
+				no isolation of information
+
+			relational inductive bias: weak  
+				all inputs can interact to determine any output unit's value, independently across outputs
+
+			invariance:-
+		
+		Convolutional layer: 
+			convolving vector/tensor with kernel of the same rank adding a bias term and applying a point-wise non-linearity
+
+			entities:grid elems  (ex: pixels)
+
+			relations: are sparser
+					local relations between entities 
+
+			re. inductive bias: locality  
+				arg. to the relational rule are those enntities in close proximity  in the input singal's coordinate space.
+
+			invariance: spatial translation
+				reuse of the same rule across localities in the input
+
+		Recurrent layer: 
+			implemented over a sequence of steps
+
+			entities: timesteps 
+					inputs and hidden states at each processing step as the entities 
+
+			rel: sequential  
+				Markov dependence of one step's hidden state on the previous hidden state and the current input
+			
+			rule:
+				take a step's inputs and hidden state as arguments to update the hidden state.
+
+				rule is reused over each step, -> temporal invariance as relational inductive bias
+
+			re. inductive bias: sequentiality  
+				also a bias for locality in the sequence via their Markovian structure
+
+			invariance: time translation
+		
+		Graph network: Nodes  rel:edges rel. induct. bias:arbitrary invariance: node, edge permutations
+
+	2.2 Computations over sets and graphs
+
+		tehre is no "default" deep learning component which operates on arbitrary relational structure.
+
+		we need models with explicit representations of entities and relations, and learniing algorithsmm which find rules for computing their interactions, as well as ways of grounding them in data.
+
+		entities in the world have no order
+
+		orderings are defined by the properties of their relations
+
+		invariance to ordering : property that should be reflected by a deep learning component for relational reasoning
+
+		->"permutation invariance"
+
+
+		Sets:
+
+			natural repr. for systems described by entities whose order is undefined or irrelevant.
+			their relational inductive bias does not come from the presence but from the absence  (why?)
+
+			ex: mass of a solar system, n planets with attributes (mass, position, velocity) -> features (x1,x2,,...,xn)
+
+				order of planets does not matter -> state is aggregated averaged quantities
+
+			if we use MLP -> prediction for input (x1,x2,...xn) does not translate for another input in diff. order (xn,x1,...,x2)
+				n! permutations -> each order different -> exponential num of input/ouptut trainign examples to learn an approximating func.
+
+		natural way to handle such combinatorial explosion is
+			only allow the prediction to depend on symmetric functios of the inputs' attributes 
+			?
+			computing shared per-object features {f(x1),..,f(xn)} which are then aggregated in a symmetric way (for ex. by taking their mean)
+
+
+
+		another form of underlying structure
+		each object in a set affected by pairwise interactions with the other objects in the set.
+
+		ex: predict each planet's position after a time interval deltat
+			-> aggregated averaged info not enough
+			-> instead compute state of each object
+				x'i=f(xi, SUMj g(xi,xj))
+					g() computes force induced by xj on xi
+					f() computes the future state of the xi planet
+
+					g() is the same in all -> permutation invariance
+					but also 2 arguments instead of one
+
+
+		2 extreme relational structure
+			1- no relations
+			2- all pairwise relations
+
+			real world systems have a relational structure somewher in between these two extremes
+				some pairs of entities possesing a relation and others lacking one.
+
+				x'i=f(xi, SUM{j in d(i)} g(xi,xj))
+
+				d(i) in {1, ,..n} is a neighborhood around node i.
+				this corresponds to a graph in that the i-th object only interacts with a subset of the other objects, described by it's neighborhood.
+
+				still the updates do not depend on the order in which we describe the neighbordhood
+
+3 Graph networks
+
+	graphs generally are a repr. whcih supports arbitrary (pairwise) relational structure, and computations over graphs afford a strong relational inductive bias beyond that which convolutional and recurrent layers can provide.
+
+	models in graph neural networks examples
+
+		- visual scene understanding
+**		- few-shot learning **
+		- dynamics of physical systems
+		- multi-agent systems
+**		- reason about knowledge graphs  
+		- predict the chemical properties of molecules
+**		- predict traffic on roads 
+		- classify and segment images and videos
+		- classify and segment 3D meshes and point clouds
+		- classify regions in images
+		- perform semi-supervised text classification
+		- machine translation
+**		- model-free and model-based continuous control
+**		- model-free reinforcement learning
+**		- classical approaches to planning
+	
+	models in computer science about reasoinoing about discrete entities and structure
+		- combinatorial optimization
+		- boolean satisfiability
+***		- program representation and verification
+		- modeling cellular automate and Turing machines
+		- inference in graphical models
+		- generative models for graphs
+		- unsupervised learning of graph embeddings
+
+
+	Papers that examine the body work of graph neural networks in more depth
+		- Scarselli et al. 2009a. 
+			early approaches
+		- Bronstein 2017 
+			deep learning on non-Euclidean data, graph neural nets, graph conv. networks and related spectral approaches
+		- Gilmer 2017
+			message-passing neural network (MPNN)
+			unified various graph neural netowkr and graph convolutional network appraoches
+				Mnti 2017, Bruan 2014, Henaff 2015, Defferrard 2016, Niepert 2016, Kipf 2017, Bronstein 2017
+		- Wang 2018c:
+			non-local neural network (NLNN) 
+			which unifies various "self-attention"-style methods
+			Vaswani 2017, Hoshen 2017, Velickovic 2018
+			->capturing long range dependencies in signals
+
+3.2 GN block
+	- GN generalizes and extends MPNN and NLNN
+    - supports constructin complex architecture from simple building blocks
+    - GN can be implemented with functions other than neural networks
+
+    GN : graph to graph model
+    	input = graph
+    	computations over structure
+    	output = graph
+
+    	entities = nodes
+    	relations = edges
+    	system-level props = global attributes
+
+    	GN framework's block organization emphasies
+    		customizability
+    		synthesizing new architectures with express desrired relational inductive biases.
+
+    		-> flexible representations
+    		-> Configurable within-block structure
+    		-> COmposable multi-block architectures
+
+	graph:
+		directed (one-way edges, sender to receiver) , attributed (edges and nodes have attributes) (proprs encoded as a vector, set or even another graph), multi-graph (more than one edge between vertices including self-edges) with a global attribute.
+		vi nodes
+		ek edges
+		u global attribute
+		sk sender node indices
+		rk received node indices
+
+		G=(u,V,E)
+		V={vi}i=1:Nv
+		E){(ek,rk,sk)}k=1:Ne
+
+	GN block
+		3 update functions phi and 3 aggregation functions rho
+
+		e'k = phie(ek,vrk, vsk ,u)
+		v'i = phiv(agg_e'i, vi, u)
+		u'  = phiu(agg_e', agg_v', u)
+
+		agg_e'i = rhoe_v(E'i)
+		agg_e'  = rhoe->u(E')
+		agg_v' =  rhov->u(V')
+
+		phie are mapped across all edges to compute per-edge update
+		phiv mapped acros all nodes to copute per-node updates
+		pihu applied once
+		rho each take a set as input and reduce it to a single element 
+		rho must be invariant ot permutations of thier inputs and should take variable numebrs of arguments (element wise summarion, mean, max, ..)
+
+
+	computational steps within a GN block
+
+
+		** for edge loop**
+		1- apply phie per edge phie(ek,vrk,vsk,u) -> e'k
+			set of resulting per-edge ouputs for each node i is
+			E'i={(e0k, rk, sk)}rk=i,k=1:Ne
+			E' = UiE'i={(e'k, rk,sk)}k=1:Ne set of all per-edge outputs
+
+		**for node loop***
+		2 rhoe->v applied to E'i adn aggregates the edge updates for edges that proejct to vertex i into agg_e'i. will be used in the next node update
+
+		3 phiv is applied to each node i -> compute and update node attribute v'i,
+			set of resulting per-node outpus V'={v'i}i=1:Nv
+
+
+
+		4 rhoe->u is applied to E', 
+			and aggregates all edge updates, into agg_e', then used in next step global update.
+
+		5 rhov->u is applied to V' 
+			and aggregates all node updates into agg_v' then used in the next step's global update.
+
+		6 phiu appliead once per graph
+
+		the order is not strictly enforced, the order could be reversed...
+
+
+	relational inductive biases in graph networks
+		1) GN input determines how representations interact and are isolated
+			graphs can express arbitrary relationships among entities
+			
+		2) GNs are invariant to the order of entities and their relations
+			graphs represent entities and relations as sets, which are invariant to permutations
+
+4 Design principles for graph network architectures
+
+	GN can be used to implement a wide variaty of architectures (all in accordance with section 3 design principles)
+
+	focus on GN's to act as a learnable graph-to-graph function approximators
+
+4.1 Flexible representations
+	in terms of representation of the attributes
+
+	in ternms of the structure of the graph itself
+
+
+	attributes:
+		global, node and edge attributes of a GN block can use
+			- real-valued vectors and tensors
+			- sequences
+			- sets
+			- graphs
+
+		depending on the requiremetns of the problem
+			ex: image input-> tensors of image pathces
+			    text  input-> sequences of words
+
+		GN edge and node output
+			lists of vector or tensors, one per edge or node, 
+			and the global outputs correspond to a single vector or tensor.
+
+			-> GN output can be passed to other deep learning blocks suck as MLPs, CNNS, and RNNs
+
+			or tailored to the atsk
+			-edge-focused GN -> edges as outputs 
+					Make decisions about interactions between entities (Kipf 2018, Hanrick 2018)
+
+			-node-focused GN -> nodes as outputs to reason about physical systems
+				Battaglia 2016, Chang 2017, Wang 2018b, Sanchez-Gonzales 2018
+			-graph-focused GN -> globals as output, 
+				Battaglia 2016  predict potential energy of a physical system 
+				Gilmer 2017 properties of a molecule
+				Santoro 2017 answer questions about a visual scene
+
+			Hamrick 2018
+				uses output edge and global attribues to compute a policy over actions
+
+
+	graph structure:
+		if input data will be represented as a graph scenarios:
+
+		1) input explicitly specifies the relational structure
+			knowledge graphs, 
+			social networks, 
+			parse trees, 
+**			optimization problems, 
+			chemical graphs,
+**			road networks,
+			physical systems
+
+		2) the relational structure must be inferred or assumed
+			visual scenes
+			text corpora
+**			programming language source code
+			multi-agent systems
+
+			data may be encoded as a set of entities without relations
+			a vector or a tensor.
+			if entities not specified then assumed -> each word in a sencted, or a local feature vector in a CNN's
+			or use separate learne dmechanism to infer entities from unstructured signal.
+
+			if not available the relations -> instasntia all possible directed eedges between entities -> prohibitieve -> further development
+
+
+4.1 Configurable within-block structure
+	
+	structure and functions within a GN block can be configured in diff ways 
+		-> flexibility in what info is made available as inputs to its functions
+		-> flexibility as hwo output edge node and global updates are produced
+
+	each PHI func must be implemented with some func f, where f's argument signature detrermines what info  it requries as input
+
+	generic Full GN block
+
+		phie = NNe([ek,vrk, vsk, u])
+		phiv = NNv([agg_e'i,vi, u])
+		phiu = NNu([agg_e'i, agg_v', u])
+
+		rhoe->v(E'i) = SUM{k:rk=i} e'k
+		rhov->u(V') = SUM_i v'i
+		rhoe->u(E') = SUM_k e'k
+
+	p16 Fig 4a
+		GN full block,,
+			E+V+u->phie -> E'
+			phie -> phie->v
+			V+phiev+u -> phiv -> V'
+			phiv -> phivu
+			e+phivu+phieu -> phiu -> u'
+
+		indepenedent recurrent block
+			E, Ehid -> phie -> E', E'hid
+			V, Vhid -> phiv -> V', V'hid
+			u, uhid -> phiu -> u', u'hid
+
+			phi's are RNN
+		
+		message-passing neural netwokr
+			E+V -> phie
+			phie ->rhoe->v
+			V+rhpe->v ->phiv -> V'
+			phiv -> rhov->u
+			rhov->u + PHIu _> u'
+
+			global predict does not include aggregated edges
+
+		non-local neural netwokr
+			E+V -> phie
+			phie ->rhoe->v
+			V+rhpe->v ->phiv -> V'
+			
+
+
+		Relation network
+			E+V -> phie
+			phie -> phieu
+			phieu -> phiu -> u'
+
+		Deep set
+			V+u -> phiv
+			phiv -> rhouv -> phiu -> u'
+
+
+	Message-passing neural network (MPNN)
+		from Gilmer 2017 MPNN translation details
+			- message func Mt  equals GN's phie, but does not take u as input
+			- element wise summ is used for GN's rhoe-v
+			- update func Ut, plays the role of the GN's phiv
+			- readout func R -> GN's phiu but does not take u or E' as input tha thus an analog to the GN's rhoe-u is not required
+			- dmaster serves a roughly similar purpose to the GN's u, but is an extra node connected toall others -> so can be a GN's V
+
+	Non-local neural networks (NLNN)
+		NLNN Wang 2018c paper unifies intra-self-vertex-graph-attention approaches
+
+		attention
+			how nodes are updated
+			based on a weighted sum of some fucntion of the node attributes of its neighbours, where teh weght between a node and on of its neigbors is computed by a scalar pairwise func between their attributes (and normalized accross neighbros)
+
+		NLNN does not includd edges
+		but other publications are able to handle explicit edges by effectively setting to zero the weights between nodes whcih do not share an edge
+			.. review when RNN and attention is clear
+
+
+	other graph-network variants
+		variations..
+
+
+		- global property of a graph
+		- interaction Networks Battaglia 2016
+		- CommNet (Sukhbaatar 2016)
+		- structure2vec
+		- Gated Graph Sequence Neural Networks
+		- Relation Neworks..
+		- Deep Sets
+		- PointNet
+
+4.3 Composable multi-block architectures
+
+	complex architecture by composing GN blocks
+
+	graph-to-graph input/output
+		entities/rel not updated are outputed intact
+		output of GN block can be passed to another GN block
+
+		similar to the tensor-to-tensor  in standar deep learning.
+
+		GN1 · GN2 = GN2(GN1(G))
+
+		shared or unshared GN blocks
+
+		fig 6 composition of GN blocks with shared and unshared 
+
+	shared config are analogous to message passing where same local update procedure is applied iteratively to propagat info across the struct.
+
+	after m steps, the info tha a node has acces to after msteps of propagation is determined by the set of nodes and edges that are at most m hops away. -> liek breaking computation into smaller elementary steps.
+
+	encode-process-decode configurations
+		Hamrick 2018
+
+		1) input graph Ginp -> to latent representation G0 by GNenc
+		2) GNcore (shared code block) is applied M times to return GM
+		3) Gout is decoded by GNdec
+
+		ex:
+			GNenc: read forces and positions from elements
+			GNcore: elementary dynamics update
+			GNdec: read the final positions from the updated graph state
+
+	recurrent GN-based architectures
+		mainaint a hidden graph Gt_hid
+		input observed graph Gt_inp
+		output Gt_out, on each step
+
+		useful for predicting sequences of graphs like trajectory of a dynamical system over time Sanchez-Gonzales 2018
+
+		also reusing GN blocks GNenc, GNdec, GNcore are shared accross each step t 
+
+4.4 Implementing graph networks in code
+
+	like CNN , GN have a natural parallel structure
+		phie and phiv funcs are shared over edges and nodes -> can be compuited in parallel
+
+		edges and nodes as batch dimension in min-batch training regimes in the perspective of phie and phiv!
+
+	several graphs can be naturally batched together by tragting them as disjoin components of a larger graph
+		-> batching together the computations made on several independent graphs
+
+	reusing Phie and phiv improves GN efficiency
+
+
+5 Discussion
+
+->extent of relational inductive bias in deep learning arhictecture s (MLP, CNNs, and RNNs) but they cannot handle more structured representations such as sets or graphs.
+
+->build stronger relational inductive biases into deep learning architectures -> graph network block
+
+
+5.1 Combinatorial generalization in graph networks
+
+
+	GN structure support combinatorial generalization 
+		-> shared computations across the entities and the relations.
+
+	capacity for combinatorial generalization of GNs
+		- Battaglia 2016 
+			-> GN trained to make one-step physical state predictions could simulate thousands of future time steps 
+			+ zero-shot transfer to physical systems (with doube, or hald the number of entities epxerienced during training)
+		- Sanchez-Gonzalez 2018
+			similar in GN that trained as forward models on simulated multi-join agents could generalize to agens with new numbers of joints.
+		- Hamrick 2018 , Wang 2018b
+			GN-based decision-making policies could transfer to novel number of entities as wel.
+
+		- Bello 2016, Nowak 2017, Dai 2017 , Kool-Welling2018: 
+			GN could generalize well to problems of much different sizes than they had been trained on.
+
+		- Toywer 2017
+			generalization to diff. sizess of planning problems
+
+		- Hamilton 2017
+			generalization to producing useful node embeddings for previously unseen data
+
+		- Selsam 2018 
+			on boolean SAT demonstrated generalization both to differetn problem sizes ans across problem distributions.
+
+	Gn's entity and relation-centric organization, embracing explicit structure and flexible learning is a viable apporach toward realizing better sample efficiency and generalization in modern AI
+
+5.2 Limitations of graph networks
+
+	
+	GN and MPNN's form of learning message-passing CANNOT guarantee to solve some classes of prbolems such as
+		- discrimanting betweeb certain non-isomorphic graphs (Shervashidze 2011)
+		  --> Konder 2018 suggests covariance rather than invariance to permutations is preferable -> covariant compositional networks which can preserve structural information and allow it to be ignored only if desired.
+
+		- recursion, control flow, conditional iteration are not straighforward to represent with graphs, and minimally require additional assumptions (e.g. interpret abstract syntax trees)
+
+			- programs and more computer like processing can offer greater representational and computational expresivity with respect to these notions and some have argued they are an important compoonent of human cognition 
+				Tenenbaum 2011, Lake 2015, Goodman 2015 
+
+5.3 Open questions
+
+	just one step forward
+	realizing the full potential of graph networks will be more challengin
+
+	unanswered questions regarding best way to use graph networks:
+
+	1) wehere does the structure come from?
+
+		raw image/text -> processed by deep learning 
+		unkwon how to convert them to more structured data
+
+		idea1) fully connected graph structure between spatial or linguistic entities, however representations may not be the true entites
+
+	2) any underlyign graph structs are much more sparese than a fully connected graph -> how to induce sparsity?
+
+	3) how to adaptively modify graph structures during course of computation.
+		example composition -> entity should be decomposed on entities and relations
+
+		hability to add or remove edges depending on the context
+
+	4) further explore the interpretability of the behavior of graph networks
+
+
+5.4 Integrative appraoches for learning and structure
+
+	blending deeep learnign approache with structure representations.
+
+	similar works
+		- linguistic trees socher 2011
+		- partial tree traversals in a stat-action graph Guez 2018
+		- hierarchical action policies (Andras 2017)
+		- multi-agent communication channels Foerster 2018
+		- programs 2017
+		- mimicking computer hardware (mem, IO controlers, registers) Dyer 2015, Grenfenstette 2015, Joulin Mikolov 2015, Sukhbaatar 2015.
+
+
+5.5 Conclusion
+
+vast gap between human and machine intelligence reamins -> efficient generalizable learning
+
+advocate for:
+1- making combinatorial generalization a top priority for AI
+2- embracing integrative approaches which draw on ideas from human cognition, traditioanl computer science, stand engineering practie, and modern deep learning.
+
+we explored
+	- flexible learning-based appraoches
+	 which implement strong relational inductive biases
+	 to capitalize on explicitly structured representations and computations
+
+	- framework : graph networks, generalizaes and extend various recent appraoches for neurela networks applied to graphs.
+
+		graph-to-graph building blocks
+		relational inductive biases promote combinatorial generalization and improved sample efficiency over other standard machine learning building blocks.
+
+appreciated approaches
+	- marruing learning-based approaches with programs
+		Ritchie 2016
+		Andreas 2016
+		Gaunt 2016
+		Evans Grrefenstette 2018
+		Evans 2018
+
+
+	- developing model-based approaches with an emphasis on abstraction
+		Kansky 2017
+		Konidaris 2018
+		zhang 2018
+		Hay 2018
+
+
+	- meta-learning investment
+		wang 2016
+
+	- exploring multi-agent learning and interaction as a key catalyst for advanced intelligence
