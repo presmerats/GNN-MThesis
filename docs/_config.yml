@@ -61,7 +61,7 @@ nav:
   - name:           "State of the art"
     url:            "/sota"
   - name:           "Research"
-    url:            "/archive"
+    url:            "/research"
   - name:           "References"
     url:            "/references"
   - name:           "Github"
