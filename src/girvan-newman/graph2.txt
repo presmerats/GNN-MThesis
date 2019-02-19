@@ -1,4 +1,0 @@
-1 2 {'weight': 7, 'color': 'green'}
-2 3 {'weight': 5, 'color': 'blue'}
-3 4 {'weight': 6, 'color': 'red'}
-3 5 {'weight': 5, 'color': 'blue'}
