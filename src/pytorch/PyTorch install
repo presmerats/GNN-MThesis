@@ -1,0 +1,51 @@
+PyTorch install
+================
+
+
+Nvidia
+	https://stackoverflow.com/questions/43022843/nvidia-nvml-driver-library-version-mismatch
+
+CUDA
+	
+	https://developer.nvidia.com/cuda-92-download-archive
+	https://docs.nvidia.com/cuda/archive/9.2/cuda-installation-guide-linux/index.html
+
+Pyenv & virtualenv
+	https://github.com/pyenv/pyenv
+	https://github.com/pyenv/pyenv-virtualenv
+
+
+PyTorch
+	https://pytorch.org/get-started/locally/
+
+	pyenv virtualenv 3.6.4 dlai-pytorch
+	pip install numpy
+	pip3 install http://download.pytorch.org/whl/cu92/torch-0.4.1-cp36-cp36m-linux_x86_64.whl
+	pip3 install torchvision
+
+
+Jupyter Notebook 
+	from within pyenv virtualenv
+
+	pip install jupyter
+	jupyter --paths
+	# look through all pats (config, data, rungime...)
+	# in my case it was in data:
+	# ls ~/.local/share/jupyter/kernels
+	#	dlai, ahltmai ...
+	#	-> add a new folder with the kernel.json
+
+	mkdir -p ~/.local/share/jupyter/kernels/dlai-pytorch/
+
+	vim kernel.json
+```
+{
+ "argv": [ "/home/pau/.pyenv/versions/dlai-pytorch/bin/python", "-m", "ipykernel",
+          "-f", "{connection_file}"],
+ "display_name": "dlai-pytorch",
+ "language": "python"
+}
+
+```	
+
+	cp kernel.json ~/.local/share/jupyter/kernels/dlai-pytorch 
