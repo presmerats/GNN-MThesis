@@ -590,7 +590,7 @@ def saveModels(modelsdict):
         saveModel(model)
 
 def reportTrainedModel(modeldict):
-    print(" trained model: ",modeldict['model'].__class__.__name__,
+    print(" trained model: ",modeldict['model'].__name__,
               modeldict['kwargs'], " epochs:",modeldict['epochs'],
              ' val loss=',modeldict['cv_val_loss'],
           ' val accuracy=',modeldict['cv_val_accuracy'],
