@@ -491,7 +491,7 @@ def final_model_train(modeldict, train_dataset):
 
 
 def modelSaveName(modeldict):
-    classname = modeldict['model'].__class__.__name__
+    classname = modeldict['model_instance'].__class__.__name__
     architecture = ""
     for k,v in modeldict['kwargs'].items():
         architecture = architecture+'_'+str(k)+'-'+str(v)
@@ -528,7 +528,7 @@ def saveModel(modeldict):
             
         return path
     except Exception as err:
-        print("ERROR SAVING MODEL "+model.__name__)
+        print("ERROR SAVING MODEL "+model.__class__.__name__)
         print(err)
         
         traceback.print_exc()
