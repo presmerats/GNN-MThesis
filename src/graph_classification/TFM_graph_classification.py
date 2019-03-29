@@ -215,6 +215,18 @@ def F1Score(pred, target):
 
 
 # k-fold cross-validation
+
+import torch
+from torch_geometric.data import Data
+from torch_geometric.datasets import TUDataset
+from torch_scatter import scatter_mean
+from torch_geometric.data import DataLoader
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from IPython.display import display, HTML
+import os
+
 # count how many graphs of each class in the dataset
 def printDatasetBalance(dataset):
     num_classes = dataset.num_classes
@@ -474,7 +486,9 @@ def final_model_train(modeldict, train_dataset):
     return model
 
 
+
 # model saving
+
 
 def modelSaveName(modeldict):
     classname = modeldict['model'].__class__.__name__
@@ -493,25 +507,31 @@ def modelSaveName(modeldict):
     return finalname
 
 def saveModel(modeldict):
+    import traceback
+    
     """
         based on :
         https://pytorch.org/tutorials/beginner/saving_loading_models.html
     """
+    
     try:
         
         if not os.path.exists('./models'):
             os.mkdir('./models')
         
         # model naming convention
-        model = modeldict['model']
+        model = modeldict['model_instance']
         path = './models/'+modelSaveName(modeldict)
             
         # save operation
         torch.save(model.state_dict(),path)
             
         return path
-    except:
-        print("ERROR SAVING MODEL"+model.__class__.__name__)
+    except Exception as err:
+        print("ERROR SAVING MODEL "+model.__name__)
+        print(err)
+        
+        traceback.print_exc()
         return None
         
 def loadModel(model, path):
@@ -538,7 +558,7 @@ def testSavingLoadingModel(train_dataset, test_dataset):
     testresult = testModel(model, test_dataset)
 
     # save model
-    m1['model']=model
+    m1['model_instance']=model
     path = saveModel(m1)
 
     # create new similar model
@@ -552,6 +572,7 @@ def testSavingLoadingModel(train_dataset, test_dataset):
     kwargs = m2['kwargs']
     model2 = modelclass(**kwargs)
     model2 = model2.to(device)
+    m2['model_instance']=model2
     
 
     # load state_dict
@@ -567,10 +588,9 @@ def testSavingLoadingModel(train_dataset, test_dataset):
 def saveModels(modelsdict):
     for k,model in modelsdict['best_models'].items():
         saveModel(model)
-    
 
 def reportTrainedModel(modeldict):
-    print(" trained model: ",modeldict['model'].__name__,
+    print(" trained model: ",modeldict['model'].__class__.__name__,
               modeldict['kwargs'], " epochs:",modeldict['epochs'],
              ' val loss=',modeldict['cv_val_loss'],
           ' val accuracy=',modeldict['cv_val_accuracy'],
@@ -618,6 +638,8 @@ def modelSelection(model_list,k, train_dataset ):
         kwargs = modeldict['kwargs']
         model = modelclass(**kwargs)
         model = model.to(device)
+        modeldict['model_instance'] = model
+        
         lr = modeldict['learning_rate']
         wd = modeldict['weight_decay']
         bs = modeldict['batch_size']
@@ -751,23 +773,27 @@ def saveResults(modelsdict):
     import json
     import datetime
     import os
+    import copy
     
     savedict = {}
     for model in modelsdict['models']:
         savedict['models']=[]
-        model['model']=model['model'].__class__.__name__
         #v2['train_loss_history']=[]
         #v2['val_loss_history']=[]
         #v2['val_accuracy_history']=[]
-        savedict['models'].append(model)
+        mod = copy.deepcopy(model)
+        mod['model']=model['model'].__name__
+        mod['model_instance']=model['model_instance'].__class__.__name__
+        savedict['models'].append(mod)
         
     savedict['best_models']={}
     for k,v2 in modelsdict['best_models'].items():
-        v2['model']=v2['model'].__class__.__name__
         #v2['train_loss_history']=[]
         #v2['val_loss_history']=[]
         #v2['val_accuracy_history']=[]
-        savedict['best_models'][k]=v2
+        savedict['best_models'][k]=copy.deepcopy(v2)
+        savedict['best_models'][k]['model'] =v2['model'].__name__
+        savedict['best_models'][k]['model_instance'] =v2['model_instance'].__class__.__name__
             
     savedict['tests'] = modelsdict['testing']
             
@@ -779,7 +805,7 @@ def saveResults(modelsdict):
     results_file = './results/experiment_'+d
     
     with open(results_file, 'w') as outfile:
-        json.dump(modelsdict, outfile)
+        json.dump(savedict, outfile)
 
 
 
