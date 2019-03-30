@@ -18,8 +18,6 @@ from torch_geometric.nn import MessagePassing
 #from torch_geometric.nn.conv.gated_graph_conv import GatedGraphConv
 from torch_geometric.nn.glob.glob import global_mean_pool, global_add_pool
 import torch.nn as nn
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -216,16 +214,6 @@ def F1Score(pred, target):
 
 # k-fold cross-validation
 
-import torch
-from torch_geometric.data import Data
-from torch_geometric.datasets import TUDataset
-from torch_scatter import scatter_mean
-from torch_geometric.data import DataLoader
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from IPython.display import display, HTML
-import os
 
 # count how many graphs of each class in the dataset
 def printDatasetBalance(dataset):
@@ -633,17 +621,6 @@ def modelSelection(model_list,k, train_dataset ):
 
     for modeldict in model_list:
 
-        epochs = modeldict['epochs']
-        modelclass = modeldict['model']
-        kwargs = modeldict['kwargs']
-        model = modelclass(**kwargs)
-        model = model.to(device)
-        modeldict['model_instance'] = model
-        
-        lr = modeldict['learning_rate']
-        wd = modeldict['weight_decay']
-        bs = modeldict['batch_size']
-
         train_loss_history = []
         val_history = {'loss':[], 'accuracy':[], 'microF1':[],'macroF1':[]}
         modeldict['cv_val_loss']=0.0
@@ -651,9 +628,21 @@ def modelSelection(model_list,k, train_dataset ):
         modeldict['cv_val_microF1'] =0.0
         modeldict['cv_val_macroF1'] =0.0
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
-
+        epochs = modeldict['epochs']
+        modelclass = modeldict['model']
+        kwargs = modeldict['kwargs']
+        
         try:
+            model = modelclass(**kwargs)
+            model = model.to(device)
+            modeldict['model_instance'] = model
+            
+            lr = modeldict['learning_rate']
+            wd = modeldict['weight_decay']
+            bs = modeldict['batch_size']
+
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
+
             for kfold in kfolds:
 
                 train = train_dataset[kfold[0]]
@@ -677,14 +666,15 @@ def modelSelection(model_list,k, train_dataset ):
                 modeldict['cv_val_accuracy']+=modeldict['accuracy']
                 modeldict['cv_val_microF1']+=modeldict['microF1']
                 modeldict['cv_val_macroF1']+=modeldict['macroF1']
+        
+            modeldict['cv_val_loss']=modeldict['cv_val_loss']/len(kfolds)
+            modeldict['cv_val_accuracy']=modeldict['cv_val_accuracy']/len(kfolds)
+            modeldict['cv_val_microF1']=modeldict['cv_val_microF1']/len(kfolds)
+            modeldict['cv_val_macroF1']=modeldict['cv_val_macroF1']/len(kfolds)
+
         except:
             print("Problem training model "+modeldict['model'].__name__)
 
-        modeldict['cv_val_loss']=modeldict['cv_val_loss']/len(kfolds)
-        modeldict['cv_val_accuracy']=modeldict['cv_val_accuracy']/len(kfolds)
-        modeldict['cv_val_microF1']=modeldict['cv_val_microF1']/len(kfolds)
-        modeldict['cv_val_macroF1']=modeldict['cv_val_macroF1']/len(kfolds)
-        
         # report model results
         reportTrainedModel(modeldict)
         
