@@ -23,6 +23,10 @@ import numpy as np
 import pandas as pd
 from IPython.display import display, HTML
 import os
+import json
+import datetime
+import copy
+import traceback
 
 
 class GatedGraphConv(MessagePassing):
@@ -387,7 +391,8 @@ def accuracy(pred, batch):
 
 
 
-def train_model(model, loader, optimizer, train_loss_history):
+
+def train_model_GGNN(model, loader, optimizer, train_loss_history):
     global device 
     
     model.train()
@@ -407,7 +412,62 @@ def train_model(model, loader, optimizer, train_loss_history):
     loss_train = loss_train /total_num_graphs
     train_loss_history.append(loss_train.item()) 
     
-def val_loss_model(model, loader, optimizer, val_history):
+def train_model_META(model, loader, optimizer, train_loss_history):
+    """
+        Precondition: loader batch size is 1, only 1 graph batches!
+        -> ERROR NOT NEEDED
+    """
+
+    global device 
+    
+    model.train()
+    loss_train = 0.0
+    total_num_graphs = 0
+    for batch in loader:
+        data = batch.to(device)
+        optimizer.zero_grad()
+
+
+        #  if there's no edge_attr, creatae a ones with num_edges
+        if data.edge_attr is None:
+            edge_attr = torch.ones(data.num_edges,data.num_features)
+            data.edge_attr = edge_attr.to(device)
+
+
+        # by default put a 1 as a graph feature
+        if not hasattr(data, 'u'):
+            data.u = None
+        
+        if data.u is None:
+            u = torch.ones(data.y.size()[0], 1)
+            data.u = u.to(device)
+
+        # by default put a 1 as a graph feature
+        u = torch.ones(data.y.size()[0], 1)
+        u = u.to(device)
+        out = model(data)
+        # the output of metalayer is : x, edge_attr, u
+        target = data.y
+        loss = F.nll_loss(out, target)
+        loss_train +=loss
+        loss.backward()
+        optimizer.step()
+        total_num_graphs += data.num_graphs
+        
+    loss_train = loss_train /total_num_graphs
+    train_loss_history.append(loss_train.item()) 
+
+
+def train_model(model, loader, optimizer, train_loss_history):
+    
+    if model.__class__.__name__.startswith('META'):
+        return train_model_META(model, loader, optimizer, train_loss_history)
+    else:
+        return train_model_GGNN(model, loader, optimizer, train_loss_history)
+    
+
+
+def val_loss_model_GGNN(model, loader, optimizer, val_history):
     global device 
     
     model.eval()
@@ -419,9 +479,9 @@ def val_loss_model(model, loader, optimizer, val_history):
     
     for batch in loader:
         data = batch.to(device)
-        pred = model(batch)
+        pred = model(data)
         total_pred.extend(pred.flatten().tolist())
-        total_gt.extend(batch.y.flatten().tolist())
+        total_gt.extend(data.y.flatten().tolist())
         
         _, predacc = pred.max(dim=1)
         total_acc.extend(predacc.flatten().tolist())
@@ -448,6 +508,73 @@ def val_loss_model(model, loader, optimizer, val_history):
     measures = F1Score(total_acc, total_gt)
     val_history['microF1'].append(measures['microF1'])
     val_history['macroF1'].append(measures['macroF1'])
+
+
+def val_loss_model_META(model, loader, optimizer, val_history):
+    global device 
+    
+    model.eval()
+    loss_val = 0.0
+    total_num_graphs = 0
+    total_pred = []
+    total_acc = []
+    total_gt = []
+    
+    for batch in loader:
+        data = batch.to(device)
+
+        #  if there's no edge_attr, creatae a ones with num_edges
+        if data.edge_attr is None:
+            edge_attr = torch.ones(data.num_edges,data.num_features)
+            data.edge_attr = edge_attr.to(device)
+
+
+        # by default put a 1 as a graph feature
+        if not hasattr(data, 'u'):
+            data.u = None
+        
+        if data.u is None:
+            u = torch.ones(data.y.size()[0], 1)
+            data.u = u.to(device)
+
+        pred = model(data)
+        total_pred.extend(pred.flatten().tolist())
+        total_gt.extend(data.y.flatten().tolist())
+        
+        _, predacc = pred.max(dim=1)
+        total_acc.extend(predacc.flatten().tolist())
+        
+        target = data.y
+        loss = F.nll_loss(pred, target)
+        loss_val += loss
+        total_num_graphs += data.num_graphs
+        
+    loss_val = loss_val / total_num_graphs
+    val_history['loss'].append(loss_val.item())
+    
+    # accuracy needs correction
+    val_history['accuracy'].append(accuracy(predacc, batch))
+    
+    # compute F1 scores
+    #pred2 = pred.to('cpu')
+    #pred2 = pred2.flatten().tolist()
+    #target = batch.y.to('cpu')
+    #target = target.flatten().tolist()
+    
+    #print("total_acc",total_acc)
+    #print("total_gt",total_gt)
+    measures = F1Score(total_acc, total_gt)
+    val_history['microF1'].append(measures['microF1'])
+    val_history['macroF1'].append(measures['macroF1'])
+
+
+def val_loss_model(model, loader, optimizer, val_history):
+    if model.__class__.__name__.startswith('META'):
+        return val_loss_model_META(model, loader, optimizer, val_history)
+    else:
+        return val_loss_model_GGNN(model, loader, optimizer, val_history)
+    
+
 
 # Retrain the best model
 def final_model_train(modeldict, train_dataset):
@@ -495,7 +622,7 @@ def modelSaveName(modeldict):
     return finalname
 
 def saveModel(modeldict):
-    import traceback
+    
     
     """
         based on :
@@ -631,6 +758,7 @@ def modelSelection(model_list,k, train_dataset ):
         epochs = modeldict['epochs']
         modelclass = modeldict['model']
         kwargs = modeldict['kwargs']
+
         
         try:
             model = modelclass(**kwargs)
@@ -674,6 +802,7 @@ def modelSelection(model_list,k, train_dataset ):
 
         except:
             print("Problem training model "+modeldict['model'].__name__)
+            traceback.print_exc()
 
         # report model results
         reportTrainedModel(modeldict)
@@ -763,10 +892,7 @@ def reportAllTest(modelsdict):
     display(res)
         
 def saveResults(modelsdict):
-    import json
-    import datetime
-    import os
-    import copy
+
     
     savedict = {}
     for model in modelsdict['models']:
