@@ -615,10 +615,12 @@ def modelSaveName(modeldict):
     lr = modeldict['learning_rate']
     wd = modeldict['weight_decay']
     bs = modeldict['batch_size']
-    
+    d = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+
     finalname = classname + "_" + architecture + "_" + \
-                str(epochs) + "_" + str(lr) + \
-                str(wd) + "_" + str(bs)
+                str(epochs) + "_" + str(lr) +  "_" + \
+                str(wd) + "_" + str(bs) +  "_" + \
+                "date" + d
     return finalname
 
 def saveModel(modeldict):
