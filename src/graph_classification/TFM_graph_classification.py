@@ -653,29 +653,32 @@ def modelSelection(model_list,k, train_dataset ):
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
-        for kfold in kfolds:
+        try:
+            for kfold in kfolds:
 
-            train = train_dataset[kfold[0]]
-            val = train_dataset[kfold[1]]
-            loader = DataLoader(train, batch_size=bs, shuffle=True)
-            loader_val = DataLoader(val, batch_size=bs, shuffle=True)
-            for epoch in range(epochs):
-                train_model(model, loader, optimizer, train_loss_history)
-                val_loss_model(model, loader_val, optimizer, val_history)
+                train = train_dataset[kfold[0]]
+                val = train_dataset[kfold[1]]
+                loader = DataLoader(train, batch_size=bs, shuffle=True)
+                loader_val = DataLoader(val, batch_size=bs, shuffle=True)
+                for epoch in range(epochs):
+                    train_model(model, loader, optimizer, train_loss_history)
+                    val_loss_model(model, loader_val, optimizer, val_history)
 
-            # save results
-            modeldict['train_loss_history']=train_loss_history
-            modeldict['val_loss_history']=val_history['loss']
-            modeldict['val_accuracy_history']=val_history['accuracy']
-            modeldict['val_loss']=val_history['loss'][-1]
-            modeldict['accuracy']=val_history['accuracy'][-1]
-            modeldict['microF1']=val_history['microF1'][-1]
-            modeldict['macroF1']=val_history['macroF1'][-1]
+                # save results
+                modeldict['train_loss_history']=train_loss_history
+                modeldict['val_loss_history']=val_history['loss']
+                modeldict['val_accuracy_history']=val_history['accuracy']
+                modeldict['val_loss']=val_history['loss'][-1]
+                modeldict['accuracy']=val_history['accuracy'][-1]
+                modeldict['microF1']=val_history['microF1'][-1]
+                modeldict['macroF1']=val_history['macroF1'][-1]
 
-            modeldict['cv_val_loss']+=modeldict['val_loss']
-            modeldict['cv_val_accuracy']+=modeldict['accuracy']
-            modeldict['cv_val_microF1']+=modeldict['microF1']
-            modeldict['cv_val_macroF1']+=modeldict['macroF1']
+                modeldict['cv_val_loss']+=modeldict['val_loss']
+                modeldict['cv_val_accuracy']+=modeldict['accuracy']
+                modeldict['cv_val_microF1']+=modeldict['microF1']
+                modeldict['cv_val_macroF1']+=modeldict['macroF1']
+        except:
+            print("Problem training model "+modeldict['model'].__name__)
 
         modeldict['cv_val_loss']=modeldict['cv_val_loss']/len(kfolds)
         modeldict['cv_val_accuracy']=modeldict['cv_val_accuracy']/len(kfolds)
