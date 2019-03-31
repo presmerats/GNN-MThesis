@@ -400,6 +400,20 @@ def train_model_GGNN(model, loader, optimizer, train_loss_history):
     total_num_graphs = 0
     for batch in loader:
         data = batch.to(device)
+
+        #print("data.x",data.x)
+        #print("data.y",data.y)
+        #print("data.edge_attr",data.edge_attr)
+        #print("data.edge_index",data.edge_index)
+        #print(dir(data))
+
+
+        if data.x is None:
+            x = torch.ones(data.num_nodes, 1)
+            data.x = x.to(device)
+
+        #print("data.x",data.x)
+
         optimizer.zero_grad()
         out = model(data)
         target = data.y
@@ -479,6 +493,11 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
     
     for batch in loader:
         data = batch.to(device)
+
+        if data.x is None:
+            x = torch.ones(data.num_nodes, 1)
+            data.x = x.to(device)
+            
         pred = model(data)
         total_pred.extend(pred.flatten().tolist())
         total_gt.extend(data.y.flatten().tolist())
@@ -747,6 +766,7 @@ def modelSelection(model_list,k, train_dataset ):
     global device 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     kfolds = kFolding2(train_dataset,k)
+
 
     for modeldict in model_list:
 

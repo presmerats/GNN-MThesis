@@ -1,0 +1,1 @@
+{"models": [{"epochs": 20, "model": "str", "kwargs": {"d1": 50, "d2": 20, "num_layers": 2, "aggr_type": "mean"}, "learning_rate": 0.01, "weight_decay": 0.0005, "batch_size": 32, "model_instance": 

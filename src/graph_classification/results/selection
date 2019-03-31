@@ -1,0 +1,63 @@
+
+trained model:  GGNN4 {'d1': 25, 'd2': 50, 'num_layers': 2, 'aggr_type': 'mean'}  epochs: 300  val loss= 0.03327821443478266  val accuracy= 0.5952380952380952  val microF1= 0.5491452991452991  val macroF1= 0.5570124542961865
+
+ trained model:  GGNN4 {'d1': 25, 'd2': 50, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 300  val loss= 0.03217820078134537  val accuracy= 0.5  val microF1= 0.5534188034188033  val macroF1= 0.5548369530352394
+
+
+
+
+trained model:  GGNN1 {'d1': 50, 'd2': 50, 'num_layers': 2, 'aggr_type': 'mean'}  epochs: 300  val loss= 0.033082940305272736  val accuracy= 0.44047619047619047  val microF1= 0.5341880341880342  val macroF1= 0.5397930249139742
+
+trained model:  GGNN3 {'d1': 25, 'd2': 50, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 300  val loss= 0.0366239125529925  val accuracy= 0.5952380952380952  val microF1= 0.5384615384615384  val macroF1= 0.53947242091443
+
+
+trained model:  GGNN3 {'d1': 25, 'd2': 50, 'num_layers': 3, 'aggr_type': 'add'}  epochs: 300  val loss= 0.03702469915151596  val accuracy= 0.5238095238095238  val microF1= 0.5256410256410257  val macroF1= 0.5368401824217041
+
+trained model:  GGNN3 {'d1': 50, 'd2': 50, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 300  val loss= 0.04536734273036321  val accuracy= 0.5833333333333334  val microF1= 0.5277777777777778  val macroF1= 0.5306881079809057
+
+trained model:  GGNN4 {'d1': 25, 'd2': 20, 'num_layers': 3, 'aggr_type': 'add'}  epochs: 300  val loss= 0.037217543770869575  val accuracy= 0.4880952380952381  val microF1= 0.5256410256410257  val macroF1= 0.5326024038168348
+
+trained model:  GGNN4 {'d1': 25, 'd2': 50, 'num_layers': 3, 'aggr_type': 'mean'}  epochs: 300  val loss= 0.03708734239141146  val accuracy= 0.5714285714285713  val microF1= 0.5192307692307693  val macroF1= 0.5315553590301407
+
+
+
+
+ trained model:  GGNN1 {'d1': 25, 'd2': 50, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 200  val loss= 0.02975280148287614  val accuracy= 0.5595238095238094  val microF1= 0.5170940170940171  val macroF1= 0.5207134824134194
+
+ trained model:  GGNN1 {'d1': 25, 'd2': 50, 'num_layers': 3, 'aggr_type': 'add'}  epochs: 300  val loss= 0.04004350180427233  val accuracy= 0.4880952380952381  val microF1= 0.5192307692307693  val macroF1= 0.5273433359849963
+
+ trained model:  GGNN3 {'d1': 25, 'd2': 50, 'num_layers': 3, 'aggr_type': 'mean'}  epochs: 200  val loss= 0.036900596072276436  val accuracy= 0.4166666666666667  val microF1= 0.5213675213675213  val macroF1= 0.5289863148964309
+
+ trained model:  GGNN3 {'d1': 25, 'd2': 50, 'num_layers': 2, 'aggr_type': 'mean'}  epochs: 300  val loss= 0.038295758267243706  val accuracy= 0.4761904761904762  val microF1= 0.5192307692307693  val macroF1= 0.5204156627515729
+
+ trained model:  GGNN3 {'d1': 50, 'd2': 20, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 200  val loss= 0.03385724561909834  val accuracy= 0.6190476190476191  val microF1= 0.5256410256410255  val macroF1= 0.5297563275929308
+
+ trained model:  GGNN4 {'d1': 25, 'd2': 50, 'num_layers': 3, 'aggr_type': 'add'}  epochs: 300  val loss= 0.037538127352794014  val accuracy= 0.5238095238095238  val microF1= 0.5192307692307693  val macroF1= 0.5227777583077278
+
+ trained model:  GGNN4 {'d1': 50, 'd2': 50, 'num_layers': 2, 'aggr_type': 'mean'}  epochs: 300  val loss= 0.040514850368102394  val accuracy= 0.5  val microF1= 0.5192307692307693  val macroF1= 0.5279156298904119
+
+ 
+
+
+
+
+
+trained model:  GGNN1 {'d1': 25, 'd2': 50, 'num_layers': 3, 'aggr_type': 'add'}  epochs: 200  val loss= 0.031498923897743225  val accuracy= 0.6071428571428571  val microF1= 0.5085470085470085  val macroF1= 0.5172725197898974
+
+trained model:  GGNN1 {'d1': 25, 'd2': 50, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 300  val loss= 0.031131733829776447  val accuracy= 0.6547619047619048  val microF1= 0.5064102564102564  val macroF1= 0.5106045705407971
+
+trained model:  GGNN3 {'d1': 50, 'd2': 20, 'num_layers': 2, 'aggr_type': 'add'}  epochs: 200  val loss= 0.03385724561909834  val accuracy= 0.6190476190476191  val microF1= 0.5256410256410255  val macroF1= 0.5297563275929308
+
+trained model:  GGNN4 {'d1': 25, 'd2': 20, 'num_layers': 4, 'aggr_type': 'add'}  epochs: 300  val loss= 0.03926588222384453  val accuracy= 0.6071428571428572  val microF1= 0.49572649572649574  val macroF1= 0.5006015338887241
+
+
+
+
+
+
+
+trained model:  GGNN3 {'d1': 25, 'd2': 20, 'num_layers': 4, 'aggr_type': 'add'}  epochs: 300  val loss= 0.03579224025209745  val accuracy= 0.5714285714285715  val microF1= 0.49786324786324787  val macroF1= 0.5045720856298626
+
+trained model:  GGNN3 {'d1': 50, 'd2': 50, 'num_layers': 2, 'aggr_type': 'mean'}  epochs: 300  val loss= 0.04057202612360319  val accuracy= 0.5714285714285714  val microF1= 0.47008547008547014  val macroF1= 0.475185477321427
+
+trained model:  GGNN4 {'d1': 50, 'd2': 50, 'num_layers': 2, 'aggr_type': 'mean'}  epochs: 100  val loss= 0.03183376230299473  val accuracy= 0.5714285714285715  val microF1= 0.47222222222222215  val macroF1= 0.48463245255750625
