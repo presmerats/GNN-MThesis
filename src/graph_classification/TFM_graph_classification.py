@@ -310,6 +310,47 @@ def balancedDatasetSplit_slice(dataset, prop):
     
     return train_dataset, test_dataset
 
+def randomDatasetSplit_slice(dataset, prop):
+    
+    #dataset = dataset.shuffle()
+    n = len(dataset)
+    test_lim= int(prop*n)
+    
+    
+    x=torch.Tensor([True,False,True])==True
+
+    train_list = []
+    test_list = []
+    
+    train_list = list(range(test_lim))
+    test_list = list(range(test_lim,n))
+
+    #print("train_list", train_list)
+    #print("test_list", test_list)        
+    train_dataset = dataset[torch.LongTensor(train_list)]
+    test_dataset = dataset[torch.LongTensor(test_list)]
+        
+    return train_dataset, test_dataset
+
+
+def randomDatasetKfoldSplit_slice(dataset, k):
+    #dataset = dataset.shuffle()
+    n = len(dataset)    
+    foldsize = int(n/k)
+
+
+    # split all indices of all graphs in k lists with same size
+    folds = []
+    l= 0
+    for i in range(k):
+        folds.append([])
+        for j in range(foldsize):
+            folds[i].append(l)
+            l+=1
+        
+    # returns a list of list of indices
+    return folds
+
 
 def balancedDatasetKfoldSplit_slice(dataset,k):
     
@@ -319,6 +360,8 @@ def balancedDatasetKfoldSplit_slice(dataset,k):
     foldsize = int(n/k)
     num_classes = dataset.num_classes
     num_items_x_class = int(foldsize/num_classes)
+
+    
     
     # list of items for each class
     train_list = []
@@ -328,6 +371,11 @@ def balancedDatasetKfoldSplit_slice(dataset,k):
         graph = dataset[i]
         datasets_byclass[int(graph.y.item())].append(i)
 
+
+    #max_num_items_in_any_class = max([len(v) for k,v in datasets_byclass.items()])
+    #print(max_num_items_in_any_class)
+    #print(num_items_x_class)
+    #num_items_x_class = max(num_items_x_class, max_num_items_in_any_class)
     #print(datasets_byclass)
     
     folds = []
@@ -335,11 +383,53 @@ def balancedDatasetKfoldSplit_slice(dataset,k):
         folds.append([])
         for c in range(num_classes):
             for j in range(num_items_x_class):
-                index = datasets_byclass[c].pop()
-                folds[i].append(index)
+                try:
+                    index = datasets_byclass[c].pop()
+                    folds[i].append(index)
+                except:
+                    pass
         
     # returns a list of list of indices
     return folds
+
+
+def unbalancedDatasetKfoldSplit_slice(dataset,k):
+    
+    #dataset = dataset.shuffle()
+    n = len(dataset)
+    
+    foldsize = int(n/k)
+    num_classes = dataset.num_classes
+    
+    # list of items for each class
+    train_list = []
+    test_list = []
+    datasets_byclass = {i:[] for i in range(num_classes)}
+    for i in range(n):
+        graph = dataset[i]
+        datasets_byclass[int(graph.y.item())].append(i)
+
+
+    # save for each class the num_items
+    num_items_x_class = [ 0 for c in range(num_classes)]
+    for c in range(num_classes):
+        num_items_x_class[c]=int(len(datasets_byclass[c])/k)
+    
+    folds = []
+    for i in range(k):
+        folds.append([])
+        for c in range(num_classes):
+            for j in range(num_items_x_class[c]):
+                try:
+                    index = datasets_byclass[c].pop()
+                    folds[i].append(index)
+                except:
+                    pass
+        
+    # returns a list of list of indices
+    return folds
+
+
 
 def kFolding(train_dataset, k):
     n = len(train_dataset)
@@ -364,10 +454,17 @@ def kFolding(train_dataset, k):
     #print(train_sets)
     return train_sets
 
-def kFolding2(train_dataset, k):
+def kFolding2(train_dataset, k, balanced=True, unbalanced_split=False):
 
     #print(" train_dataset len:", len(train_dataset))
-    folds = balancedDatasetKfoldSplit_slice(train_dataset, k)
+    folds =[]
+    if unbalanced_split:
+        folds = randomDatasetKfoldSplit_slice(train_dataset, k)
+    elif balanced:
+        folds = balancedDatasetKfoldSplit_slice(train_dataset, k)
+    else:
+        folds = unbalancedDatasetKfoldSplit_slice(train_dataset, k)
+
     train_sets =[]
     for i in range(k):
         # each train_set must have a torch.LongTensor for train indices
@@ -441,11 +538,16 @@ def train_model_META(model, loader, optimizer, train_loss_history):
         data = batch.to(device)
         optimizer.zero_grad()
 
+        if data.x is None:
+            x = torch.ones(data.num_nodes, 1)
+            data.x = x.to(device)
+
 
         #  if there's no edge_attr, creatae a ones with num_edges
         if data.edge_attr is None:
             edge_attr = torch.ones(data.num_edges,data.num_features)
             data.edge_attr = edge_attr.to(device)
+
 
 
         # by default put a 1 as a graph feature
@@ -497,7 +599,7 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
         if data.x is None:
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
-            
+
         pred = model(data)
         total_pred.extend(pred.flatten().tolist())
         total_gt.extend(data.y.flatten().tolist())
@@ -541,6 +643,11 @@ def val_loss_model_META(model, loader, optimizer, val_history):
     
     for batch in loader:
         data = batch.to(device)
+
+        if data.x is None:
+            x = torch.ones(data.num_nodes, 1)
+            data.x = x.to(device)
+
 
         #  if there's no edge_attr, creatae a ones with num_edges
         if data.edge_attr is None:
@@ -761,11 +868,17 @@ def selectBestModel(model_list):
     
 
 
-def modelSelection(model_list,k, train_dataset ):    
+def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False ):    
 
     global device 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    kfolds = kFolding2(train_dataset,k)
+
+    #print(dir(train_dataset))
+    # not working
+    if force_numclasses is not None:
+        train_dataset.num_classes = force_numclasses
+
+    kfolds = kFolding2(train_dataset,k, balanced, unbalanced_split)
 
 
     for modeldict in model_list:
@@ -887,18 +1000,23 @@ def testModel(model, test_dataset):
     model.eval()
     loader = DataLoader(test_dataset, batch_size= len(test_dataset), shuffle=True)
     for batch in loader:
-        batch = batch.to(device)
+        data = batch.to(device)
+
+        if data.x is None:
+            x = torch.ones(data.num_nodes, 1)
+            data.x = x.to(device)
+
         #_, pred = model(test_dataset).max(dim=1)
-        _, pred = model(batch).max(dim=1)
-        acc = accuracy(pred, batch)    
+        _, pred = model(data).max(dim=1)
+        acc = accuracy(pred, data)    
         pred2 = pred.to('cpu')
         pred2 = pred2.flatten().tolist()
-        target = batch.y.to('cpu')
+        target = data.y.to('cpu')
         target = target.flatten().tolist()
         measures = F1Score(pred2, target)
         measures['accuracy']=acc
         
-        reportTest(batch, pred, measures, test_dataset)
+        reportTest(data, pred, measures, test_dataset)
         
         
         
