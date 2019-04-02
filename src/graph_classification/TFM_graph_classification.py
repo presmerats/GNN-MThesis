@@ -704,7 +704,8 @@ def val_loss_model(model, loader, optimizer, val_history):
 
 # Retrain the best model
 def final_model_train(modeldict, train_dataset):
-    global device 
+    global device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     epochs = modeldict['epochs']
     modelclass = modeldict['model']
@@ -781,7 +782,64 @@ def loadModel(model, path):
     model.load_state_dict(torch.load(path))
     model.eval()
     
+
+def getModelParamsFromFilename(path):
+    import contextvars
+
+
+    basename = os.path.basename(path)
+
+    modelclassname, rest = basename.split("__")
+    mod = __import__('TFM_graph_classification_models')
+    modelclass = getattr(mod, modelclassname)
     
+    kwargs1, rest = rest.split("date")
+    kwargs1_list = kwargs1.split("_")
+    #print(modelclassname)
+    #print(rest)
+    #print(kwargs1_list)
+
+    newkargs={ }
+    for e in kwargs1_list:
+        if e.find('-')>-1:
+            vals = e.split('-')
+            if vals[0] == 'layers':
+                vals[0]='num_layers'
+                vals[1]=int(vals[1])
+            elif vals[0] == 'type':
+                vals[0]='aggr_type'
+            else:
+                vals[1] = int(vals[1])
+            newkargs[vals[0]]=vals[1]
+
+    ep = int(kwargs1_list[-5])
+    lr = float(kwargs1_list[-4])
+    wd = float(kwargs1_list[-3])
+    bs = int(kwargs1_list[-2])
+
+    # create similar model
+    modeldict = {'epochs': ep,
+    'model': modelclass,
+    'kwargs':newkargs, 
+    'learning_rate': lr, 'weight_decay':wd, 'batch_size': bs}
+
+    return modeldict
+    
+def loadModelFromFile(path):
+
+    # extract params from name
+    modeldict = getModelParamsFromFilename(path)
+
+    modelclass = modeldict['model']
+    kwargs = modeldict['kwargs']
+    model = modelclass(**kwargs)
+    
+    # read the weights into the model
+    loadModel(model, path)
+
+    modeldict['model_instance'] = model
+    return modeldict
+
 def testSavingLoadingModel(train_dataset, test_dataset):
 
     global device
@@ -1006,6 +1064,20 @@ def testModel(model, test_dataset):
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
 
+        #  if there's no edge_attr, creatae a ones with num_edges
+        if data.edge_attr is None:
+            edge_attr = torch.ones(data.num_edges,data.num_features)
+            data.edge_attr = edge_attr.to(device)
+
+        # by default put a 1 as a graph feature
+        if not hasattr(data, 'u'):
+            data.u = None
+        
+        if data.u is None:
+            u = torch.ones(data.y.size()[0], 1)
+            data.u = u.to(device)
+
+
         #_, pred = model(test_dataset).max(dim=1)
         _, pred = model(data).max(dim=1)
         acc = accuracy(pred, data)    
@@ -1024,9 +1096,9 @@ def testModel(model, test_dataset):
 
 def reportAllTest(modelsdict):
     reportDict = [{'name':k, 
-                   'accuracy': v['accuracy'],
-                  'macroF1': v['macroF1'],
-                  'microF1': v['microF1']} for k,v in modelsdict['testing'].items()]
+                   'accuracy': round(v['accuracy'],4),
+                  'macroF1': round(v['macroF1'],4),
+                  'microF1': round(v['microF1'],4)} for k,v in modelsdict['testing'].items()]
     #print(reportDict)
     res = pd.DataFrame(reportDict)
     display(res)
