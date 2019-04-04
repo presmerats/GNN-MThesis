@@ -46,10 +46,10 @@ class codeNode():
 		self.fd_edges = fd_edges
 	
 	def saveNode(self):
-		self.fd_nodes.write("%s {'type': '%s', 'content': '%s'}\n" % (self.memaddr, self.type, self.content))
+		self.fd_nodes.write('%s {"type": "%s", "content": "%s"}\n' % (self.memaddr, self.type, self.content))
 		
 	def saveEdge(self, destination):
-		self.fd_edges.write("%s %s {'type': '%s' }\n" % (self.memaddr, destination.memaddr, destination.type))
+		self.fd_edges.write('%s %s {"type": "%s" }\n' % (self.memaddr, destination.memaddr, destination.type))
 
 def initializeFolder():
 	prefix = "C:\labs\IDA_pro_book\\" 
