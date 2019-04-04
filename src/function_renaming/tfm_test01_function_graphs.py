@@ -129,6 +129,23 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 	return xref_node
 			
 def processOperand(f, op,i, fd_nodes, fd_edges):
+	"""
+	o_void = 0
+ 	o_reg = 1
+ 	o_mem = 2
+ 	o_phrase = 3
+ 	o_displ = 4
+ 	o_imm = 5
+ 	o_far = 6
+ 	o_near = 7
+ 	o_idpspec0 = 8
+ 	o_idpspec1 = 9
+ 	o_idpspec2 = 10
+ 	o_idpspec3 = 11
+ 	o_idpspec4 = 12
+ 	o_idpspec5 = 13
+	
+	"""
 
 	operand_node = codeNode(str(op.addr), 
 						  type="data", 
@@ -137,7 +154,9 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
 						  fd_edges = fd_edges)
 						  
 	#if op.type in [o_displ, o_phrase]:
-	if op.type == o_displ:		
+	if op.type == o_void:
+		return None
+	elif op.type == o_displ:		
 		# mem ref[BaseReg + index Reg + displ] 
 		# mem ref[BaseReg + index Reg] 
 		
@@ -147,14 +166,24 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
 		# alternatively save as an immediate displ or base reg?
 		#pass
 		operand_node.type="displacement"
+		operand_node.content=str(op.value)
 	elif op.type == o_mem:
 		operand_node.type="memory"
+		operand_node.content=str(op.value)
 	elif op.type == o_imm:
 		operand_node.type="immediate"
 		operand_node.content=str(op.value)
+	elif op.type == o_reg:
+		operand_node.type="register"
+		operand_node.content=str(op.reg)
+	elif op.type == o_phrase:
+		operand_node.type="phrase"
+		operand_node.content=str(op.phrase)
 	else:
-		pass
-		
+		operand_node.type="unkown"
+		operand_node.content=str(op.value)
+	
+	operand_node.saveNode()
 	return operand_node
 		
 	
@@ -182,14 +211,19 @@ def writeGraph(f,  fd_nodes, fd_edges):
 								  content=instrToStr(i),
 								  fd_nodes = fd_nodes,
 								  fd_edges = fd_edges)
-			instr_node.saveNode()
+			
 			
 			# save instr. operands as nodes and save edges too 
 			instr = DecodeInstruction(i)
+			operands = [instr_node.content]
 			for op in instr.Operands:
 				operand_node = processOperand(f, op,i, fd_nodes, fd_edges)
-				instr_node.saveEdge(operand_node)
-				
+				if operand_node is not None:
+					instr_node.saveEdge(operand_node)
+					operands.append(operand_node.content)
+			
+			instr_node.content = " ".join(operands)
+			instr_node.saveNode()
 				
 			# save xrefs From i
 			for xref in XrefsFrom(i,0):
