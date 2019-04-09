@@ -163,8 +163,16 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 						  content=instrToStr(xref.to),
 						  fd_nodes = fd_nodes,
 						  fd_edges = fd_edges)
+		
+	#verify = False
+	#if xref_node.content is not None and   xref_node.content.find('ret') > -1:
+	#	Message(" xref  %s type is %d %s  content: %s \n" % (xref_node.memaddr, xref.type,XrefTypeName(xref.type), xref_node.content) )
+	#	verify = True
 	
-	if xref.type == fl_CF or xref.type == fl_JF :
+	#Message(" xref type is %d %s \n" % (xref.type,XrefTypeName(xref.type)) )
+	if XrefTypeName(xref.type) == 'Ordinary_Flow':
+		pass # the xref is instr, and you want to write the edge
+	elif xref.type == fl_CF or xref.type == fl_JF :
 		# jump or call far
 		xref_node.type = "func"
 		xref_node.content = Name(xref.to)
@@ -188,14 +196,24 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 		
 		# decision making
 		if inside:
-			pass # do nothing, don't even save the node as it will overwrite previous saved node
+			#pass # do nothing, don't even save the node as it will overwrite previous saved node
+			# as later the edges are read, networkx will create this node. So it would be better to remove it from the results_dict
+			xref_node = None
 		else:
-			#Message(" computed as xref to outside the function! \n")
+			#Message(" xref %s computed as xref to outside the function! \n" % xref_node.memaddr)
+			
 			xref_node.type = "func"
 			xref_node.content += ' ' + Name(xref.to)
 			xref_node.saveNode(results_dict)
+			
+	elif XrefTypeName(xref.type).find('Data_')>-1:
+		xref_node = None
+	#else:
+	#	Message(" xref type is %d %s \n" % (xref.type,XrefTypeName(xref.type)) )
 
-	
+	#if verify:
+	#	Message("  %s \n" % (xref_node) )
+		
 	return xref_node
 			
 def processOperand(f, op,i, fd_nodes, fd_edges):
@@ -276,7 +294,7 @@ def writeFuncGraphToDisk(results_dict, fd_nodes, fd_edges):
 		source = v['source']
 		destination = v['dest']
 		type = v['type']
-		fd_edges.write('%s %s {"type": "%s" }\n' % (source, destination, type))
+		fd_edges.write('%s %s %s\n' % (source, destination, type))
 	
 def writeGraph(f,  fd_nodes, fd_edges):
 	"""
@@ -324,8 +342,8 @@ def writeGraph(f,  fd_nodes, fd_edges):
 			# save xrefs From i
 			for xref in XrefsFrom(i,0):
 				xref_node = processXrefFrom(f, xref,i, fd_nodes, fd_edges)
-				#Message(" Xref from %s to %s \n" % (instr_node.memaddr, xref_node.memaddr))
-				instr_node.saveEdge(xref_node, results_dict)
+				if xref_node is not None:
+					instr_node.saveEdge(xref_node, results_dict)
 		
 		#write func to disk
 		writeFuncGraphToDisk(results_dict, fd_nodes, fd_edges)
@@ -340,8 +358,8 @@ results_dict = {}
 funcs = Functions()
 for f in funcs:
 	func = get_func(GetFunctionAttr(f, FUNCATTR_START))
-	if not func is None: #and \
-	   #Name(func.startEA)=='sub_452740':
+	if not func is None: # and \
+	   #Name(func.startEA)=='Call_Decryption_Routine_45E320':
 		fd_nodes, fd_edges = initializeFiles(folder_name,f)
 		autoid = 0
 		writeGraph(f, fd_nodes, fd_edges)		
