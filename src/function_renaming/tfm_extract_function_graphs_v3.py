@@ -247,7 +247,7 @@ def processOperand(f, op,i, fd_nodes, fd_edges, verify=False):
 						  
 	#verify=False
 	#if operand_node.memaddr == "4532035":
-	if verify:
+	if verify and False:
 		#faddr = GetFunctionAttr(i, FUNCATTR_START)
 		faddr = i
 		print(idc.GetDisasm(faddr))
@@ -278,6 +278,8 @@ def processOperand(f, op,i, fd_nodes, fd_edges, verify=False):
 		#pass
 		operand_node.type="displacement"
 		operand_node.content=str(op.value)
+		print(op.type, GetOpnd(i,2), op.value )
+		operand_node.content=GetOpnd(i,op.value)
 	elif op.type == o_mem:
 		operand_node.type="memory"
 		operand_node.content=str(op.value)
@@ -314,15 +316,15 @@ def processOperand(f, op,i, fd_nodes, fd_edges, verify=False):
 		# probably it's better to put the memaddr?
 		#operand_node.content=operand_node.memaddr
 		if verify:
-			Message(" in type func")
+			Message(" in type func \n")
 	else:
 		if verify:
-			Message(" in type unknown")
+			Message(" in type unknown \n")
 		operand_node.type="unknown"
 		operand_node.content=str(op.value)
 	
 	if verify:
-		Message(" operand_node.content: %s, operand_node.type=%s \n" % (operand_node.content, operand_node.type))
+		pass #Message(" operand_node.content: %s, operand_node.type=%s \n" % (operand_node.content, operand_node.type))
 	operand_node.saveNode(results_dict)
 	return operand_node
 		
@@ -376,7 +378,7 @@ def writeGraph(f,  fd_nodes, fd_edges):
 								  content=instrToStr(i),
 								  fd_nodes = fd_nodes,
 								  fd_edges = fd_edges)
-			verify = False
+			verify = True
 			if instr_node.memaddr == '4532035':
 				pass
 				#verify = True
@@ -413,8 +415,8 @@ results_dict = {}
 funcs = Functions()
 for f in funcs:
 	func = get_func(GetFunctionAttr(f, FUNCATTR_START))
-	if not func is None: # and \
-	   #Name(func.startEA)=='sub_452740':
+	if not func is None and \
+	   Name(func.startEA)=='Call_Decryption_Routine_45E320': # 'sub_452740':
 		fd_nodes, fd_edges = initializeFiles(folder_name,f)
 		autoid = 0
 		writeGraph(f, fd_nodes, fd_edges)		
