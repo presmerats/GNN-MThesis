@@ -86,7 +86,10 @@ class codeNode():
 			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
 			    results_dict['nodes'][self.memaddr]['type'] == 'instr':
 				pass
-			
+			elif results_dict['nodes'][self.memaddr]['type'] == 'unknown' and \
+			    self.type == 'func':
+				results_dict['nodes'][self.memaddr]['type']=  self.type	
+				results_dict['nodes'][self.memaddr]['content']= self.content
 			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
 			    results_dict['nodes'][self.memaddr]['type'] != 'instr':
 				results_dict['nodes'][self.memaddr]['type']+= "; "  + self.type
@@ -176,6 +179,8 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 		# jump or call far
 		xref_node.type = "func"
 		xref_node.content = Name(xref.to)
+		xref_node.saveNode(results_dict)
+		
 	elif xref.type == fl_CN or xref.type == fl_JN or xref.type == fl_F:
 		# jump/call near or ordinary flow
 		# compute if it comes from outside the function
@@ -201,9 +206,8 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 			xref_node = None
 		else:
 			#Message(" xref %s computed as xref to outside the function! \n" % xref_node.memaddr)
-			
 			xref_node.type = "func"
-			xref_node.content += ' ' + Name(xref.to)
+			xref_node.content =  Name(xref.to)
 			xref_node.saveNode(results_dict)
 			
 	elif XrefTypeName(xref.type).find('Data_')>-1:
@@ -216,7 +220,7 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 		
 	return xref_node
 			
-def processOperand(f, op,i, fd_nodes, fd_edges):
+def processOperand(f, op,i, fd_nodes, fd_edges, verify=False):
 	"""
 	o_void = 0
  	o_reg = 1
@@ -240,6 +244,25 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
 						  content="",
 						  fd_nodes = fd_nodes,
 						  fd_edges = fd_edges)
+						  
+	#verify=False
+	#if operand_node.memaddr == "4532035":
+	if verify:
+		#faddr = GetFunctionAttr(i, FUNCATTR_START)
+		faddr = i
+		print(idc.GetDisasm(faddr))
+		operands = re.findall('\[(.*)\]', idc.GetDisasm(faddr))[0].split('+')
+		print(operands)
+		#print(str(op))
+		print(op.phrase, op.reg, op.value)
+		if op.type == o_phrase:
+			#print(dir(op))
+			pass
+			#operands = re.findall('\[(.*)\]', idc.GetDisasm(faddr))[0].split('+')
+		#for elem in dir(op):
+		#	print(elem, op.__dict__.get(elem,''))
+		#Message(" Operand-%s-(o_void=%s) %s %s \n" % (op.type, o_void, operand_node.content, op.value))
+		#verify=True
 						  
 	#if op.type in [o_displ, o_phrase]:
 	if op.type == o_void:
@@ -267,11 +290,39 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
 		#Message(" %s  %s %s %s\n" % (op.reg, op.phrase, op.value, op.addr))
 	elif op.type == o_phrase:
 		operand_node.type="phrase"
-		operand_node.content=str(op.phrase)
+		#operand_node.content=str(op.phrase) # only prints immediates used in the register displacement
+		instruc_str = idc.GetDisasm(i)
+		phrases = instruc_str.split(',')
+		#phrase = phrases[0] # not good then
+		phrase = str(op.phrase)
+		if len(phrases) > 1:
+			phrase = phrases[1]
+		else:
+			# most of those cases are rep movsb, rep ...
+			phrases = instruc_str.split(' ')
+			if len(phrases) > 1:
+				phrase = phrases[1]
+			#print(phrase, phrases)
+		#print(phrase)
+		if len(phrase)>1 and phrase[0] == ' ':
+			phrase = phrase[1:]
+		operand_node.content=str(phrase) 
+	elif op.type == 7:
+		operand_node.type="func"
+		operand_func_start = GetFunctionAttr(op.addr, FUNCATTR_START)
+		operand_node.content=Name(operand_func_start)
+		# probably it's better to put the memaddr?
+		#operand_node.content=operand_node.memaddr
+		if verify:
+			Message(" in type func")
 	else:
-		operand_node.type="unkown"
+		if verify:
+			Message(" in type unknown")
+		operand_node.type="unknown"
 		operand_node.content=str(op.value)
 	
+	if verify:
+		Message(" operand_node.content: %s, operand_node.type=%s \n" % (operand_node.content, operand_node.type))
 	operand_node.saveNode(results_dict)
 	return operand_node
 		
@@ -325,13 +376,17 @@ def writeGraph(f,  fd_nodes, fd_edges):
 								  content=instrToStr(i),
 								  fd_nodes = fd_nodes,
 								  fd_edges = fd_edges)
-			
+			verify = False
+			if instr_node.memaddr == '4532035':
+				pass
+				#verify = True
 			
 			# save instr. operands as nodes and save edges too 
 			instr = DecodeInstruction(i)
 			operands = [instr_node.content]
 			for op in instr.Operands:
-				operand_node = processOperand(f, op,i, fd_nodes, fd_edges)
+				
+				operand_node = processOperand(f, op,i, fd_nodes, fd_edges, verify)
 				if operand_node is not None:
 					instr_node.saveEdge(operand_node, results_dict)
 					operands.append(operand_node.content)
@@ -359,7 +414,7 @@ funcs = Functions()
 for f in funcs:
 	func = get_func(GetFunctionAttr(f, FUNCATTR_START))
 	if not func is None: # and \
-	   #Name(func.startEA)=='Call_Decryption_Routine_45E320':
+	   #Name(func.startEA)=='sub_452740':
 		fd_nodes, fd_edges = initializeFiles(folder_name,f)
 		autoid = 0
 		writeGraph(f, fd_nodes, fd_edges)		
