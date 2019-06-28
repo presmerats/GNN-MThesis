@@ -27,6 +27,8 @@ import json
 import datetime
 import copy
 import traceback
+from pprint import pprint
+import itertools
 
 
 class GatedGraphConv(MessagePassing):
@@ -75,6 +77,7 @@ class GatedGraphConv(MessagePassing):
 
     def forward(self, x, edge_index):
         """"""
+
         h = x if x.dim() == 2 else x.unsqueeze(-1)
         assert h.size(1) <= self.out_channels
 
@@ -83,6 +86,7 @@ class GatedGraphConv(MessagePassing):
             h = torch.cat([h, zero], dim=1)
 
         for i in range(self.num_layers):
+
             m = torch.matmul(h, self.weight[i])
             # original master 1.0.3 (new version with problems when using rnn)
             #m = self.propagate(edge_index, x=m)
@@ -160,7 +164,14 @@ def F1Score(pred, target):
     targetset = set(target)
     #print(predset)
     #print(targetset)
-    num_classes = max(len(predset),len(targetset))
+    if len(predset)<=len(targetset) and \
+       max(predset)<=max(targetset):
+        num_classes = max(len(predset),len(targetset))
+        
+    else:
+        # very strange case
+        num_classes = max(max(predset),max(targetset)) + 1
+    #print("num_classes",num_classes)
 
     # for each class save pred_indices, and target_indices
     preddict = { i:[] for i in range(num_classes) }
@@ -168,6 +179,8 @@ def F1Score(pred, target):
     #print(preddict)
 
     for i in range(len(pred)):
+        #print("pred[i]",pred[i])
+        #print("preddict[pred[i]]",preddict[pred[i]])
         preddict[pred[i]].append(i)
         targetdict[target[i]].append(i)
 
@@ -222,11 +235,22 @@ def F1Score(pred, target):
 # count how many graphs of each class in the dataset
 def printDatasetBalance(dataset):
     num_classes = dataset.num_classes
-    class_counts = { i:0 for i in range(num_classes)}
-    #print(class_counts)
-    for graph in dataset:
-        class_counts[int(graph.y.item())]+=1
-    print(class_counts)
+    if len(dataset[0].y.shape) == 1:
+        class_counts = { i:0 for i in range(num_classes)}
+        #print(class_counts)
+        for graph in dataset:
+            class_counts[int(graph.y.item())]+=1
+        print(class_counts)
+    else:
+        #print(dataset[0].y[0])
+        #print(dataset[0].y[0,0])
+        class_counts = { i:0 for i in range(num_classes)}
+        #print(class_counts)
+        for graph in dataset:
+            i = np.argmax(graph.y[0])
+            label = int(i.item())
+            class_counts[label]+=1
+        print(class_counts)
     
     
 def balancedDatasetSplit_list(dataset, prop):
@@ -480,6 +504,27 @@ def kFolding2(train_dataset, k, balanced=True, unbalanced_split=False):
     
 
 
+
+def prepare_dataset(dataset, nfolds=3, prop=0.8, dataset_type="balanced", print_debug=False):
+    dataset = dataset.shuffle()
+    k = nfolds
+    n = len(dataset)
+    if dataset_type=="balanced":
+        train_dataset, test_dataset = balancedDatasetSplit_slice(dataset, prop=prop)
+    else:
+        train_dataset, test_dataset = randomDatasetSplit_slice(dataset, prop=prop)
+
+    if print_debug:
+        print(" n:",n," k folds=",k)
+        print("Datasets balancing: ")
+        printDatasetBalance(dataset )
+        printDatasetBalance(train_dataset )
+        printDatasetBalance(test_dataset )
+        print()
+
+    return train_dataset, test_dataset
+
+
 def accuracy(pred, batch):
     correct = pred.eq(batch.y).sum().item()
     #acc = correct / test_dataset.sum().item()
@@ -725,15 +770,17 @@ def final_model_train(modeldict, train_dataset):
     for epoch in range(epochs):
         train_model(model, loader, optimizer, train_loss_history)
         
-    return model
+    modeldict['final_model'] = model
+    return modeldict
 
 
 
 # model saving
 
 
-def modelSaveName(modeldict):
-    classname = modeldict['model_instance'].__class__.__name__
+def model_save_name(modeldict):
+    #classname = modeldict['model_instance'].__class__.__name__
+    thename = modeldict['name']
     architecture = ""
     for k,v in modeldict['kwargs'].items():
         architecture = architecture+'_'+str(k)+'-'+str(v)
@@ -744,13 +791,14 @@ def modelSaveName(modeldict):
     bs = modeldict['batch_size']
     d = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
 
-    finalname = classname + "_" + architecture + "_" + \
+    #classname + "_" + architecture + "_" + \
+    finalname = thename + "_" + architecture + "_" + \
                 str(epochs) + "_" + str(lr) +  "_" + \
                 str(wd) + "_" + str(bs) +  "_" + \
                 "date" + d
     return finalname
 
-def saveModel(modeldict):
+def save_model(modeldict):
     
     
     """
@@ -765,13 +813,15 @@ def saveModel(modeldict):
         
         # model naming convention
         model = modeldict['model_instance']
-        path = './models/'+modelSaveName(modeldict)
-            
+        path = './models/'+model_save_name(modeldict)
+        modeldict['filename'] = model_save_name(modeldict)
+
         # save operation
         torch.save(model.state_dict(),path)
             
         return path
     except Exception as err:
+        model = modeldict['model_instance']
         print("ERROR SAVING MODEL "+model.__class__.__name__)
         print(err)
         
@@ -779,7 +829,13 @@ def saveModel(modeldict):
         return None
         
 def loadModel(model, path):
-    model.load_state_dict(torch.load(path))
+    global device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    # Choose whatever GPU device number you want
+    model.load_state_dict(torch.load(path, map_location="cuda:0"))
+    model.to(device)
+    # Make sure to call input = input.to(device) on any input tensors that you feed to the model
     model.eval()
     
 
@@ -789,7 +845,8 @@ def getModelParamsFromFilename(path):
 
     basename = os.path.basename(path)
 
-    modelclassname, rest = basename.split("__")
+    modelname, rest = basename.split("__")
+    num, modelclassname = modelname.split("_")
     mod = __import__('TFM_graph_classification_models')
     modelclass = getattr(mod, modelclassname)
     
@@ -821,7 +878,8 @@ def getModelParamsFromFilename(path):
     modeldict = {'epochs': ep,
     'model': modelclass,
     'kwargs':newkargs, 
-    'learning_rate': lr, 'weight_decay':wd, 'batch_size': bs}
+    'learning_rate': lr, 'weight_decay':wd, 'batch_size': bs,
+    'name': modelname}
 
     return modeldict
     
@@ -835,9 +893,12 @@ def loadModelFromFile(path):
     model = modelclass(**kwargs)
     
     # read the weights into the model
+    # problem the weights will remain in cpu?
     loadModel(model, path)
 
     modeldict['model_instance'] = model
+    modeldict['final_model'] = model
+    modeldict['filename']=path
     return modeldict
 
 def testSavingLoadingModel(train_dataset, test_dataset):
@@ -860,7 +921,7 @@ def testSavingLoadingModel(train_dataset, test_dataset):
 
     # save model
     m1['model_instance']=model
-    path = saveModel(m1)
+    path = save_model(m1)
 
     # create new similar model
     m2 = {'epochs': 200,
@@ -886,9 +947,9 @@ def testSavingLoadingModel(train_dataset, test_dataset):
 
 
     
-def saveModels(modelsdict):
-    for k,model in modelsdict['best_models'].items():
-        saveModel(model)
+def save_models(modelsdict):
+    for k,modeldict in modelsdict['best_models'].items(): 
+        save_model(modeldict)
 
 def reportTrainedModel(modeldict):
     print(" trained model: ",modeldict['model'].__name__,
@@ -898,7 +959,7 @@ def reportTrainedModel(modeldict):
          ' val microF1=',modeldict['cv_val_microF1'],
           ' val macroF1=',modeldict['cv_val_macroF1'])
     
-def selectBestModel(model_list):
+def select_best_model(model_list, train_dataset):
     # select the best model (lower validation loss)
     losses = np.array([ modeldict['cv_val_loss'] for modeldict in model_list])
     accuracies = np.array([ modeldict['cv_val_accuracy'] for modeldict in model_list])
@@ -913,9 +974,17 @@ def selectBestModel(model_list):
     modelsdict = {}
     modelsdict['models'] = model_list
     modelsdict['best_models']={}
+    
+    best_model_loss = final_model_train(best_model_loss, train_dataset)
     modelsdict['best_models']['loss'] = best_model_loss
+
+    best_model_acc = final_model_train(best_model_acc, train_dataset)
     modelsdict['best_models']['accuracy'] = best_model_acc
+    
+    best_model_microF1  = final_model_train(best_model_microF1 , train_dataset)
     modelsdict['best_models']['microF1'] = best_model_microF1
+    
+    best_model_macroF1  = final_model_train(best_model_macroF1 , train_dataset)
     modelsdict['best_models']['macroF1'] = best_model_macroF1
 
     modelsdict['testing']={}
@@ -923,10 +992,59 @@ def selectBestModel(model_list):
     return modelsdict
     
 
+def hpsearch(model_list, hyperparameters_dict):
+    """
+        hyperparameters = {
     
+            'd1': [5,10,20,40,80,160],
+            'd2': [10,100,1000],
+            'epochs':[300,600],
+            ...
+        }
+        model_list = [] # or with already some dicts that state how to train a model and which model
+
+        ok-construct a summary dict
+            {'epochs': [300, 600],
+             'kwargs': {'d1': [1, 3, 4], 'd2': [5, 10, 15]},
+             'learning_rate': [0.01],
+             'model': [<class 'TFM_graph_classification_models.GGNN1'>,
+                       <class 'TFM_graph_classification_models.GGNN2'>]}
+        - deploy nested for loops for each parameter
+    """
+    if model_list is None:
+        model_list = []
+
+    # unroll all hyperparameters
+    # recursively?
+    # use cartesian product from itertools
+    list_of_hps = []
+    list_of_hpnames = []
+    for k,v in hyperparameters_dict.items():
+        list_of_hps.append(v)
+        list_of_hpnames.append(k)
 
 
-def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False ):    
+    # for each hyperparameters dict , add a model
+    for product in itertools.product(*list_of_hps):
+        #print(product)
+        d = {}
+        param_index=0
+        for param in product:
+            k = list_of_hpnames[param_index]
+            v = param
+            if k in ['epochs','model','learning_rate','weight_decay','batch_size']:
+                d[k]=v
+            else:
+                if 'kwargs' not in d.keys():
+                    d['kwargs']={}
+                d['kwargs'][k]=v
+            param_index+=1
+        #pprint(d)
+        model_list.append(d)
+
+    return model_list
+
+def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False, debug_training=True):    
 
     global device 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -954,7 +1072,7 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
 
         
         try:
-            model = modelclass(**kwargs)
+            model = modelclass(**kwargs) # model parameters are inside kwargs dict
             model = model.to(device)
             modeldict['model_instance'] = model
             
@@ -998,44 +1116,78 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             traceback.print_exc()
 
         # report model results
-        reportTrainedModel(modeldict)
+        if debug_training: 
+            reportTrainedModel(modeldict)
         
 
         
     # select best model
-    modelsdict = selectBestModel(model_list)
+    # and train again the best model
+    modelsdict = select_best_model(model_list, train_dataset)
+
     
-    # save model to disk + save file path    
-    # or save model in the dict.. (could take too much memory)
-    saveModels(modelsdict)
+    
+
     
     return modelsdict
         
 
     
-def reportModelSelectionResult(modeldict):
+def reportModelSelectionResult(modeldict, resultsdict):
+
+    i = resultsdict['autoincrement']
+    resultsdict['autoincrement']+=1
     best_model_loss = modeldict['best_models']['loss']
+    best_model_loss['name'] = str(i)+'_'+best_model_loss['model'].__name__
+
+    i = resultsdict['autoincrement']
+    resultsdict['autoincrement']+=1
     best_model_acc = modeldict['best_models']['accuracy']
+    best_model_acc['name'] = str(i)+'_'+best_model_acc['model'].__name__    
+
+    i = resultsdict['autoincrement']
+    resultsdict['autoincrement']+=1
     best_model_microF1 = modeldict['best_models']['microF1']
+    best_model_microF1['name'] = str(i)+'_'+best_model_microF1['model'].__name__
+
+    i = resultsdict['autoincrement']
+    resultsdict['autoincrement']+=1
     best_model_macroF1 = modeldict['best_models']['macroF1']
+    best_model_macroF1['name'] = str(i)+'_'+best_model_macroF1['model'].__name__
     
-    print("\n selected model from loss: ",best_model_loss['model'].__name__,
+    print("\n selected model from loss: ",best_model_loss['name'],
       best_model_loss['kwargs']," epochs:", best_model_loss['epochs'], 
       best_model_loss['cv_val_loss'], best_model_loss['cv_val_accuracy'], 
       best_model_loss['cv_val_microF1'], best_model_loss['cv_val_macroF1'])
-    print(" selected model from accuracy: ",best_model_acc['model'].__name__,
+    print(" selected model from accuracy: ",best_model_acc['name'],
           best_model_acc['kwargs']," epochs:",best_model_acc['epochs'],  
           best_model_acc['cv_val_loss'], best_model_acc['cv_val_accuracy'], 
           best_model_loss['cv_val_microF1'], best_model_loss['cv_val_macroF1'])
-    print(" selected model from microF1: ",best_model_microF1['model'].__name__,best_model_microF1['kwargs'],
+    print(" selected model from microF1: ",best_model_microF1['name'],best_model_microF1['kwargs'],
           " epochs:", best_model_microF1['epochs'],  
           best_model_microF1['cv_val_loss'], best_model_microF1['cv_val_accuracy'], 
           best_model_microF1['cv_val_microF1'], best_model_microF1['cv_val_macroF1'])
 
-    print(" selected model from macroF1: ",best_model_macroF1['model'].__name__,best_model_macroF1['kwargs'],
+    print(" selected model from macroF1: ",best_model_macroF1['name'],best_model_macroF1['kwargs'],
           " epochs:", best_model_macroF1['epochs'],  
           best_model_macroF1['cv_val_loss'], best_model_macroF1['cv_val_accuracy'], 
           best_model_macroF1['cv_val_microF1'], best_model_macroF1['cv_val_macroF1'])
+
+
+    
+    #modelsdict['models_list'].append(modeldict)
+    
+
+    #resultsdict['models'].append(modeldict['best_models'])
+    resultsdict['best_models_list'].append(modeldict['best_models']['loss'])
+    resultsdict['best_models_list'].append(modeldict['best_models']['accuracy'])
+    resultsdict['best_models_list'].append(modeldict['best_models']['microF1'])
+    resultsdict['best_models_list'].append(modeldict['best_models']['macroF1'])
+    resultsdict['best_models_list'].sort(key=lambda x: x['cv_val_accuracy'])
+
+    # save model to disk + save file path    
+    # or save model in the dict.. (could take too much memory)
+    save_models(modeldict)
     
     # report with Pandas table
     res = pd.DataFrame({
@@ -1043,7 +1195,8 @@ def reportModelSelectionResult(modeldict):
         'best_model_acc' : best_model_acc, 
         'best_model_microF1' : best_model_microF1, 
         'best_model_macroF1': best_model_macroF1})
-    
+
+    return res
 
 def reportTest(batch, pred, measures, test_dataset):
     print("len(test_dataset): ", len(test_dataset))
@@ -1052,8 +1205,9 @@ def reportTest(batch, pred, measures, test_dataset):
     print(batch.y)
     print('Accuracy: {:.4f}'.format(measures['accuracy'])," macroF1:",measures['macroF1'], " microF1:", measures['microF1'])
 
-def testModel(model, test_dataset):
+def testModel(model, test_dataset, debug=False):
     global device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     model.eval()
     loader = DataLoader(test_dataset, batch_size= len(test_dataset), shuffle=True)
@@ -1088,22 +1242,32 @@ def testModel(model, test_dataset):
         measures = F1Score(pred2, target)
         measures['accuracy']=acc
         
-        reportTest(data, pred, measures, test_dataset)
+        if debug:
+            reportTest(data, pred, measures, test_dataset)
         
         
         
     return measures
 
-def reportAllTest(modelsdict):
+def report_all_test(modelsdict):
     reportDict = [{'name':k, 
                    'accuracy': round(v['accuracy'],4),
                   'macroF1': round(v['macroF1'],4),
                   'microF1': round(v['microF1'],4)} for k,v in modelsdict['testing'].items()]
     #print(reportDict)
     res = pd.DataFrame(reportDict)
+    res = res.sort_values(by=['accuracy'])
+
+    d = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+    print(d)
+
     display(res)
         
 def saveResults(modelsdict):
+    """
+        not saving model instances
+        only  names and parameters
+    """
 
     
     savedict = {}
@@ -1115,6 +1279,7 @@ def saveResults(modelsdict):
         mod = copy.deepcopy(model)
         mod['model']=model['model'].__name__
         mod['model_instance']=model['model_instance'].__class__.__name__
+        mod['final_model']=model['final_model'].__class__.__name__
         savedict['models'].append(mod)
         
     savedict['best_models']={}
@@ -1125,7 +1290,8 @@ def saveResults(modelsdict):
         savedict['best_models'][k]=copy.deepcopy(v2)
         savedict['best_models'][k]['model'] =v2['model'].__name__
         savedict['best_models'][k]['model_instance'] =v2['model_instance'].__class__.__name__
-            
+        savedict['best_models'][k]['final_model'] =v2['final_model'].__class__.__name__
+
     savedict['tests'] = modelsdict['testing']
             
     
@@ -1148,6 +1314,23 @@ def test_saving_model():
     n = len(dataset)
     train_dataset, test_dataset = balancedDatasetSplit_slice(dataset, prop=0.8)
     testSavingLoadingModel(train_dataset, test_dataset)
+
+
+def test_multiple_models(resultsdict, test_dataset ):    
+    if 'testing' not in resultsdict.keys():
+        resultsdict['testing']={}
+
+
+    model_list = resultsdict['best_models_list']
+    for model in model_list:
+        bmodel = model['final_model']
+        print(model['name'])
+        print(model['filename'])
+        testresult = testModel(bmodel, test_dataset)
+        resultsdict['testing'][model['name']]=testresult
+        
+    saveResults(resultsdict)
+
 
 if __name__=='__main__':
     dataset = TUDataset(root='/tmp/ENZYMES', name='ENZYMES')
@@ -1181,5 +1364,5 @@ if __name__=='__main__':
     testresult = testModel(bmodel, test_dataset)
     modelsdict['testing'][bmodel.__class__.__name__+'macroF1']=testresult
 
-    reportAllTest(modelsdict)
+    report_all_test(modelsdict)
     saveResults(modelsdict)     

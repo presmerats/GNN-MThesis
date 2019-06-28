@@ -24,6 +24,9 @@ class GGNN1(torch.nn.Module):
     def forward(self, data):
         x, edge_index, batch_vector = data.x, data.edge_index, data.batch
 
+        #print(x.is_cuda, x.get_device())
+        #print(edge_index.is_cuda, edge_index.get_device())
+
         x = self.ggnn(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, training=self.training) # until here the output is for each node
