@@ -506,7 +506,10 @@ def kFolding2(train_dataset, k, balanced=True, unbalanced_split=False):
 
 
 def prepare_dataset(dataset, nfolds=3, prop=0.8, dataset_type="balanced", print_debug=False):
-    dataset = dataset.shuffle()
+    try:
+        dataset = dataset.shuffle()
+    except:
+        print("WARNING: couldn't call dataset.shuffle. Passing")
     k = nfolds
     n = len(dataset)
     if dataset_type=="balanced":
