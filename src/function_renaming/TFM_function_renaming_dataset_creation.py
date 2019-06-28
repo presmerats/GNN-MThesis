@@ -14,6 +14,7 @@ from numpy.random import choice
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+from random import shuffle
 
 import torch
 from torch_geometric.data import Dataset
@@ -190,7 +191,7 @@ class FunctionsDataset(Dataset):
                 if os.path.isfile(os.path.join(processed_path, item)):
                     self.myprocessed_filenames.append(item)
 
-            self.processed_paths = self.myprocessed_filenames
+            #self.processed_paths = self.myprocessed_filenames # can't set attribute
             return self.myprocessed_filenames
         else:
             return self.myprocessed_filenames
@@ -210,8 +211,10 @@ class FunctionsDataset(Dataset):
     @property
     def num_features(self):
         # this should be dynamic!!
-        # load one of the processed files and count the features there!
-        return 4
+        # load one of the processed files and count the features in there!
+        graph0 = self.get(0)
+        return graph0.x.shape[1]
+        #return 4
     
     def __len__(self):
         return len(self.processed_file_names)
@@ -245,7 +248,7 @@ class FunctionsDataset(Dataset):
             # navigate the folder hierarchy
             for root, dirs, files in os.walk(folder, topdown=False):
                 for name in files:
-                    if i== 1890:
+                    if i== -1:
                         break
                     # and create ggraph g for each pair of files
                     filename = os.path.join(root, name)
@@ -268,7 +271,7 @@ class FunctionsDataset(Dataset):
                         newfile = 'data_{}.pt'.format(i)
                         torch.save(data, os.path.join(self.processed_dir, newfile))
                         self.myprocessed_filenames.append(newfile)
-                        print(i,filename)
+                        #print(i,filename)
                         i += 1
 
 
@@ -279,6 +282,11 @@ class FunctionsDataset(Dataset):
             i+len(self.problematic_files),i,len(self.problematic_files)))
         print()
 
+
+    def shuffle(self):
+        # randomize the list of processed files form disk
+        #shuffle(self.processed_file_names)
+        return self
          
     def get(self, idx):
         # idx is a torch.LongTensor
@@ -291,7 +299,7 @@ class FunctionsDataset(Dataset):
             
             try:
                 #realfile = self.processed_paths[idx]
-                realfile = self.processed_file_names[idx]
+                realfile = self.myprocessed_filenames[idx]
                 filename = os.path.join(self.processed_dir,realfile)
                 data = torch.load(filename)
                 return data
@@ -305,7 +313,8 @@ class FunctionsDataset(Dataset):
             filenames = []
             for pointer in pointers:
                 #filename = os.path.join(self.processed_dir,'data_{}.pt'.format(pointer))
-                filename = 'data_{}.pt'.format(pointer)
+                #filename = 'data_{}.pt'.format(pointer)
+                filename = self.myprocessed_filenames[pointer]
                 try:
                     #print("reading: ",filename)
                     #graph_tensor = torch.load(filename)
@@ -335,9 +344,12 @@ class FunctionsDataset(Dataset):
                 -has num_features
                 -anything else?
         """
+        #print(" old dataset",self.myprocessed_filenames[:3])
         new_dataset = copy.deepcopy(self)
-        new_dataset.myprocessed_filenames = processed_paths_sub_list
+        new_dataset.myprocessed_filenames = list(processed_paths_sub_list)
         #print(new_dataset.myprocessed_filenames)
+
+        #print(" new dataset",new_dataset.myprocessed_filenames[:3])
         return new_dataset
 
 
@@ -671,13 +683,14 @@ class FunctionsDataset(Dataset):
                 #if e[1][i] >= 18446744073709551612/20: #sys.double_info.max:
                 if e[1][i] >= 184467440737095516: # now using a random high number
                     e[1][i] = int(np.log(e[1][i]))
+                e[1][i]=float(e[1][i])
             res.append(elem)
         x = res
         #print(x[:2])
         #print(max(x))
         #pprint(x)
         #pprint(edge_index)
-        x = torch.tensor(x, dtype=torch.long)
+        x = torch.tensor(x, dtype=torch.float)
     
         
         return self.createGraph(x, edge_index)

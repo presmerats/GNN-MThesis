@@ -59,7 +59,9 @@ class GatedGraphConv(MessagePassing):
     """
 
     def __init__(self, out_channels, num_layers, aggr='add', bias=True):
-        super(GatedGraphConv, self).__init__(aggr)
+        print(type(self), isinstance(self, GatedGraphConv))
+        #super(GatedGraphConv, self).__init__(aggr) # strange behaviour!
+        super(type(self), self).__init__(aggr)
 
         self.out_channels = out_channels
         self.num_layers = num_layers
@@ -234,12 +236,19 @@ def F1Score(pred, target):
 
 # count how many graphs of each class in the dataset
 def printDatasetBalance(dataset):
+
+    #print("  dataset ", dataset.myprocessed_filenames[:3])
+    
     num_classes = dataset.num_classes
+    #print("printDatasetbalance class shape verification: ",len(dataset[0].y.shape))
     if len(dataset[0].y.shape) == 1:
         class_counts = { i:0 for i in range(num_classes)}
         #print(class_counts)
+        j =0
         for graph in dataset:
+            
             class_counts[int(graph.y.item())]+=1
+            j+=1
         print(class_counts)
     else:
         #print(dataset[0].y[0])
@@ -289,8 +298,8 @@ def balancedDatasetSplit_slice(dataset, prop):
 
     train_list = []
     test_list = []
-    train_dataset_slice = [False]*n
-    test_dataset_slice = [False]*n
+    #train_dataset_slice = [False]*n
+    #test_dataset_slice = [False]*n
     datasets_byclass = {i:[] for i in range(num_classes)}
     
     #print("train_dataset_slice", train_dataset_slice)
@@ -300,17 +309,48 @@ def balancedDatasetSplit_slice(dataset, prop):
     # for each class repeat balanced split
     for i in range(n):
         graph = dataset[i]
+        #print(i,dataset.myprocessed_filenames[i],int(graph.y.item()),end=" ")
         datasets_byclass[int(graph.y.item())].append(i)
+        #print(datasets_byclass)
+        # datasets_byclass saves indices of the list myprocessed_filenames
 
-    #print("datasets_byclass",datasets_byclass)
-        
-    for c in range(num_classes):
+    # print()
+    # print("datasets_byclass",datasets_byclass.keys())
+    # print("datasets_byclass",datasets_byclass)
+    # for k in datasets_byclass.keys():
+    #     print("class ",k," count: ",len(datasets_byclass[k]))    
+    # print()
+
+    for c in datasets_byclass.keys(): #range(num_classes):
         nc = len(datasets_byclass[c])
         limit = int(prop*nc)
+        #print("class: ",c," length",nc, " train limit ",limit)
         train_list.extend(datasets_byclass[c][:limit])
+        #print("train_list total ",len(train_list))
+        #print(" train_list min-max: ",min(train_list),max(train_list) )
         test_list.extend(datasets_byclass[c][limit:])
         
-    #print("train_list", train_list)
+        #print("train list", train_list)
+        #print("test list ", test_list)
+    #print()
+
+    # THIS IS FINE! VERIFIED
+
+    # print("train_list", train_list[25938:25942])
+    # print("graph 25938",dataset[train_list[25938]].y)
+    # print("graph 25939",dataset[train_list[25939]].y)
+    # print("graph 25940", dataset[train_list[25940]].y)
+
+    # print("train_list", train_list[26853:26858])
+    # print("graph 26855",dataset[train_list[26855]].y)
+    # print("graph 26856", dataset[train_list[26856]].y)
+    # print("graph 26857", dataset[train_list[26857]].y)
+
+    # print("train_list",len(train_list), train_list[27570:27572])
+    # print("graph 27582",dataset[train_list[27570]].y)
+    # print("graph 27583", dataset[train_list[27571]].y)
+    # print("graph 27584", dataset[train_list[27572]].y)
+    
     #print("test_list", test_list)
 
         
@@ -326,11 +366,38 @@ def balancedDatasetSplit_slice(dataset, prop):
     #print("train_dataset_slice", train_dataset_slice)
     #print("test_dataset_slice", test_dataset_slice)
         
+    
+    #print(" train_list min-max: ",min(train_list),max(train_list) )
+    #print(" before slicing",dataset[0].y, dataset.myprocessed_filenames[0])
+    #print()
     train_dataset = dataset[torch.LongTensor(train_list)]
     test_dataset = dataset[torch.LongTensor(test_list)]
         
     #print("train_dataset", train_dataset)
     #print("test_dataset", test_dataset)
+
+    # print(" origianl dataset ", dataset.myprocessed_filenames[:3])
+    # dataset_fileids = [ int(f.replace('.pt','')[5:])   for f in dataset.myprocessed_filenames]
+    # print(min(dataset_fileids),max(dataset_fileids))
+
+    # print(" new train dataset ", train_dataset.myprocessed_filenames[:3])
+    # # traverse the list, extract id's, get max and min
+    # train_dataset_fileids = [ int(f.replace('.pt','')[5:])   for f in train_dataset.myprocessed_filenames ]
+    # train_dataset_classes = [ int(g.y.item())   for g in train_dataset ]
+    # print("train_dataset_fileids",train_dataset_fileids)
+    # print("train_dataset_classes",train_dataset_classes)
+    # #print(min(train_dataset_fileids),max(train_dataset_fileids))
+
+    # # with those id's get the graph.y
+    # print(" new test dataset ", test_dataset.myprocessed_filenames[:3])
+    # test_dataset_fileids = [ int(f.replace('.pt','')[5:])   for f in test_dataset.myprocessed_filenames]
+    # test_dataset_classes = [ int(g.y.item())   for g in test_dataset ]
+    # print("test_dataset_fileids",test_dataset_fileids)
+    # print("test-datset classes",test_dataset_classes)
+    # #print(min(test_dataset_fileids),max(test_dataset_fileids))
+    # print()
+
+
     
     return train_dataset, test_dataset
 
@@ -524,6 +591,11 @@ def prepare_dataset(dataset, nfolds=3, prop=0.8, dataset_type="balanced", print_
         printDatasetBalance(train_dataset )
         printDatasetBalance(test_dataset )
         print()
+        # print()
+        # print(" origianl dataset ", dataset.myprocessed_filenames[:3])
+        # print(" new train dataset ", train_dataset.myprocessed_filenames[:3])
+        # print(" new test dataset ", test_dataset.myprocessed_filenames[:3])
+        # print()
 
     return train_dataset, test_dataset
 
