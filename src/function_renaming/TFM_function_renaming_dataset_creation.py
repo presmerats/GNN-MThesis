@@ -8,6 +8,7 @@ import copy
 import re
 import sys
 import json
+import yaml 
 from pprint import pprint
 import numpy as np
 from numpy.random import choice
@@ -15,6 +16,7 @@ import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 from random import shuffle
+
 
 import torch
 from torch_geometric.data import Dataset
@@ -74,7 +76,7 @@ def readGraph(folder, filename):
                 continue
 
             tokens = line[firstsep:]
-            nodeid = line[:firstsep]
+            nodeid = line[:firstsep].replace(' ','')
             
             attr_dict = json.loads(tokens)
             
@@ -83,10 +85,15 @@ def readGraph(folder, filename):
             
             for k,v in attr_dict.items():
                 try:
+                    if len(g.node.keys() )==0:
+                        g.node[nodeid]={}
                     g.node[nodeid][k] = v
-                except:
-                    print("problem with ",nodeid,attr_dict)
+                except Exception as err:
+                    print("problem with ",nodeid,attr_dict,str(err))
                     print("{} in g.node.keys() ?".format(nodeid),nodeid in g.node.keys())
+                    #print(filename)
+                    traceback.print_exc()
+                    
                 
     return g
 
@@ -145,29 +152,47 @@ def plotGraph(g, label=None):
 def plotGraphFunction(folder, filename, label=None):
     g = readGraph(folder, filename)
     plotGraph(g,label)
+
+def read_config_file():
+
+    conf = None
+    with open('config.yaml','r') as f:
+        conf = yaml.load(f)
+
+    return conf
         
 class FunctionsDataset(Dataset):
     node_translation = {}  # translates from nodeid like im34,r2 to an autoincremented integer
     nodeidmax = -1
-    instr_types = ['instr','register','immediate','memory',
-        'displacement','phrase','func','unknown']
-    x86_instr_set = [ i.lower() for i in ['AAA', 'AAD', 'AAM', 'AAS', 'ADC', 'ADCX', 'ADD', 
-                     'ADDPD', 'ADDPS', 'ADDSD', 'ADDSS', 'ADDSUBPD', 
-                     'ADDSUBPS', 'ADOX', 'AESDEC', 'AESDECLAST', 'AESENC',
-                     'AESENCLAST', 'AESIMC', 'AESKEYGENASSIST', 'AND', 'ANDN', 
-                     'ANDNPD', 'ANDNPS', 'ANDPD', 'ANDPS', 'ARPL', 'BEXTR', 
-                     'BLENDPD', 'BLENDPS', 'BLENDVPD', 'BLENDVPS', 'BLSI', 
-                     'BLSMSK', 'BLSR', 'BNDCL', 'BNDCN', 'BNDCU', 'BNDLDX', 
-                     'BNDMK', 'BNDMOV', 'BNDSTX', 'BOUND', 'BSF', 'BSR', 'BSWAP', 'BT', 'BTC', 'BTR', 'BTS', 'BZHI', 'CALL', 'CBW', 'CDQ', 'CDQE', 'CLAC', 'CLC', 'CLD', 'CLDEMOTE', 'CLFLUSH', 'CLFLUSHOPT', 'CLI', 'CLTS', 'CLWB', 'CMC', 'CMOVcc', 'CMP', 'CMPPD', 'CMPPS', 'CMPS', 'CMPSB', 'CMPSD', 'CMPSQ', 'CMPSS', 'CMPSW', 'CMPXCHG', 'COMISD', 'COMISS', 'CPUID', 'CQO', 'CWD', 'CWDE', 'DAA', 'DAS', 'DEC', 'DIV', 'DIVPD', 'DIVPS', 'DIVSD', 'DIVSS', 'DPPD', 'DPPS', 'EMMS', 'ENTER', 'EXTRACTPS', 'FABS', 'FADD', 'FADDP', 'FBLD', 'FBSTP', 'FCHS', 'FCLEX', 'FCMOVcc', 'FCOM', 'FCOMI', 'FCOMIP', 'FCOMP', 'FCOMPP', 'FCOS', 'FDECSTP', 'FDIV', 'FDIVP', 'FDIVR', 'FDIVRP', 'FFREE', 'FIADD', 'FICOM', 'FICOMP', 'FIDIV', 'FIDIVR', 'FILD', 'FIMUL', 'FINCSTP', 'FINIT', 'FIST', 'FISTP', 'FISTTP', 'FISUB', 'FISUBR', 'FLD', 'FLDCW', 'FLDENV', 'FLDPI', 'FLDZ', 'FMUL', 'FMULP', 'FNCLEX', 'FNINIT', 'FNOP', 'FNSAVE', 'FNSTCW', 'FNSTENV', 'FNSTSW', 'FPATAN', 'FPREM', 'FPTAN', 'FRNDINT', 'FRSTOR', 'FSAVE', 'FSCALE', 'FSIN', 'FSINCOS', 'FSQRT', 'FST', 'FSTCW', 'FSTENV', 'FSTP', 'FSTSW', 'FSUB', 'FSUBP', 'FSUBR', 'FSUBRP', 'FTST', 'FUCOM', 'FUCOMI', 'FUCOMIP', 'FUCOMP', 'FUCOMPP', 'FWAIT', 'FXAM', 'FXCH', 'FXRSTOR', 'FXSAVE', 'FXTRACT', 'HADDPD', 'HADDPS', 'HLT', 'HSUBPD', 'HSUBPS', 'IDIV', 'IMUL', 'IN', 'INC', 'INS', 'INSB', 'INSD', 'INSERTPS', 'INSW', 'INTO', 'INVD', 'INVLPG', 'INVPCID', 'IRET', 'IRETD', 'JMP', 'Jcc', 'KADDB', 'KADDD', 'KADDQ', 'KADDW', 'KANDB', 'KANDD', 'KANDNB', 'KANDND', 'KANDNQ', 'KANDNW', 'KANDQ', 'KANDW', 'KMOVB', 'KMOVD', 'KMOVQ', 'KMOVW', 'KNOTB', 'KNOTD', 'KNOTQ', 'KNOTW', 'KORB', 'KORD', 'KORQ', 'KORTESTB', 'KORTESTD', 'KORTESTQ', 'KORTESTW', 'KORW', 'KSHIFTLB', 'KSHIFTLD', 'KSHIFTLQ', 'KSHIFTLW', 'KSHIFTRB', 'KSHIFTRD', 'KSHIFTRQ', 'KSHIFTRW', 'KTESTB', 'KTESTD', 'KTESTQ', 'KTESTW', 'KUNPCKBW', 'KUNPCKDQ', 'KUNPCKWD', 'KXNORB', 'KXNORD', 'KXNORQ', 'KXNORW', 'KXORB', 'KXORD', 'KXORQ', 'KXORW', 'LAHF', 'LAR', 'LDDQU', 'LDMXCSR', 'LDS', 'LEA', 'LEAVE', 'LES', 'LFENCE', 'LFS', 'LGDT', 'LGS', 'LIDT', 'LLDT', 'LMSW', 'LOCK', 'LODS', 'LODSB', 'LODSD', 'LODSQ', 'LODSW', 'LOOP', 'LOOPcc', 'LSL', 'LSS', 'LTR', 'LZCNT', 'MASKMOVDQU', 'MASKMOVQ', 'MAXPD', 'MAXPS', 'MAXSD', 'MAXSS', 'MFENCE', 'MINPD', 'MINPS', 'MINSD', 'MINSS', 'MONITOR', 'MOV', 'MOVAPD', 'MOVAPS', 'MOVBE', 'MOVD', 'MOVDDUP', 'MOVDIRI', 'MOVDQA', 'MOVDQU', 'MOVHLPS', 'MOVHPD', 'MOVHPS', 'MOVLHPS', 'MOVLPD', 'MOVLPS', 'MOVMSKPD', 'MOVMSKPS', 'MOVNTDQ', 'MOVNTDQA', 'MOVNTI', 'MOVNTPD', 'MOVNTPS', 'MOVNTQ', 'MOVQ', 'MOVS', 'MOVSB', 'MOVSD', 'MOVSHDUP', 'MOVSLDUP', 'MOVSQ', 'MOVSS', 'MOVSW', 'MOVSX', 'MOVSXD', 'MOVUPD', 'MOVUPS', 'MOVZX', 'MPSADBW', 'MUL', 'MULPD', 'MULPS', 'MULSD', 'MULSS', 'MULX', 'MWAIT', 'NEG', 'NOP', 'NOT', 'OR', 'ORPD', 'ORPS', 'OUT', 'OUTS', 'OUTSB', 'OUTSD', 'OUTSW', 'PABSB', 'PABSD', 'PABSQ', 'PABSW', 'PACKSSDW', 'PACKSSWB', 'PACKUSDW', 'PACKUSWB', 'PADDB', 'PADDD', 'PADDQ', 'PADDSB', 'PADDSW', 'PADDUSB', 'PADDUSW', 'PADDW', 'PALIGNR', 'PAND', 'PANDN', 'PAUSE', 'PAVGB', 'PAVGW', 'PBLENDVB', 'PBLENDW', 'PCLMULQDQ', 'PCMPEQB', 'PCMPEQD', 'PCMPEQQ', 'PCMPEQW', 'PCMPESTRI', 'PCMPESTRM', 'PCMPGTB', 'PCMPGTD', 'PCMPGTQ', 'PCMPGTW', 'PCMPISTRI', 'PCMPISTRM', 'PDEP', 'PEXT', 'PEXTRB', 'PEXTRD', 'PEXTRQ', 'PEXTRW', 'PHADDD', 'PHADDSW', 'PHADDW', 'PHMINPOSUW', 'PHSUBD', 'PHSUBSW', 'PHSUBW', 'PINSRB', 'PINSRD', 'PINSRQ', 'PINSRW', 'PMADDUBSW', 'PMADDWD', 'PMAXSB', 'PMAXSD', 'PMAXSQ', 'PMAXSW', 'PMAXUB', 'PMAXUD', 'PMAXUQ', 'PMAXUW', 'PMINSB', 'PMINSD', 'PMINSQ', 'PMINSW', 'PMINUB', 'PMINUD', 'PMINUQ', 'PMINUW', 'PMOVMSKB', 'PMOVSX', 'PMOVZX', 'PMULDQ', 'PMULHRSW', 'PMULHUW', 'PMULHW', 'PMULLD', 'PMULLQ', 'PMULLW', 'PMULUDQ', 'POP', 'POPA', 'POPAD', 'POPCNT', 'POPF', 'POPFD', 'POPFQ', 'POR', 'PREFETCHW', 'PREFETCHh', 'PSADBW', 'PSHUFB', 'PSHUFD', 'PSHUFHW', 'PSHUFLW', 'PSHUFW', 'PSIGNB', 'PSIGND', 'PSIGNW', 'PSLLD', 'PSLLDQ', 'PSLLQ', 'PSLLW', 'PSRAD', 'PSRAQ', 'PSRAW', 'PSRLD', 'PSRLDQ', 'PSRLQ', 'PSRLW', 'PSUBB', 'PSUBD', 'PSUBQ', 'PSUBSB', 'PSUBSW', 'PSUBUSB', 'PSUBUSW', 'PSUBW', 'PTEST', 'PTWRITE', 'PUNPCKHBW', 'PUNPCKHDQ', 'PUNPCKHQDQ', 'PUNPCKHWD', 'PUNPCKLBW', 'PUNPCKLDQ', 'PUNPCKLQDQ', 'PUNPCKLWD', 'PUSH', 'PUSHA', 'PUSHAD', 'PUSHF', 'PUSHFD', 'PUSHFQ', 'PXOR', 'RCL', 'RCPPS', 'RCPSS', 'RCR', 'RDFSBASE', 'RDGSBASE', 'RDMSR', 'RDPID', 'RDPKRU', 'RDPMC', 'RDRAND', 'RDSEED', 'RDTSC', 'RDTSCP', 'REP', 'REPE', 'REPNE', 'REPNZ', 'REPZ', 'RET', 'ROL', 'ROR', 'RORX', 'ROUNDPD', 'ROUNDPS', 'ROUNDSD', 'ROUNDSS', 'RSM', 'RSQRTPS', 'RSQRTSS', 'SAHF', 'SAL', 'SAR', 'SARX', 'SBB', 'SCAS', 'SCASB', 'SCASD', 'SCASW', 'SETcc', 'SFENCE', 'SGDT', 'SHL', 'SHLD', 'SHLX', 'SHR', 'SHRD', 'SHRX', 'SHUFPD', 'SHUFPS', 'SIDT', 'SLDT', 'SMSW', 'SQRTPD', 'SQRTPS', 'SQRTSD', 'SQRTSS', 'STAC', 'STC', 'STD', 'STI', 'STMXCSR', 'STOS', 'STOSB', 'STOSD', 'STOSQ', 'STOSW', 'STR', 'SUB', 'SUBPD', 'SUBPS', 'SUBSD', 'SUBSS', 'SWAPGS', 'SYSCALL', 'SYSENTER', 'SYSEXIT', 'SYSRET', 'TEST', 'TPAUSE', 'TZCNT', 'UCOMISD', 'UCOMISS', 'UD', 'UMONITOR', 'UMWAIT', 'UNPCKHPD', 'UNPCKHPS', 'UNPCKLPD', 'UNPCKLPS', 'VALIGND', 'VALIGNQ', 'VBLENDMPD', 'VBLENDMPS', 'VBROADCAST', 'VCOMPRESSPD', 'VCOMPRESSPS', 'VDBPSADBW', 'VERR', 'VERW', 'VEXPANDPD', 'VEXPANDPS', 'VFIXUPIMMPD', 'VFIXUPIMMPS', 'VFIXUPIMMSD', 'VFIXUPIMMSS', 'VFPCLASSPD', 'VFPCLASSPS', 'VFPCLASSSD', 'VFPCLASSSS', 'VGATHERDPD', 'VGATHERDPS', 'VGATHERQPD', 'VGATHERQPS', 'VGETEXPPD', 'VGETEXPPS', 'VGETEXPSD', 'VGETEXPSS', 'VGETMANTPD', 'VGETMANTPS', 'VGETMANTSD', 'VGETMANTSS', 'VMASKMOV', 'VPBLENDD', 'VPBLENDMB', 'VPBLENDMD', 'VPBLENDMQ', 'VPBLENDMW', 'VPBROADCAST', 'VPBROADCASTB', 'VPBROADCASTD', 'VPBROADCASTM', 'VPBROADCASTQ', 'VPBROADCASTW', 'VPCMPB', 'VPCMPD', 'VPCMPQ', 'VPCMPUB', 'VPCMPUD', 'VPCMPUQ', 'VPCMPUW', 'VPCMPW', 'VPCOMPRESSD', 'VPCOMPRESSQ', 'VPCONFLICTD', 'VPCONFLICTQ', 'VPERMB', 'VPERMD', 'VPERMILPD', 'VPERMILPS', 'VPERMPD', 'VPERMPS', 'VPERMQ', 'VPERMW', 'VPEXPANDD', 'VPEXPANDQ', 'VPGATHERDD', 'VPGATHERDQ', 'VPGATHERQD', 'VPGATHERQQ', 'VPLZCNTD', 'VPLZCNTQ', 'VPMASKMOV', 'VPMOVDB', 'VPMOVDW', 'VPMOVQB', 'VPMOVQD', 'VPMOVQW', 'VPMOVSDB', 'VPMOVSDW', 'VPMOVSQB', 'VPMOVSQD', 'VPMOVSQW', 'VPMOVSWB', 'VPMOVUSDB', 'VPMOVUSDW', 'VPMOVUSQB', 'VPMOVUSQD', 'VPMOVUSQW', 'VPMOVUSWB', 'VPMOVWB', 'VPMULTISHIFTQB', 'VPROLD', 'VPROLQ', 'VPROLVD', 'VPROLVQ', 'VPRORD', 'VPRORQ', 'VPRORVD', 'VPRORVQ', 'VPSCATTERDD', 'VPSCATTERDQ', 'VPSCATTERQD', 'VPSCATTERQQ', 'VPSLLVD', 'VPSLLVQ', 'VPSLLVW', 'VPSRAVD', 'VPSRAVQ', 'VPSRAVW', 'VPSRLVD', 'VPSRLVQ', 'VPSRLVW', 'VPTERNLOGD', 'VPTERNLOGQ', 'VPTESTMB', 'VPTESTMD', 'VPTESTMQ', 'VPTESTMW', 'VPTESTNMB', 'VPTESTNMD', 'VPTESTNMQ', 'VPTESTNMW', 'VRANGEPD', 'VRANGEPS', 'VRANGESD', 'VRANGESS', 'VREDUCEPD', 'VREDUCEPS', 'VREDUCESD', 'VREDUCESS', 'VRNDSCALEPD', 'VRNDSCALEPS', 'VRNDSCALESD', 'VRNDSCALESS', 'VSCALEFPD', 'VSCALEFPS', 'VSCALEFSD', 'VSCALEFSS', 'VSCATTERDPD', 'VSCATTERDPS', 'VSCATTERQPD', 'VSCATTERQPS', 'VTESTPD', 'VTESTPS', 'VZEROALL', 'VZEROUPPER', 'WAIT', 'WBINVD', 'WRFSBASE', 'WRGSBASE', 'WRMSR', 'WRPKRU', 'XABORT', 'XACQUIRE', 'XADD', 'XBEGIN', 'XCHG', 'XEND', 'XGETBV', 'XLAT', 'XLATB', 'XOR', 'XORPD', 'XORPS', 'XRELEASE', 'XRSTOR', 'XRSTORS', 'XSAVE', 'XSAVEC', 'XSAVEOPT', 'XSAVES', 'XSETBV', 'XTEST', 'EACCEPT', 'EACCEPTCOPY', 'EADD', 'EAUG', 'EBLOCK', 'ECREATE', 'EDBGRD', 'EDBGWR', 'EDECVIRTCHILD', 'EENTER', 'EEXIT', 'EEXTEND', 'EGETKEY', 'EINCVIRTCHILD', 'EINIT', 'ELBUC', 'ELDB', 'ELDBC', 'ELDU', 'EMODPE', 'EMODPR', 'EMODT', 'ENCLS', 'ENCLU', 'ENCLV', 'EPA', 'ERDINFO', 'EREMOVE', 'EREPORT', 'ERESUME', 'ESETCONTEXT', 'ETRACK', 'ETRACKC', 'EWB', 'INVEPT', 'INVVPID', 'VMCALL', 'VMCLEAR', 'VMFUNC', 'VMLAUNCH', 'VMPTRLD', 'VMPTRST', 'VMREAD', 
-                     'VMRESUME', 'VMWRITE', 'VMXOFF', 'VMXON']]
+
+    conf = read_config_file()
+    instr_types = conf['instr_types']
+    #x86_instr_set = [ i.lower() for i in
+    x86_instr_set = conf['x86_instr_set']
+    bow_vocab = conf['bow_vocab']
+
+    # instr_types = ['instr','register','immediate','memory',
+    #     'displacement','phrase','func','unknown']
+    # x86_instr_set = [ i.lower() for i in ['AAA', 'AAD', 'AAM', 'AAS', 'ADC', 'ADCX', 'ADD', 
+    #                  'ADDPD', 'ADDPS', 'ADDSD', 'ADDSS', 'ADDSUBPD', 
+    #                  'ADDSUBPS', 'ADOX', 'AESDEC', 'AESDECLAST', 'AESENC',
+    #                  'AESENCLAST', 'AESIMC', 'AESKEYGENASSIST', 'AND', 'ANDN', 
+    #                  'ANDNPD', 'ANDNPS', 'ANDPD', 'ANDPS', 'ARPL', 'BEXTR', 
+    #                  'BLENDPD', 'BLENDPS', 'BLENDVPD', 'BLENDVPS', 'BLSI', 
+    #                  'BLSMSK', 'BLSR', 'BNDCL', 'BNDCN', 'BNDCU', 'BNDLDX', 
+    #                  'BNDMK', 'BNDMOV', 'BNDSTX', 'BOUND', 'BSF', 'BSR', 'BSWAP', 'BT', 'BTC', 'BTR', 'BTS', 'BZHI', 'CALL', 'CBW', 'CDQ', 'CDQE', 'CLAC', 'CLC', 'CLD', 'CLDEMOTE', 'CLFLUSH', 'CLFLUSHOPT', 'CLI', 'CLTS', 'CLWB', 'CMC', 'CMOVcc', 'CMP', 'CMPPD', 'CMPPS', 'CMPS', 'CMPSB', 'CMPSD', 'CMPSQ', 'CMPSS', 'CMPSW', 'CMPXCHG', 'COMISD', 'COMISS', 'CPUID', 'CQO', 'CWD', 'CWDE', 'DAA', 'DAS', 'DEC', 'DIV', 'DIVPD', 'DIVPS', 'DIVSD', 'DIVSS', 'DPPD', 'DPPS', 'EMMS', 'ENTER', 'EXTRACTPS', 'FABS', 'FADD', 'FADDP', 'FBLD', 'FBSTP', 'FCHS', 'FCLEX', 'FCMOVcc', 'FCOM', 'FCOMI', 'FCOMIP', 'FCOMP', 'FCOMPP', 'FCOS', 'FDECSTP', 'FDIV', 'FDIVP', 'FDIVR', 'FDIVRP', 'FFREE', 'FIADD', 'FICOM', 'FICOMP', 'FIDIV', 'FIDIVR', 'FILD', 'FIMUL', 'FINCSTP', 'FINIT', 'FIST', 'FISTP', 'FISTTP', 'FISUB', 'FISUBR', 'FLD', 'FLDCW', 'FLDENV', 'FLDPI', 'FLDZ', 'FMUL', 'FMULP', 'FNCLEX', 'FNINIT', 'FNOP', 'FNSAVE', 'FNSTCW', 'FNSTENV', 'FNSTSW', 'FPATAN', 'FPREM', 'FPTAN', 'FRNDINT', 'FRSTOR', 'FSAVE', 'FSCALE', 'FSIN', 'FSINCOS', 'FSQRT', 'FST', 'FSTCW', 'FSTENV', 'FSTP', 'FSTSW', 'FSUB', 'FSUBP', 'FSUBR', 'FSUBRP', 'FTST', 'FUCOM', 'FUCOMI', 'FUCOMIP', 'FUCOMP', 'FUCOMPP', 'FWAIT', 'FXAM', 'FXCH', 'FXRSTOR', 'FXSAVE', 'FXTRACT', 'HADDPD', 'HADDPS', 'HLT', 'HSUBPD', 'HSUBPS', 'IDIV', 'IMUL', 'IN', 'INC', 'INS', 'INSB', 'INSD', 'INSERTPS', 'INSW', 'INTO', 'INVD', 'INVLPG', 'INVPCID', 'IRET', 'IRETD', 'JMP', 'Jcc', 'KADDB', 'KADDD', 'KADDQ', 'KADDW', 'KANDB', 'KANDD', 'KANDNB', 'KANDND', 'KANDNQ', 'KANDNW', 'KANDQ', 'KANDW', 'KMOVB', 'KMOVD', 'KMOVQ', 'KMOVW', 'KNOTB', 'KNOTD', 'KNOTQ', 'KNOTW', 'KORB', 'KORD', 'KORQ', 'KORTESTB', 'KORTESTD', 'KORTESTQ', 'KORTESTW', 'KORW', 'KSHIFTLB', 'KSHIFTLD', 'KSHIFTLQ', 'KSHIFTLW', 'KSHIFTRB', 'KSHIFTRD', 'KSHIFTRQ', 'KSHIFTRW', 'KTESTB', 'KTESTD', 'KTESTQ', 'KTESTW', 'KUNPCKBW', 'KUNPCKDQ', 'KUNPCKWD', 'KXNORB', 'KXNORD', 'KXNORQ', 'KXNORW', 'KXORB', 'KXORD', 'KXORQ', 'KXORW', 'LAHF', 'LAR', 'LDDQU', 'LDMXCSR', 'LDS', 'LEA', 'LEAVE', 'LES', 'LFENCE', 'LFS', 'LGDT', 'LGS', 'LIDT', 'LLDT', 'LMSW', 'LOCK', 'LODS', 'LODSB', 'LODSD', 'LODSQ', 'LODSW', 'LOOP', 'LOOPcc', 'LSL', 'LSS', 'LTR', 'LZCNT', 'MASKMOVDQU', 'MASKMOVQ', 'MAXPD', 'MAXPS', 'MAXSD', 'MAXSS', 'MFENCE', 'MINPD', 'MINPS', 'MINSD', 'MINSS', 'MONITOR', 'MOV', 'MOVAPD', 'MOVAPS', 'MOVBE', 'MOVD', 'MOVDDUP', 'MOVDIRI', 'MOVDQA', 'MOVDQU', 'MOVHLPS', 'MOVHPD', 'MOVHPS', 'MOVLHPS', 'MOVLPD', 'MOVLPS', 'MOVMSKPD', 'MOVMSKPS', 'MOVNTDQ', 'MOVNTDQA', 'MOVNTI', 'MOVNTPD', 'MOVNTPS', 'MOVNTQ', 'MOVQ', 'MOVS', 'MOVSB', 'MOVSD', 'MOVSHDUP', 'MOVSLDUP', 'MOVSQ', 'MOVSS', 'MOVSW', 'MOVSX', 'MOVSXD', 'MOVUPD', 'MOVUPS', 'MOVZX', 'MPSADBW', 'MUL', 'MULPD', 'MULPS', 'MULSD', 'MULSS', 'MULX', 'MWAIT', 'NEG', 'NOP', 'NOT', 'OR', 'ORPD', 'ORPS', 'OUT', 'OUTS', 'OUTSB', 'OUTSD', 'OUTSW', 'PABSB', 'PABSD', 'PABSQ', 'PABSW', 'PACKSSDW', 'PACKSSWB', 'PACKUSDW', 'PACKUSWB', 'PADDB', 'PADDD', 'PADDQ', 'PADDSB', 'PADDSW', 'PADDUSB', 'PADDUSW', 'PADDW', 'PALIGNR', 'PAND', 'PANDN', 'PAUSE', 'PAVGB', 'PAVGW', 'PBLENDVB', 'PBLENDW', 'PCLMULQDQ', 'PCMPEQB', 'PCMPEQD', 'PCMPEQQ', 'PCMPEQW', 'PCMPESTRI', 'PCMPESTRM', 'PCMPGTB', 'PCMPGTD', 'PCMPGTQ', 'PCMPGTW', 'PCMPISTRI', 'PCMPISTRM', 'PDEP', 'PEXT', 'PEXTRB', 'PEXTRD', 'PEXTRQ', 'PEXTRW', 'PHADDD', 'PHADDSW', 'PHADDW', 'PHMINPOSUW', 'PHSUBD', 'PHSUBSW', 'PHSUBW', 'PINSRB', 'PINSRD', 'PINSRQ', 'PINSRW', 'PMADDUBSW', 'PMADDWD', 'PMAXSB', 'PMAXSD', 'PMAXSQ', 'PMAXSW', 'PMAXUB', 'PMAXUD', 'PMAXUQ', 'PMAXUW', 'PMINSB', 'PMINSD', 'PMINSQ', 'PMINSW', 'PMINUB', 'PMINUD', 'PMINUQ', 'PMINUW', 'PMOVMSKB', 'PMOVSX', 'PMOVZX', 'PMULDQ', 'PMULHRSW', 'PMULHUW', 'PMULHW', 'PMULLD', 'PMULLQ', 'PMULLW', 'PMULUDQ', 'POP', 'POPA', 'POPAD', 'POPCNT', 'POPF', 'POPFD', 'POPFQ', 'POR', 'PREFETCHW', 'PREFETCHh', 'PSADBW', 'PSHUFB', 'PSHUFD', 'PSHUFHW', 'PSHUFLW', 'PSHUFW', 'PSIGNB', 'PSIGND', 'PSIGNW', 'PSLLD', 'PSLLDQ', 'PSLLQ', 'PSLLW', 'PSRAD', 'PSRAQ', 'PSRAW', 'PSRLD', 'PSRLDQ', 'PSRLQ', 'PSRLW', 'PSUBB', 'PSUBD', 'PSUBQ', 'PSUBSB', 'PSUBSW', 'PSUBUSB', 'PSUBUSW', 'PSUBW', 'PTEST', 'PTWRITE', 'PUNPCKHBW', 'PUNPCKHDQ', 'PUNPCKHQDQ', 'PUNPCKHWD', 'PUNPCKLBW', 'PUNPCKLDQ', 'PUNPCKLQDQ', 'PUNPCKLWD', 'PUSH', 'PUSHA', 'PUSHAD', 'PUSHF', 'PUSHFD', 'PUSHFQ', 'PXOR', 'RCL', 'RCPPS', 'RCPSS', 'RCR', 'RDFSBASE', 'RDGSBASE', 'RDMSR', 'RDPID', 'RDPKRU', 'RDPMC', 'RDRAND', 'RDSEED', 'RDTSC', 'RDTSCP', 'REP', 'REPE', 'REPNE', 'REPNZ', 'REPZ', 'RET', 'ROL', 'ROR', 'RORX', 'ROUNDPD', 'ROUNDPS', 'ROUNDSD', 'ROUNDSS', 'RSM', 'RSQRTPS', 'RSQRTSS', 'SAHF', 'SAL', 'SAR', 'SARX', 'SBB', 'SCAS', 'SCASB', 'SCASD', 'SCASW', 'SETcc', 'SFENCE', 'SGDT', 'SHL', 'SHLD', 'SHLX', 'SHR', 'SHRD', 'SHRX', 'SHUFPD', 'SHUFPS', 'SIDT', 'SLDT', 'SMSW', 'SQRTPD', 'SQRTPS', 'SQRTSD', 'SQRTSS', 'STAC', 'STC', 'STD', 'STI', 'STMXCSR', 'STOS', 'STOSB', 'STOSD', 'STOSQ', 'STOSW', 'STR', 'SUB', 'SUBPD', 'SUBPS', 'SUBSD', 'SUBSS', 'SWAPGS', 'SYSCALL', 'SYSENTER', 'SYSEXIT', 'SYSRET', 'TEST', 'TPAUSE', 'TZCNT', 'UCOMISD', 'UCOMISS', 'UD', 'UMONITOR', 'UMWAIT', 'UNPCKHPD', 'UNPCKHPS', 'UNPCKLPD', 'UNPCKLPS', 'VALIGND', 'VALIGNQ', 'VBLENDMPD', 'VBLENDMPS', 'VBROADCAST', 'VCOMPRESSPD', 'VCOMPRESSPS', 'VDBPSADBW', 'VERR', 'VERW', 'VEXPANDPD', 'VEXPANDPS', 'VFIXUPIMMPD', 'VFIXUPIMMPS', 'VFIXUPIMMSD', 'VFIXUPIMMSS', 'VFPCLASSPD', 'VFPCLASSPS', 'VFPCLASSSD', 'VFPCLASSSS', 'VGATHERDPD', 'VGATHERDPS', 'VGATHERQPD', 'VGATHERQPS', 'VGETEXPPD', 'VGETEXPPS', 'VGETEXPSD', 'VGETEXPSS', 'VGETMANTPD', 'VGETMANTPS', 'VGETMANTSD', 'VGETMANTSS', 'VMASKMOV', 'VPBLENDD', 'VPBLENDMB', 'VPBLENDMD', 'VPBLENDMQ', 'VPBLENDMW', 'VPBROADCAST', 'VPBROADCASTB', 'VPBROADCASTD', 'VPBROADCASTM', 'VPBROADCASTQ', 'VPBROADCASTW', 'VPCMPB', 'VPCMPD', 'VPCMPQ', 'VPCMPUB', 'VPCMPUD', 'VPCMPUQ', 'VPCMPUW', 'VPCMPW', 'VPCOMPRESSD', 'VPCOMPRESSQ', 'VPCONFLICTD', 'VPCONFLICTQ', 'VPERMB', 'VPERMD', 'VPERMILPD', 'VPERMILPS', 'VPERMPD', 'VPERMPS', 'VPERMQ', 'VPERMW', 'VPEXPANDD', 'VPEXPANDQ', 'VPGATHERDD', 'VPGATHERDQ', 'VPGATHERQD', 'VPGATHERQQ', 'VPLZCNTD', 'VPLZCNTQ', 'VPMASKMOV', 'VPMOVDB', 'VPMOVDW', 'VPMOVQB', 'VPMOVQD', 'VPMOVQW', 'VPMOVSDB', 'VPMOVSDW', 'VPMOVSQB', 'VPMOVSQD', 'VPMOVSQW', 'VPMOVSWB', 'VPMOVUSDB', 'VPMOVUSDW', 'VPMOVUSQB', 'VPMOVUSQD', 'VPMOVUSQW', 'VPMOVUSWB', 'VPMOVWB', 'VPMULTISHIFTQB', 'VPROLD', 'VPROLQ', 'VPROLVD', 'VPROLVQ', 'VPRORD', 'VPRORQ', 'VPRORVD', 'VPRORVQ', 'VPSCATTERDD', 'VPSCATTERDQ', 'VPSCATTERQD', 'VPSCATTERQQ', 'VPSLLVD', 'VPSLLVQ', 'VPSLLVW', 'VPSRAVD', 'VPSRAVQ', 'VPSRAVW', 'VPSRLVD', 'VPSRLVQ', 'VPSRLVW', 'VPTERNLOGD', 'VPTERNLOGQ', 'VPTESTMB', 'VPTESTMD', 'VPTESTMQ', 'VPTESTMW', 'VPTESTNMB', 'VPTESTNMD', 'VPTESTNMQ', 'VPTESTNMW', 'VRANGEPD', 'VRANGEPS', 'VRANGESD', 'VRANGESS', 'VREDUCEPD', 'VREDUCEPS', 'VREDUCESD', 'VREDUCESS', 'VRNDSCALEPD', 'VRNDSCALEPS', 'VRNDSCALESD', 'VRNDSCALESS', 'VSCALEFPD', 'VSCALEFPS', 'VSCALEFSD', 'VSCALEFSS', 'VSCATTERDPD', 'VSCATTERDPS', 'VSCATTERQPD', 'VSCATTERQPS', 'VTESTPD', 'VTESTPS', 'VZEROALL', 'VZEROUPPER', 'WAIT', 'WBINVD', 'WRFSBASE', 'WRGSBASE', 'WRMSR', 'WRPKRU', 'XABORT', 'XACQUIRE', 'XADD', 'XBEGIN', 'XCHG', 'XEND', 'XGETBV', 'XLAT', 'XLATB', 'XOR', 'XORPD', 'XORPS', 'XRELEASE', 'XRSTOR', 'XRSTORS', 'XSAVE', 'XSAVEC', 'XSAVEOPT', 'XSAVES', 'XSETBV', 'XTEST', 'EACCEPT', 'EACCEPTCOPY', 'EADD', 'EAUG', 'EBLOCK', 'ECREATE', 'EDBGRD', 'EDBGWR', 'EDECVIRTCHILD', 'EENTER', 'EEXIT', 'EEXTEND', 'EGETKEY', 'EINCVIRTCHILD', 'EINIT', 'ELBUC', 'ELDB', 'ELDBC', 'ELDU', 'EMODPE', 'EMODPR', 'EMODT', 'ENCLS', 'ENCLU', 'ENCLV', 'EPA', 'ERDINFO', 'EREMOVE', 'EREPORT', 'ERESUME', 'ESETCONTEXT', 'ETRACK', 'ETRACKC', 'EWB', 'INVEPT', 'INVVPID', 'VMCALL', 'VMCLEAR', 'VMFUNC', 'VMLAUNCH', 'VMPTRLD', 'VMPTRST', 'VMREAD', 
+    #                  'VMRESUME', 'VMWRITE', 'VMXOFF', 'VMXON']]
     
     myprocessed_filenames = []
     problematic_files = []
     my_classes = set([])
     
     def __init__(self, root, transform=None, pre_transform=None):
+        print("before super init")
         super(FunctionsDataset, self).__init__(root, transform, pre_transform)
         print(" end of __init__()")
+        print(self.bow_vocab[:10])
+        print(self.instr_types)
 
     @property
     def raw_file_names(self):
@@ -183,6 +208,9 @@ class FunctionsDataset(Dataset):
 
             # if myprocessed_filenames is not initialized,
             # read all filenames from processed folder
+            print(self.bow_vocab[:10])
+            print(self.x86_instr_set[:10])
+            print(self.instr_types)
 
             processed_path = os.path.join(self.root, 'processed')
             print("processed_path",processed_path)
@@ -267,15 +295,11 @@ class FunctionsDataset(Dataset):
                         if self.pre_transform is not None:
                             data = self.pre_transform(data)
 
-                        
                         newfile = 'data_{}.pt'.format(i)
                         torch.save(data, os.path.join(self.processed_dir, newfile))
                         self.myprocessed_filenames.append(newfile)
                         #print(i,filename)
                         i += 1
-
-
-        
         print()
         print("Finished reading-processing dataset,")
         print("processed: {} total files, {} created graph files, {} problematic files".format(
@@ -378,11 +402,12 @@ class FunctionsDataset(Dataset):
             y = self.extractClassLabelFromFolderName(os.path.dirname(filename))
             g = readGraph('',filename)
             if not self.verify_created_graph(g):
-                print("problem with: ", filename, len(g.nodes()), len(g.edges()))
+                #print("problem with: ", filename, len(g.nodes()), len(g.edges()))
                 return None
             xlen = len(g.nodes())
             data = self.createGraphFromNXwithTarget(g,y,xlen,undirected=True)
-            
+            data.filename = filename
+
             return data
         except Exception as err:
             #print(filename)
@@ -427,6 +452,12 @@ class FunctionsDataset(Dataset):
 
 
     def resetNodeTranslation(self):
+        """
+            For each function graph, independently, 
+            the id's of the nodes is set from 0 to m
+
+            Each time a function and so it's graph is parsed, self.nodeidmax and self.node_translation is reset.
+        """
         self.nodeidmax = -1
         self.node_translation = {}
         
@@ -551,7 +582,9 @@ class FunctionsDataset(Dataset):
         return -1
     
     def update_edge_list(self, edge_list_1, n1, node_type):
-        
+        """
+            edge_list_1 is a dict that contains a list for each type of node
+        """
         if node_type not in edge_list_1.keys():
             edge_list_1[node_type]=[n1]
             
@@ -563,6 +596,7 @@ class FunctionsDataset(Dataset):
     def merge_edge_list(self, edge_list):
         """
             pre: edge_list a dict of lists of ints
+
         """
         result_list = []
         previous_max_id = 0
@@ -571,106 +605,20 @@ class FunctionsDataset(Dataset):
             previous_max_id = max(vlist) + previous_max_id
             
         return result_list
+
+    def tensorize_node_attributes(self, x):
+        """
+            GOAL:
+            To use node attributes in PyTorch
+            we need them to be translated to float values.
     
-    def createGraphFromNX(self, g, xlen, undirected=True):
-        """
-            Creates a PyTorch Geometric dataset
-            from a NetworkX graph
-
-            node features -> to one-hot-encoding
-                - type (string)
-                - content
-                    - reg number string -> to int
-                    - displacement number string -> to int?
-                    - memory/ other string -> to what?
+            STEPS:
+            1. sort nodes and their attributes by the nodeid
+            2. make sure all attributes are integers that are less than an arbitrary maximum
+            3. convert them to floats
+            4. create a torch.tensor
 
         """
-        # get edge list
-        edges = g.edges
-        edge_list_1 = {}
-        edge_list_2 = {}
-        self.resetNodeTranslation()
-        for e in edges:
-            # node id must be an int
-            
-            # make nodeid by type
-            # then merge the list
-            n1, node_type1 = self.translateNodeIds(e[0],g)
-            n2, node_type2 = self.translateNodeIds(e[1],g)
-            
-            self.update_edge_list(edge_list_1, n1, node_type1)
-            self.update_edge_list(edge_list_2, n2, node_type2)
-            
-            # edge features?
-            
-            if undirected:
-                self.update_edge_list(edge_list_2, n1, node_type1)
-                self.update_edge_list(edge_list_1, n2, node_type2)
-                # edge features?
-            
-
-
-        edge_list_1 = self.merge_edge_list(edge_list_1)
-        edge_list_2 = self.merge_edge_list(edge_list_2)
-        edge_index = torch.tensor([ edge_list_1,
-                                    edge_list_2], dtype=torch.long)
-
-        # features
-        # use e[0] and e[1] original memoray address values as a feature
-        # add the rest of the features: type, content, ...
-        
-        # starting point: 
-        #    g.node[node]={
-        #      'type': 'register' ,
-        #       'content' : integer}
-        #   and node as a memaddr
-        # result:
-        #  x [ type_as_one-hot-enc, int(content), int(node)]
-        n = xlen
-        x = {}
-        for node in g.nodes():
-            #  all attr of a node are converted to int
-
-            #print(node, g.node[node])
-            nodeid = self.translateNodeIds(node, g)
-            
-            # int
-            # node is an int or a string  im32 -> how to separate
-            # if it contains any alphabetical number -> no memaddres
-            memaddr = -1.0
-            if not re.search('[^0-9]', node):
-                memaddr = int(node)
-                
-
-            # vector with 0's and a 1
-            # version2: replaced with int
-            instr_type = self.one_hot_nodetype_v2(g.node[node])
-            
-            # int
-            if 'type' in g.node[node].keys() and \
-               g.node[node]['type'] != 'instr':
-                try:
-                    content_not_instr = int(g.node[node]['content'])
-                except:
-                    content_not_instr = 0
-                
-            else:
-                content_not_instr = 0
-                
-            # vector with 0's and a 1 in the actual instruction
-            # version2: replaced with int
-            content_instr = self.one_hot_instruction_v2(g.node[node])
-            
-            
-            x[nodeid] = [memaddr, content_not_instr]
-            #print("content_instr: ",content_instr)
-            #x[nodeid].extend(content_instr) # one_hot_nodetype()
-            x[nodeid].append(content_instr) # one_hot_nodetype_v2()
-            #print("instr_type: ", instr_type)
-            #x[nodeid].extend(instr_type) # one_hot_instruction()
-            x[nodeid].append(instr_type) # one_hot_instruciton_v2()
-            # total 4 features per node
-            
         # now transform into a sorted list
         x = sorted([(k,v) for k,v in x.items()], key = lambda x: x[0] )
         #x = [ e[1] for e in x]
@@ -691,9 +639,249 @@ class FunctionsDataset(Dataset):
         #pprint(x)
         #pprint(edge_index)
         x = torch.tensor(x, dtype=torch.float)
-    
-        
+        return x
+
+    def code_attr_memaddres(self, x,nodeid,g, node):
+        """
+        # memaddres - int
+        # node is an int or a string  im32 -> how to separate
+        # if it contains any alphabetical number -> no memaddres
+        """
+        memaddr = -1.0
+        if not re.search('[^0-9]', node):
+            memaddr = int(node)
+                
+        x[nodeid].append(memaddr)
+
+    def code_attr_instr_type(self,x,nodeid,g,node):
+        """   
+
+            # instr_type - int
+            # vector with 0's and a 1
+            # version2: replaced with int
+        """
+        instr_type = self.one_hot_nodetype_v2(g.node[node])
+        x[nodeid].append(instr_type)
+
+    def code_attr_content_not_instr(self,x,nodeid,g,node):
+        """
+         # content_not_instr - int
+
+         this should be rethinked into a global map from 
+         string content to int id
+           
+        """             
+        if 'type' in g.node[node].keys() and \
+           g.node[node]['type'] != 'instr':
+            try:
+                content_not_instr = int(g.node[node]['content'])
+            except:
+                content_not_instr = 0
+        else:
+            content_not_instr = 0
+        x[nodeid].append(content_not_instr)
+
+    def code_attr_content_instr(self,x,nodeid,g,node):
+        """           
+            # content_instr - int
+            # vector with 0's and a 1 in the actual instruction
+            # version2: replaced with int
+
+            one_hot_instruction_v2 could use GLOBAL ids, 
+            for later better classification maybe
+        """
+        content_instr = self.one_hot_instruction_v2(g.node[node])
+        x[nodeid].append(content_instr)
+
+
+    def createGraphFromNX(self, g, xlen, undirected=True):
+        """
+            Creates a PyTorch Geometric dataset
+            from a NetworkX graph
+
+            edge list:
+                currently there a list of edge for each node_type
+                so edge_list_1 and edge_list_2 are dicts of lists of nodes.
+                first we translate nodeids in those dicts of lists
+                then we merge them to become a 2 list of nodes , forming the edge list (list of origins and list of endpoints)
+
+            node features(attributes):
+                starting point: 
+                   g.node[node]={
+                     'type': 'register' ,
+                      'content' : integer}
+                  and node as a memaddr
+                
+                result:
+                 x [ memaddrr, type_as_one-hot-enc, float(content), float(node)]
+
+        """
+
+
+        # edge list preparation
+        edges = g.edges
+        edge_list_1 = {}
+        edge_list_2 = {}
+        self.resetNodeTranslation()
+        for e in edges:
+            # node id must be an int
+            
+            # make nodeid by type
+            # then merge the list
+            n1, node_type1 = self.translateNodeIds(e[0],g)
+            n2, node_type2 = self.translateNodeIds(e[1],g)
+            
+            # add node and node type to edge_list1 and 2
+            # edge_list is implemented as 2 lists,
+            # one holding the origin node for each edge, and one
+            # holding the end node for each edge.
+            self.update_edge_list(edge_list_1, n1, node_type1)
+            self.update_edge_list(edge_list_2, n2, node_type2)
+            
+            # edge features?
+            
+            if undirected:
+                self.update_edge_list(edge_list_2, n1, node_type1)
+                self.update_edge_list(edge_list_1, n2, node_type2)
+                # edge features?
+
+        edge_list_1 = self.merge_edge_list(edge_list_1)
+        edge_list_2 = self.merge_edge_list(edge_list_2)
+        edge_index = torch.tensor([ edge_list_1,
+                                    edge_list_2], dtype=torch.long)
+
+        # node and its features(attributes)
+        n = xlen
+        x = {}
+        for node in g.nodes():
+            # translate nodeid first
+            nodeid = self.translateNodeIds(node, g)
+            x[nodeid] = []
+
+            # code graph node attributes
+            self.code_attr_memaddres(x,nodeid,g,node)
+            self.code_attr_instr_type(x,nodeid,g,node)
+            self.code_attr_content_not_instr(x,nodeid,g,node)
+            self.code_attr_content_instr(x,nodeid,g,node)
+
+        # transform all attributes into floats and tensorize 
+        x = self.tensorize_node_attributes(x)
         return self.createGraph(x, edge_index)
+
+
+    def avg_degree(self, g):
+        degrees = dict(g.degree())
+        sum_of_edges = sum(degrees.values())
+        return sum_of_edges/len(g.nodes)
+
+    def topological_features(self, g):
+        """
+            Set of topological graph features
+
+            They are appended into a list 
+
+            list of times of computation (for statistics and later decision)
+        """
+
+        features = []
+        times = []
+
+        # add graph features here
+
+        start = time.time()
+        try:
+            size = nx.number_of_nodes(g)
+        except:
+            size = 0.0
+        features.append(size)
+        times.append(time.time() - start)
+
+        start = time.time()
+        try:
+            diameter = nx.diameter(g)
+        except:
+            diameter = 0.0
+        features.append(diameter)
+        times.append(time.time() - start)
+
+        start = time.time()
+        try:
+            radius = nx.radius(g)
+        except:
+            radius = 0.0
+        features.append(radius)
+        times.append(time.time() - start)
+
+        start = time.time()
+        try:
+            avg_degree = self.avg_degree(g)
+        except:
+            avg_degree = 0.0
+        features.append(avg_degree)
+        times.append(time.time() - start)
+        #avg_degree_connectivity = nx.average_degree_connectivity(g)
+        
+        start = time.time()
+        try:
+            density = nx.classes.function.density(g)
+        except:
+            density = 0.0
+        features.append(density)
+        times.append(time.time() - start)
+
+        start = time.time()
+        try:
+            connectivity = nx.node_connectivity(g)
+        except:
+            connectivity = 0.0
+        features.append(connectivity)
+        times.append(time.time() - start)
+        
+        start = time.time()
+        try:
+            avg_clustering = nx.average_clustering(g)
+        except:
+            avg_clustering = 0.0
+        features.append(avg_clustering)
+        times.append(time.time() - start)
+
+        start = time.time()
+        try:
+            avg_shortest_path_length = nx.algorithms.shortest_paths.average_shortest_path_length(g)
+        except:
+            avg_shortest_path_length = 0.0
+        features.append(avg_shortest_path_length)
+        times.append(time.time() - start)
+
+        #degree_centrality = nx.algorithms.centrality.degree_centrality(g)
+        start = time.time()
+        try:
+            degree_assortativity = nx.algorithms.assortativity.degree_assortativity_coefficient(g)
+            if math.isnan(degree_assortativity):
+                degree_assortativity = 0.0
+        except:
+            degree_assortativity = 0.0
+        features.append(degree_assortativity)
+        times.append(time.time() - start)
+        
+        start = time.time()
+        try:
+            degree_pearson_correlation_coefficient = nx.algorithms.assortativity.degree_pearson_correlation_coefficient(g)
+            if math.isnan(degree_pearson_correlation_coefficient):
+                degree_pearson_correlation_coefficient = 0.0
+        except:
+            degree_pearson_correlation_coefficient = 0.0
+        features.append(degree_pearson_correlation_coefficient)
+        times.append(time.time() - start)
+        
+
+        # add code features here 
+        # TO-DO
+
+        # merge into a list
+        #print(features)
+        return times, torch.LongTensor(features)
+
 
     def createGraphFromNXwithTarget(self,g,y,xlen, undirected=True):
         """
@@ -702,11 +890,15 @@ class FunctionsDataset(Dataset):
             with node features (called target and represented by y )
 
             PENDING:
-                - appepnd many Datas to the dataset
+                - append static graph features 
+                - append static function code features
         """
         dataset =  self.createGraphFromNX(g,xlen, undirected)
         y = torch.LongTensor(y)
         dataset.y = y 
+        dataset.x_topo_feats, dataset.x_topo_times = self.topological_features(g)
+        
+
         return dataset
     
    
