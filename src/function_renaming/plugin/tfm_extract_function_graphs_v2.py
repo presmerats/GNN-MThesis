@@ -37,19 +37,83 @@ from idaapi import *
 import os
 import datetime
 
+
 class codeNode():
 	def __init__(self, memaddr, type, content, fd_nodes=None, fd_edges=None):
+		
+		
 		self.memaddr = memaddr
 		self.type = type 
 		self.content = content
 		self.fd_nodes = fd_nodes
 		self.fd_edges = fd_edges
+		Message("init: %s  %s  %s\n" % (self.memaddr, self.type, self.content))
 	
-	def saveNode(self):
-		self.fd_nodes.write('%s {"type": "%s", "content": "%s"}\n' % (self.memaddr, self.type, self.content))
+	def saveNode(self, results_dict):
+		global autoid
+		Message("before save:  %s  %s  %s\n" % (self.memaddr, self.type, self.content))
 		
-	def saveEdge(self, destination):
-		self.fd_edges.write('%s %s {"type": "%s" }\n' % (self.memaddr, destination.memaddr, destination.type))
+		if self.memaddr == '0' and self.type == 'register':
+			self.memaddr = 'r' + self.content
+		elif self.memaddr == '0' and self.type == 'immediate':
+			self.memaddr = 'im' + self.content
+		elif self.memaddr == '0' and self.type == 'memory':
+			self.memaddr = 'm' + self.content
+		elif self.memaddr == '0' and self.type == 'displacement':
+			self.memaddr = 'd' + self.content
+		elif self.memaddr == '0' and self.type == 'phrase':
+			self.memaddr = 'p' + self.content
+		elif self.memaddr == '0':
+			autoid+=1
+			self.memaddr = '_' + str(autoid)
+			#Message(" memaddrr %s and autoid %d\n" % (self.memaddr,autoid))
+			
+		# to avoid overwriting, first verify not in dict
+		if self.memaddr not in results_dict['nodes'].keys():
+			results_dict['nodes'][self.memaddr] = {
+				'memaddr' : self.memaddr,
+				'type' : self.type,
+				'content': self.content
+			}
+		else:
+			# if already there, then study how to modify it
+			# don't modify type, memaddr 
+			# maybe can append data to content...
+			if results_dict['nodes'][self.memaddr]['type'] != self.type and \
+			    self.type == 'instr':
+				results_dict['nodes'][self.memaddr]['type']=  self.type	
+				results_dict['nodes'][self.memaddr]['content']= self.content
+			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
+			    results_dict['nodes'][self.memaddr]['type'] == 'instr':
+				pass
+			
+			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
+			    results_dict['nodes'][self.memaddr]['type'] != 'instr':
+				results_dict['nodes'][self.memaddr]['type']+= "; "  + self.type
+			
+			elif results_dict['nodes'][self.memaddr]['content'] != self.content:
+				results_dict['nodes'][self.memaddr]['content']+= "; "  + self.content
+		
+		
+		# will be written to disk at the end of the writeGraph function
+		
+		
+		#self.fd_nodes.write('%s {"type": "%s", "content": "%s"}\n' % (self.memaddr, self.type, self.content))
+		#Message("save:  %s  %s  %s\n" % (self.memaddr, self.type, self.content))
+		
+	def saveEdge(self, destination, results_dict):
+		
+		edgeid = self.memaddr +"-"+ destination.memaddr
+		if edgeid not in results_dict['edges'].keys():
+			results_dict['edges'][edgeid] = {
+				'source': self.memaddr,
+				'dest': destination.memaddr,
+				'type': '{ "type": "'+destination.type+'" }'
+			}
+		
+		#self.fd_edges.write('%s %s {"type": "%s" }\n' % (self.memaddr, destination.memaddr, destination.type))
+		#Message("saveEdge: %s  %s  %s -  %s %s %s\n" % (self.memaddr, self.type, self.content,destination.memaddr, destination.type, destination.content))
+	
 
 def initializeFolder():
 	prefix = "C:\labs\IDA_pro_book\\" 
@@ -92,6 +156,7 @@ def instrToStr(instr):
 		return None
 			
 def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
+	global results_dict
 	# save the caddr as a node (duplicates can exist)
 	xref_node = codeNode(str(xref.to), 
 						  type="instr", 
@@ -110,22 +175,27 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 		# otherwise do nothing 
 	
 		# HOW TO COMPUTE: initial func instruction?
-		func_start = get_func(GetFunctionAttr(f, FUNCATTR_START))
+		func_start = GetFunctionAttr(f, FUNCATTR_START)
 		
 		# HOW TO COMPUTE: last func instruction?
-		func_end = get_func(GetFunctionAttr(f, FUNCATTR_END))
+		func_end = GetFunctionAttr(f, FUNCATTR_END)
 		
 		# comparison
-		inside = xref.to >= func_start and xref.to <= func_end
+		xref_start = GetFunctionAttr(xref.to, FUNCATTR_START)
+		inside = xref_start >= func_start and xref_start <= func_end
+		#inside = True
+		Message(" xref_start: %s func_start: %s  func_end: %s \n" % (xref_start, func_start, func_end))
 		
 		# decision making
 		if inside:
-			pass # do nothing
+			pass # do nothing, don't even save the node as it will overwrite previous saved node
 		else:
+			Message(" computed as xref to outside the function! \n")
 			xref_node.type = "func"
-			xref_node.content = Name(xref.to)
+			xref_node.content += ' ' + Name(xref.to)
+			xref_node.saveNode(results_dict)
 
-	xref_node.saveNode()
+	
 	return xref_node
 			
 def processOperand(f, op,i, fd_nodes, fd_edges):
@@ -146,7 +216,7 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
  	o_idpspec5 = 13
 	
 	"""
-
+	global results_dict
 	operand_node = codeNode(str(op.addr), 
 						  type="data", 
 						  content="",
@@ -176,6 +246,7 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
 	elif op.type == o_reg:
 		operand_node.type="register"
 		operand_node.content=str(op.reg)
+		#Message(" %s  %s %s %s\n" % (op.reg, op.phrase, op.value, op.addr))
 	elif op.type == o_phrase:
 		operand_node.type="phrase"
 		operand_node.content=str(op.phrase)
@@ -183,9 +254,29 @@ def processOperand(f, op,i, fd_nodes, fd_edges):
 		operand_node.type="unkown"
 		operand_node.content=str(op.value)
 	
-	operand_node.saveNode()
+	operand_node.saveNode(results_dict)
 	return operand_node
 		
+def writeFuncGraphToDisk(results_dict, fd_nodes, fd_edges):
+	
+	for k,v in results_dict['nodes'].items():
+		memaddr = v['memaddr']
+		type = v['type']
+		content = v['content']
+		fd_nodes.write('%s {"type": "%s", "content": "%s"}\n' % (memaddr, type, content))
+		
+	for k,v in results_dict['edges'].items():
+		"""
+			{
+				'source': self.memaddr,
+				'dest': destination.memaddr,
+				'type': '{ "type": "'+destination.type+'" }'
+			}
+		"""
+		source = v['source']
+		destination = v['dest']
+		type = v['type']
+		fd_edges.write('%s %s {"type": "%s" }\n' % (source, destination, type))
 	
 def writeGraph(f,  fd_nodes, fd_edges):
 	"""
@@ -196,7 +287,12 @@ def writeGraph(f,  fd_nodes, fd_edges):
 		- node features file:  node id { 'feat1_name': feat1_val, ...}
 			- manually add those features into the nodes once imported from edge_list
 	
+		now first using a dict, then writing to disk
 	"""
+	
+	global results_dict
+	results_dict = { 'nodes': {}, 'edges': {}}
+	
 	func = get_func(GetFunctionAttr(f, FUNCATTR_START))
 	if not func is None:
 		fname = Name(func.startEA)
@@ -219,17 +315,20 @@ def writeGraph(f,  fd_nodes, fd_edges):
 			for op in instr.Operands:
 				operand_node = processOperand(f, op,i, fd_nodes, fd_edges)
 				if operand_node is not None:
-					instr_node.saveEdge(operand_node)
+					instr_node.saveEdge(operand_node, results_dict)
 					operands.append(operand_node.content)
 			
 			instr_node.content = " ".join(operands)
-			instr_node.saveNode()
+			instr_node.saveNode(results_dict)
 				
 			# save xrefs From i
 			for xref in XrefsFrom(i,0):
 				xref_node = processXrefFrom(f, xref,i, fd_nodes, fd_edges)
-				instr_node.saveEdge(xref_node)
+				Message(" Xref from %s to %s \n" % (instr_node.memaddr, xref_node.memaddr))
+				instr_node.saveEdge(xref_node, results_dict)
 		
+		#write func to disk
+		writeFuncGraphToDisk(results_dict, fd_nodes, fd_edges)
 			
 			
 folder_name = initializeFolder()
@@ -237,12 +336,17 @@ if not folder_name:
 	Message("Error creating folder!")
 	exit()
 
+results_dict = {}
 funcs = Functions()
 for f in funcs:
-	fd_nodes, fd_edges = initializeFiles(folder_name,f)
-	writeGraph(f, fd_nodes, fd_edges)		
-	fd_edges.close()
-	fd_nodes.close()
+	func = get_func(GetFunctionAttr(f, FUNCATTR_START))
+	if not func is None: #and \
+	   #Name(func.startEA)=='sub_452740':
+		fd_nodes, fd_edges = initializeFiles(folder_name,f)
+		autoid = 0
+		writeGraph(f, fd_nodes, fd_edges)		
+		fd_edges.close()
+		fd_nodes.close()
 			
 
 			
