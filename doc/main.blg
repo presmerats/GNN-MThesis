@@ -1,0 +1,65 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: main.aux
+The style file: unsrt.bst
+Database file #1: references.bib
+You're missing a field name---line 2 of file references.bib
+ : 
+ : % author = {Kaggle: Your Home for Data Science},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 10 of file references.bib
+ : 
+ : % author = "The statistic portal",
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 18 of file references.bib
+ : 
+ : % author = "",
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Warning--all relevant fields are empty in DB
+Warning--all relevant fields are empty in statista
+Warning--all relevant fields are empty in tax
+You've used 3 entries,
+            1791 wiz_defined-function locations,
+            449 strings with 3531 characters,
+and the built_in function-call counts, 260 in all, are:
+= -- 3
+> -- 3
+< -- 0
++ -- 3
+- -- 0
+* -- 5
+:= -- 18
+add.period$ -- 3
+call.type$ -- 3
+change.case$ -- 0
+chr.to.int$ -- 0
+cite$ -- 6
+duplicate$ -- 15
+empty$ -- 55
+format.name$ -- 0
+if$ -- 61
+int.to.chr$ -- 0
+int.to.str$ -- 3
+missing$ -- 0
+newline$ -- 12
+num.names$ -- 0
+pop$ -- 15
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 30
+stack$ -- 0
+substring$ -- 0
+swap$ -- 3
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 3
+while$ -- 0
+width$ -- 4
+write$ -- 14
+(There were 3 error messages)

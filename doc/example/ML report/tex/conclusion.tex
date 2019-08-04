@@ -1,0 +1,27 @@
+\section{Conclusion}
+
+% important points to highlight
+%   1- data analysis
+%   2- feature extraction
+%   3- model training
+%   4- feature selection and model selection
+We start with manual data exploration  using unsupervised techniques, checking for outliers and structures in the dataset. In the next step we did feature engineering for creating new features using ratio, log and other transformations. Facing the million dollar question which combination of feature set and model is the best for our problem, we decided to implement sequential forward selection. After many steps trail and error, we came up with the results in Table.\ref{table:final}. The most interesting to see, in our point of view, is the comparison between the decision tree and the Random forest. As we can see in the decision tree preform better than random tree. However, this is base on the subset we used from SFS, looking on Table.\ref{experiments} we see that the Random forest model that trained with the complete data set (featureset\_logs) preform much better. But when we used SFS not all the features were chosen, that show us that doing SFS is good, but not enough. On the other hand, we see that the decision tree model didn't suffer from that, we assume it because it have less randomness in it's process. About the Lasso regression model, we expected it be worse than Random Forest, but using the best featureset (by forward selection) we found that this is not the case. This is a bit surprising, we can also say the difference is not so significant.
+
+% 
+
+% mentions the manual exploration and feature extraction
+% metion the unsupervised analysis and pca feature extraction
+% mention the methodology forward selection
+% mention the results : which model outperforms the others 
+% compare the models in the top 3
+% state why random forest is better than decision trees and lasso -> theoretically should be easy to give reasons for that
+% IMprovements: 
+
+
+We proposed a series of improvements over the current work:
+\begin{itemize}
+    \item test more advanced models: Splines, RVM, Bayesian approach to regression,
+    \item perform a deeper exploration of the possible features and combinations of features
+    \item Explore better feature selection method.
+\end{itemize}
+\input{tables/final.tex}

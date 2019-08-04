@@ -1,0 +1,132 @@
+\documentclass[a4paper]{article}
+
+%%%%%%%% CREATE DOCUMENT STRUCTURE %%%%%%%%
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage{subfig}
+\usepackage[table,xcdraw]{xcolor}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multicol}
+%\usepackage{sectsty}
+%\usepackage{apacite}
+\usepackage{float}
+\usepackage{titling} 
+\usepackage{blindtext}
+\usepackage[square,sort,comma,numbers]{natbib}
+\usepackage[colorinlistoftodos]{todonotes}
+%\usepackage{xcolor}
+\usepackage{indentfirst}
+\usepackage{amsmath}
+\usepackage[linesnumbered,algoruled,boxed,lined]{algorithm2e}
+\setlength\parskip{.5\baselineskip plus .1\baselineskip  minus .1\baselineskip}
+\setlength{\parindent}{1em}
+\definecolor{darkgreen}{rgb}{0.0, 0.4, 0.0}
+
+% \makeatletter
+% \def\BState{\State\hskip-\ALG@thistlm}
+% \makeatother
+
+
+%%%%%%%% DOCUMENT %%%%%%%%
+\begin{document}
+
+
+
+%%%% Title Page
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} 							% horizontal line and its thickness
+\newenvironment{bottompar}{\par\vspace*{\fill}}{\clearpage}
+\center 
+\begin{center}
+%----------------------------------------------------------------------------------------
+%	HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+\includegraphics[scale=0.8]{./img/upclogo.png}\\[2cm] % Include a department/university logo - this will require the graphicx package
+ 
+%\textsc{\LARGE Polytechnical University of Catalonia}\\[1cm] % Name of your university/college
+\textsc{\Large Master in Innovation and Research in Informatics}\\[0.5cm] % Major heading such as course name
+\textsc{\large Machine Learning}\\[5cm] % Minor heading such as course title
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \huge \bfseries House Price Prediction}\\[0.4cm] % Title of your document
+\HRule \\[1.5cm]
+ 
+%----------------------------------------------------------------------------------------
+%	AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+\begin{bottompar}
+\begin{minipage}{0.5\textwidth}
+\begin{flushleft} \large
+\emph{Authors:}\\
+Asaf Badouh \\ Pau Rodríguez Esmerats % Your name
+\end{flushleft}
+\end{minipage}
+~
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Professors:} \\
+Jaume Baixeries Juvillà	\\ Marta Arias Vicente   % Supervisor's Name
+\end{flushright}
+\end{minipage}\\[2cm]
+
+% If you don't want a supervisor, uncomment the two lines below and remove the section above
+%\Large \emph{Author:}\\
+%John \textsc{Smith}\\[3cm] % Your name
+
+%----------------------------------------------------------------------------------------
+%	DATE SECTION
+%----------------------------------------------------------------------------------------
+
+{\large \today}\\[2cm] % Date, change the \today to a set date if you want to be precise
+\end{bottompar}
+\end{center}
+\end{titlepage}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+\pagebreak
+
+% \begin{abstract}
+
+
+% \end{abstract}
+
+\pagebreak
+
+\input{./tex/introduction.tex}
+
+\input{./tex/mva.tex}
+
+\input{./tex/feature_extraction.tex}
+
+\input{./tex/model_fitting.tex}
+
+\input{./tex/experiments.tex}
+
+\input{./tex/conclusion.tex}
+
+
+\newpage
+\nocite{*}
+\bibliographystyle{unsrt}
+\bibliography{references}
+\end{document}

@@ -1,0 +1,79 @@
+\section{Experiments}
+
+This section exposes the selected approach to perform feature and model selection through different experiments. An experiment consists on training a model over a selected dataset, using cross validation to select the hyper parameters that produce a model with the minimum validation error. Our strategy consists on explore the space of combinations of models and datatsets in order the find the best performing model over the best dataset. The steps we follow are summaryzed here:
+\begin{itemize}
+    \item First we start from a group of different datasets, each containing features produced on different analyses. 
+    \item Then we train all the models that we have considered for the project over each of those datasets, performing cross validation each time.
+    \item After that, we select the top 3 best pairs model-dataset, the ones with minimum validation error, and perform feature selection over the dataset using forward selection. 
+    \item Finally, for each pair, the model is trained again over the resulting dataset.\\
+\end{itemize}
+
+The next table shows fragments of all the experiments and their error measures. For each experiment we printed the normalized root mean squared error obtained during the cross validation (shown as Validation.NRMSE), obtained as a mean of all the nrmse of each model and fold. This is the value that we use to select the best model, by selecting the minimum normalized root mean squared error. We also show the normalized mean squared error that the selected model, which is then trained again over all the training data set, obtains when predicting over the test set. This is the error that helps us see how well the selected model will generalize over new data.
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=0.95\linewidth]{img/exp01.png}
+    \caption{Evolution of the NRMSE for the validation, training and testing set}\label{fig:Evol}
+\end{figure}
+
+% Summarized table
+\input{./tables/exp_models_vs_featuresets_all.tex}
+
+We also show in the fig.\ref{fig:Evol} how the mean of the normalized root mean squared error (NRMSE) when performing cross validation evolves in the different datasets, and compare it to how the training and test NRMSE performs.
+
+
+
+
+
+
+% top 3 table
+Our top 3 best performers consists of Random forest, Decision tree and Lasso regression models trained over feature datasets that contains logarithms of continuous variables, manually selected continuous vars that are not correlated between them or all the original dataset.
+\input{./tables/top3.tex}
+
+% forward selection explanation
+Once we have found our best performing model and datasets, we run a forward selection algorithm to perform feature selection over each dataset with its corresponding model.\\
+
+% forward selection table
+
+%\scalebox{0.8}{
+
+\input{./tables/_regression_randomforest_featureset_logs_sfs.tex}
+%}
+
+In this table we can observe how we add features to the dataset until the validation error stops decreasing. At that point the best feature set is found. We can plot the evolution of the error measure (NRMSE of the cross validation) during the execution of the forward selection algorithm. In Figure.\ref{fig:rf_sfs} We can see the error in each iteration space (between the dashed-orange-lines), in every iteration we choose the feature that decrease the error the most.
+
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=0.8\textwidth]{img/randomForest.png}
+    \caption{Evolution of the NRMSE for the Sequential forward selection}\label{fig:rf_sfs}
+\end{figure}
+
+We used SFS on the two best models, decision tree and lasso.
+\textbf{Decision tree} - Using feature-set without correlated features gives us good results, knowing how decision tree this can be explained by the fact that every split will try to maximize the differences between it's nodes. When we are using features that are not correlate with each other it should help the model do better in it's splitting decision. We start the SFS with 8 features and add features iteratively. Eventually, the validation error dropped from 0.66 to 0.51.
+\textbf{Lasso} - We used dataset with large range of features we extract. Start with the small number of features having validation error of 0.68, after 351 iteration of SFS algorithm, the final number of feature grow significantly and so the validation error dropped to 0.54.
+
+
+%\scalebox{0.8}{
+%\input{./tables/_regression_rpart_tree_fitting_featureset_logs_sfs_summary.tex}
+%}\\
+%\textbf{Forward selection of the decision tree model over the "featureset\_nocorrelation03\_logs" dataset:}\\
+
+
+%\scalebox{0.8}{
+%\input{./tables/_glmnet_lasso_featureset_allmanyal_log_sfs_summary.tex}
+%}\\
+%\textbf{Forward selection of the lasso model over the "featureset\_nocorrelation03\_logs" dataset:}\\
+
+
+% forward selection plot
+
+
+
+
+% explanation of the final fit
+Once we have selected our best 3 models and performed feature selection over the dataset, we can fit the best model with the feature set and see what is its validation error and how it generalizes by the testing error.
+
+% small resulting table of the final validatio errors
+
+

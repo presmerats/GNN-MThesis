@@ -1,0 +1,9 @@
+\select@language {english}
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}
+\contentsline {section}{\numberline {2}State of the art}{2}{section.2}
+\contentsline {section}{\numberline {3}Methodology}{2}{section.3}
+\contentsline {section}{\numberline {4}Implementation}{2}{section.4}
+\contentsline {section}{\numberline {5}Experiments}{2}{section.5}
+\contentsline {section}{\numberline {6}Conclusion}{6}{section.6}
+\contentsline {section}{Appendices}{8}{section*.10}
+\contentsline {section}{\numberline {A}Implementation details}{8}{Appendix.a.A}
