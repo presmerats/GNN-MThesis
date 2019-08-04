@@ -922,9 +922,10 @@ class FunctionsDataset(Dataset):
             doc = ""
             doc2 = ""
             num_regs = 0
+            num_distinct_regs = 0
             num_memaddrs = 0
-            num_imms = 0
-            num_displs = 0
+            #num_imms = 0
+            #num_displs = 0
             num_funcs = 0
             num_instrs = 0
             list_regs = []
@@ -947,7 +948,7 @@ class FunctionsDataset(Dataset):
                     # num regs, memaddrs, imms, displs, xrefs from, xrefs to
                     # list of registers, xrefsto,
                     if attr_dict['type'] == 'register' or attr_dict['type'] == 'phrase':
-                        num_regs += 1
+                        num_distinct_regs += 1
                         list_regs.append(attr_dict['raw_content'])
                     elif attr_dict['type'] == 'instr':
                         num_instrs += 1
@@ -978,10 +979,62 @@ class FunctionsDataset(Dataset):
 
                 except:
                     pass
+
+        with open(folder+filename,'r') as f:
+
+            
+            num_regs = 0
+            num_imms = 0
+            num_displs = 0
+            num_funcs = 0
+           
+
+
+            # read file
+            for line in f.readlines():
+
+                firstsep = line.find("{")
+                if firstsep==-1:
+                    continue
+
+                
+                try:
+                    
+                    attributes = line[firstsep:]
+                    attr_dict = json.loads(attributes)
+
+
+                    # num regs, memaddrs, imms, displs, xrefs from, xrefs to
+                    # list of registers, xrefsto,
+                    if attr_dict['type'] == 'register' or \
+                       attr_dict['type'] == 'phrase' or \
+                       attr_dict['type'] == 'displacement':
+                        num_regs += 1 
+                        #list_regs.append(attr_dict['raw_content'])
+                    elif attr_dict['type'] == 'immediate':
+                        num_imms += 1
+                    elif attr_dict['type'] == 'func':
+                        num_funcs += 1
+                        
+                    
+
+                    # apply the BOW model embedding?
+
+                    # pack everything as a vector?
+                    # this could be done after the bow model is tested, 
+                    # for now 20190728, those values will continue as features for further analysis
+
+
+
+                except Exception as e:
+                    #pass
+                    print("error with edges.txt ",line,e)
+
             
             # save everything as a dict for the moment
             code_feats = {
                 'nregs': num_regs,
+                'num_distinct_regs': num_distinct_regs,
                 'ninstrs': num_instrs,
                 'ndispls': num_displs,
                 'nimms': num_imms,
@@ -1003,7 +1056,7 @@ def find_node(fnodes, search_memaddr, search_content, regex):
     """
 
     fnodes.seek(0)
-    print(hex(search_memaddr), search_content)
+    #print(hex(search_memaddr), search_content)
     fnodes.seek(0)
     for line in fnodes.readlines():
         tokens2 = line.split('{')
@@ -1029,7 +1082,7 @@ def find_node(fnodes, search_memaddr, search_content, regex):
             content_str = tokens2[1][(j+14):(j+k)]
             content_str = content_str.split(';')[0]
             if j<0:
-                print("cannot find content",line)
+                #print("cannot find content",line)
                 nodes_split_errors+=1
                 continue
             memaddr = hex(int(memaddr_str))
@@ -1041,7 +1094,7 @@ def find_node(fnodes, search_memaddr, search_content, regex):
                 #print("found",memaddr, content_str)
                 return True
             elif memaddr == hex(search_memaddr):
-                print("contents is not equal:",search_content+"|"+current_content)
+                #print("contents is not equal:",search_content+"|"+current_content)
                 pass
 
             #print(memaddr, memaddr_str, content_str)
@@ -1103,15 +1156,15 @@ def check_instructions(assembly_listing_file, nodes_file):
                     show_final_results = False
                     if len(not_found_instrs)>0 and \
                        not_found_instrs[-1][0] == int_memaddr:
-                        print("removing previous not found memaddr")
-                        print(not_found_instrs)
+                        #print("removing previous not found memaddr")
+                        #print(not_found_instrs)
                         show_final_results = True
                     while len(not_found_instrs)>0 and \
                        not_found_instrs[-1][0] == int_memaddr:   
                         not_found_instrs.pop()
-                    if show_final_results: print(not_found_instrs)
+                    #if show_final_results: print(not_found_instrs)
 
-        print("\n nodes.txt")
+        #print("\n nodes.txt")
         for line in fnodes.readlines():
 
             tokens2 = line.split('{')
@@ -1136,7 +1189,7 @@ def check_instructions(assembly_listing_file, nodes_file):
                 k = tokens2[1][j:].find(', "mnemonic_content":')
                 content_str = tokens2[1][j:(j+k)]
                 if j<0:
-                    print("cannot find content",line)
+                    #print("cannot find content",line)
                     nodes_split_errors+=1
                     continue
                 memaddr = hex(int(memaddr_str))
@@ -1166,7 +1219,7 @@ def find_instr_in_code(document, search_memaddr, search_content, regex):
             current_content = regex.sub(' ',content_str)
             #print("      ",content_str)
             if current_content.strip() == search_content.strip():
-                print("found", content_str)
+                #print("found", content_str)
                 return True
             else:
                 #print("contents is not equal:",search_content+"|"+current_content)
@@ -1178,6 +1231,47 @@ def find_instr_in_code(document, search_memaddr, search_content, regex):
 
     return False
 
+def find_registers(instruction_string):
+    registers = ["eax","ebx","ecx","edx","esi","edi", "ebp","esp",
+                 "rax","rbx","rcx","rdx",
+                 "ah","bh","ch","dh","si","di", "bp","sp",
+                 "al","bl","cl","dl"]
+
+    found = False
+    for reg in registers:
+        if instruction_string.lower().find(reg)>-1:
+            if instruction_string.lower().find("_"+reg)>-1:
+                continue
+            found=True 
+            break
+    return found 
+
+
+def find_howmany_registers(instruction_string):
+    registers = ["eax","ebx","ecx","edx","esi","edi", "ebp","esp",
+                 "rax","rbx","rcx","rdx",
+                 "ax","bx","cx","dx",
+                 "ah","bh","ch","dh","si","di", "bp","sp",
+                 "al","bl","cl","dl"]
+
+    found = 0
+    positions = []
+    for reg in registers:
+        i = instruction_string.lower().find(reg)
+        if i>-1 and \
+           i not in positions and \
+           i+1 not in positions and \
+           i-1 not in positions and \
+           i+2 not in positions and \
+           i-2 not in positions and \
+           instruction_string.lower().find("_"+reg)==-1 and \
+           instruction_string.lower().find("0"+reg)==-1 :
+            positions.append(i)
+            #print(" found ",reg," in ",instruction_string)
+            found+=1 
+            
+    return found 
+
 
 def check_document_features(code_feats_dict, nodes_file, assembly_listing_file):
      # tracking errors
@@ -1186,6 +1280,7 @@ def check_document_features(code_feats_dict, nodes_file, assembly_listing_file):
     not_found_instrs = []
     found_instrs = 0
     assembly_listing_code_lines = 0
+    num_registers_assembly_listing = 0
 
     regex = re.compile(r"\s+", re.IGNORECASE)
 
@@ -1218,6 +1313,9 @@ def check_document_features(code_feats_dict, nodes_file, assembly_listing_file):
                     assembly_listing_code_lines+=1 
                 old_memaddr = int_memaddr
 
+                if find_registers(instr):
+                    num_registers_assembly_listing+=find_howmany_registers(instr)
+
                 if not find_instr_in_code(code_feats_dict['document'], int_memaddr, instr, regex):
                     if line_orig.find('; CODE XREF')==-1 and \
                        instr != ' ' and \
@@ -1226,14 +1324,14 @@ def check_document_features(code_feats_dict, nodes_file, assembly_listing_file):
                 else:
 
                     found_instrs +=1
-                    print(" found ",memaddr,instr)
+                    #print(" found ",memaddr,instr)
 
                     # make sure thi int_memaddr was not on the list of not founds
                     show_final_results = False
                     if len(not_found_instrs)>0 and \
                        not_found_instrs[-1][0] == int_memaddr:
-                        print("removing previous not found memaddr")
-                        print(not_found_instrs)
+                        #print("removing previous not found memaddr")
+                        #print(not_found_instrs)
                         show_final_results = True
                     while len(not_found_instrs)>0 and \
                        not_found_instrs[-1][0] == int_memaddr:   
@@ -1241,16 +1339,18 @@ def check_document_features(code_feats_dict, nodes_file, assembly_listing_file):
                         #found_instrs -=1
                     
                         #assembly_listing_code_lines-=1 # approach not working
-                    if show_final_results: print(not_found_instrs)
+                    #if show_final_results: print(not_found_instrs)
 
                 
     return {
-        'line_split_errors': line_split_errors,
-        'code_errors': code_errors,
-        'not_found_instr': not_found_instrs,
-        'found_instrs': found_instrs,
-        'assembly_listing_code_lines': assembly_listing_code_lines,
+        'parsing assembly listing line_split_errors': line_split_errors,
+        'parsing assembly listing code_errors': code_errors,
+        'parsing assembly listing not_found_instr': not_found_instrs,
+        'parsing assembly listing found_instrs': found_instrs,
+        'assembly listing code lines': assembly_listing_code_lines,
+        'assembly listing num regs': num_registers_assembly_listing,
     }
+
 
 
 def check_global_code_features(code_feats_dict, nodes_file, assembly_listing_file, result_2):
@@ -1269,22 +1369,145 @@ def check_global_code_features(code_feats_dict, nodes_file, assembly_listing_fil
             }
     """
 
+    regex = re.compile(r"\s+", re.IGNORECASE)
+
+    
+    check_num_registers_ok = False
+
     check_num_instrs_ok = False
     # features num instructions in document code
-    doc_num_instrs = result_2['found_instrs']
+    doc_num_instrs = result_2['parsing assembly listing found_instrs']
     # features num instructions as a feature 
     feats_num_instrs = code_feats_dict['ninstrs']
     # real num instructions in code
-    real_num_instrs = result_2['assembly_listing_code_lines']
+    real_num_instrs = result_2['assembly listing code lines']
     print("checking num instructions: ",
           real_num_instrs,
           doc_num_instrs,
           feats_num_instrs)
     check_num_instrs_ok =  real_num_instrs== doc_num_instrs == feats_num_instrs
 
+    # num regs, displs, imm
+
+                
+    print("checking num  registers ",result_2['assembly listing num regs'],
+        code_feats_dict['nregs'],
+        code_feats_dict['num_distinct_regs'])
+    check_num_registers_ok =  result_2['assembly listing num regs'] == code_feats_dict['nregs']     
+
+    
+
     return {
-        'check_num_instrs_ok': check_num_instrs_ok
+        'features num instr': feats_num_instrs,
+        'features num_instr in document': doc_num_instrs,
+        'assembly listing num instr': real_num_instrs,
+        '_check_num_instrs_ok': check_num_instrs_ok,
+
+        'assembly listing num regs': result_2['assembly listing num regs'],
+        'features num regs': code_feats_dict['nregs'],
+        '_check_num_registers_ok': check_num_registers_ok,
+
+        'features num func calls': code_feats_dict['num_funcs'],
+        
     }
+
+
+def check_xrefsto(assembly_listing_file, edges_file, nodes_file):
+    """
+        ok- get the func edges from edges.txt
+        ok- rewrite the nodes.txt with onlly the instructions
+        but, putting the link to func under the instructions that calls it 
+        ok- manually inspect if it's correct comparing to the assemblly listing 
+
+        
+    """
+
+    # tracking errors
+    line_split_errors = 0
+    nodes_split_errors = 0
+    not_found_instrs = []
+    xrefs_to_instrs = []
+
+    regex = re.compile(r"\s+", re.IGNORECASE)
+
+    funcs_list = []
+    with open(nodes_file,'r') as fnodes, open(edges_file,'r') as fedges :
+
+
+        fedges.seek(0)
+        for line in fedges.readlines():
+            tokens2 = line.split('{')
+            memaddr_str = tokens2[0]
+            try:
+                # first find type and select only instr
+                j = tokens2[1].find('type": ')
+                if j<0:
+                    print("cannot find type",line)
+                    nodes_split_errors+=1
+                    continue
+                k = tokens2[1][j:].find(' }')
+                if k<0:
+                    print("cannot find type",line)
+                    nodes_split_errors+=1
+                    continue
+                node_type = tokens2[1][(j+7):(j+k)]
+                if node_type == '"func"':
+                    splits = line.split(' ')
+                    m1 = splits[0]
+                    m2 = splits[1]
+                    funcs_list.append((hex(int(m1)),hex(int(m2)))  )
+            except Exception as e:
+                print("PROBLEM: ",line, e)
+
+        xrefsto_origins = [e[0] for e in funcs_list]
+        xrefsto_dests = [e[1] for e in funcs_list]
+
+        fnodes.seek(0)
+        for line in fnodes.readlines():
+            
+            tokens2 = line.split('{')
+            memaddr_str = tokens2[0]
+            try:
+                # first find type and select only instr
+                j = tokens2[1].find('type": ')
+                if j<0:
+                    print("cannot find type",line)
+                    nodes_split_errors+=1
+                    continue
+                k = tokens2[1][j:].find(', "content":')
+                if k<0:
+                    print("cannot find type",line)
+                    nodes_split_errors+=1
+                    continue
+                node_type = tokens2[1][(j+7):(j+k)]
+                if node_type != '"instr"':
+                    continue
+                
+                
+                memaddr = hex(int(memaddr_str))
+
+                # DEBUG print  xrefstTO and instructions
+                if memaddr in xrefsto_origins:
+                    l = xrefsto_origins.index(memaddr)
+                    #print(memaddr,line)
+                    #print("        xreft to ",xrefsto_dests[l])
+                    xrefs_to_instrs.append((line, xrefsto_dests[l]))
+                # printf bug verification
+                #elif memaddr == hex(int("0045E3FA",16)):
+                #    print(memaddr, line)
+
+            except Exception as e:
+                print("PROBLEM: ",line, e)
+
+    #pprint(funcs_list)
+                    
+    return {
+        'num funcs calls from edges and nodes files': len(funcs_list),
+        
+        'funcs calls xrefsto info': xrefs_to_instrs,
+        'funcs calls list': funcs_list
+    }
+
 
 
 
@@ -1316,11 +1539,19 @@ def test_code_features(code_feats_dict, assembly_listing_file, nodes_file, edges
     """
 
     result_1 = check_instructions(assembly_listing_file, nodes_file)
-    pprint(result_1)
+
     
 
     result_2 = check_document_features(code_feats_dict, nodes_file, assembly_listing_file)
-    pprint(result_2)
+
 
     result_3 = check_global_code_features(code_feats_dict, nodes_file, assembly_listing_file, result_2)
-    pprint(result_3)
+
+
+
+    result_4 = check_xrefsto(assembly_listing_file, edges_file, nodes_file)
+
+    result_1.update(result_2)
+    result_1.update(result_3)
+    result_1.update(result_4)
+    pprint(result_1)

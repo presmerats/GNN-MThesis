@@ -47,6 +47,7 @@ class codeNode():
 		self.type = type 
 		self.content = content
 		self.mnemonic_content = ''
+		self.raw_content = ''
 		self.fd_nodes = fd_nodes
 		self.fd_edges = fd_edges
 		#Message("init: %s  %s  %s\n" % (self.memaddr, self.type, self.content))
@@ -86,7 +87,9 @@ class codeNode():
 			results_dict['nodes'][self.memaddr] = {
 				'memaddr' : self.memaddr,
 				'type' : self.type,
-				'content': self.content
+				'content': self.content,
+				'mnemonic_content': self.mnemonic_content,
+				'raw_content': self.raw_content
 			}
 		else:
 			# if already there, then study how to modify it
@@ -99,11 +102,23 @@ class codeNode():
 				"""
 				results_dict['nodes'][self.memaddr]['type']=  self.type	
 				results_dict['nodes'][self.memaddr]['content']= self.content
+				results_dict['nodes'][self.memaddr]['mnemonic_content']= self.mnemonic_content
+				results_dict['nodes'][self.memaddr]['raw_content']= self.raw_content
 			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
 			    results_dict['nodes'][self.memaddr]['type'] == 'instr':
 				""" Any previous definition of the node that is instr and the new one is not instr, the previous definition will take precedence
 				"""
 				pass
+			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
+			    self.type == 'func':
+				"""
+					if old type is not func(and per if order is not instr either) but new type is func, 
+					then overwrite with new_type
+				"""
+				results_dict['nodes'][self.memaddr]['type']=  self.type	
+				results_dict['nodes'][self.memaddr]['content']= self.content
+				results_dict['nodes'][self.memaddr]['mnemonic_content']= self.mnemonic_content
+				results_dict['nodes'][self.memaddr]['raw_content']= self.raw_content
 			elif results_dict['nodes'][self.memaddr]['type'] == 'unknown' and \
 			    self.type == 'func':
 				"""
@@ -111,6 +126,8 @@ class codeNode():
 				"""
 				results_dict['nodes'][self.memaddr]['type']=  self.type	
 				results_dict['nodes'][self.memaddr]['content']= self.content
+				results_dict['nodes'][self.memaddr]['mnemonic_content']= self.mnemonic_content
+				results_dict['nodes'][self.memaddr]['raw_content']= self.raw_content
 			elif  results_dict['nodes'][self.memaddr]['type'] != self.type and \
 			    results_dict['nodes'][self.memaddr]['type'] != 'instr':
 				"""
@@ -120,12 +137,22 @@ class codeNode():
 				"""
 				
 				results_dict['nodes'][self.memaddr]['type']+= "; "  + self.type
-			
 			elif results_dict['nodes'][self.memaddr]['content'] != self.content:
 				"""
 					Type is the same and content is not the same: then concatenate the content. 
 				"""
+				Message('overwriting node!\n')
+				Message(results_dict['nodes'][self.memaddr]['content'])
+				Message("\n")
+				Message(self.content)
+				Message("\n")
+				
 				results_dict['nodes'][self.memaddr]['content']+= "; "  + self.content
+				# save only the last mnemonic_content
+				results_dict['nodes'][self.memaddr]['mnemonic_content']= self.mnemonic_content
+				# save only the last raw content
+				results_dict['nodes'][self.memaddr]['raw_content']= self.raw_content
+				
 		
 		
 		# will be written to disk at the end of the writeGraph function
@@ -216,9 +243,11 @@ def instrToStr(instr):
 	else:
 		return None
 			
-def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
+def processXrefFrom(f, xref, i, current_func_name, fd_nodes, fd_edges):
 	global results_dict
 	# save the caddr as a node (duplicates can exist)
+	#Message(' '.join(dir(xref)))
+	# It is misleading, but the xref.to is the address of the origin of this xreffrom
 	xref_node = codeNode(str(xref.to), 
 						  type="instr", 
 						  content=instrToStr(xref.to),
@@ -237,6 +266,8 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 		# jump or call far
 		xref_node.type = "func"
 		xref_node.content = Name(xref.to)
+		xref_node.mnemonic_content = Name(xref.to)
+		xref_node.raw_content =  '' # technically not in the function, so no need for the raw content
 		xref_node.saveNode(results_dict)
 		
 	elif xref.type == fl_CN or xref.type == fl_JN or xref.type == fl_F:
@@ -259,22 +290,20 @@ def processXrefFrom(f, xref, i, fd_nodes, fd_edges):
 		
 		# decision making
 		if inside:
-			#pass # do nothing, don't even save the node as it will overwrite previous saved node
-			# as later the edges are read, networkx will create this node. So it would be better to remove it from the results_dict
-			xref_node = None
+			# this node wil be deduped in case it is already registered
+			xref_node = process_instruction(f,xref.to,results_dict, current_func_name, fd_nodes,fd_edges)
 		else:
-			#Message(" xref %s computed as xref to outside the function! \n" % xref_node.memaddr)
+			#Message(" xref %s computed as xref from outside the function! \n" % xref_node.memaddr)
 			xref_node.type = "func"
 			xref_node.content =  Name(xref.to)
 			xref_node.saveNode(results_dict)
 			
 	elif XrefTypeName(xref.type).find('Data_')>-1:
+		""" memaddress or data that points to this func
+			savevd pointer in mem?
+		"""
 		xref_node = None
-	#else:
-	#	Message(" xref type is %d %s \n" % (xref.type,XrefTypeName(xref.type)) )
 
-	#if verify:
-	#	Message("  %s \n" % (xref_node) )
 		
 	return xref_node
 			
@@ -335,6 +364,7 @@ def processOperand(f, op,i, op_position, current_func_name, fd_nodes, fd_edges, 
 			operand_node.mnemonic_content = "memory"
 		else:
 			operand_node.mnemonic_content = addr_func_name
+			Message("\n memory operand, applied addr_func_name and found" + operand_node.mnemonic_content + "\n" )
 	elif op.type == o_imm:
 		operand_node.type="immediate"
 		operand_node.content=str(op.value)
@@ -402,10 +432,13 @@ def processOperand(f, op,i, op_position, current_func_name, fd_nodes, fd_edges, 
 def writeFuncGraphToDisk(results_dict, fd_nodes, fd_edges):
 	
 	for k,v in results_dict['nodes'].items():
+		
 		memaddr = v['memaddr']
 		type = v['type']
 		content = v['content']
-		fd_nodes.write('%s {"type": "%s", "content": "%s"}\n' % (memaddr, type, content))
+		mnemonic_content = v['mnemonic_content']
+		raw_content = v['raw_content']
+		fd_nodes.write('%s {"type": "%s", "content": "%s", "mnemonic_content": "%s", "raw_content":"%s"}\n' % (memaddr, type, content, mnemonic_content, raw_content))
 		
 	for k,v in results_dict['edges'].items():
 		"""
@@ -429,6 +462,8 @@ def process_instruction(f,i,results_dict, current_func_name, fd_nodes,fd_edges):
 						  content=instrToStr(i),
 						  fd_nodes = fd_nodes,
 						  fd_edges = fd_edges)
+						  
+	
 	
 	# save instr. operands as nodes and save edges too 			
 	instr = DecodeInstruction(i)
@@ -440,7 +475,23 @@ def process_instruction(f,i,results_dict, current_func_name, fd_nodes,fd_edges):
 		operand_node = processOperand(f, op,i,op_pos, current_func_name, fd_nodes, fd_edges, False)
 		op_pos+=1
 		
+		
 		if operand_node is not None:
+			if operand_node.raw_content=="sprintf":
+				Message(operand_node.type)
+				Message("\n")
+				Message(operand_node.content)
+				Message("\n")
+				Message(instr_node.content)
+				Message("\n")
+				
+			if instr_node.content== "call" and operand_node.type=="memory":
+				operand_node.type="func"
+				operand_node.mnemonic_content=operand_node.raw_content
+				operand_node.content=operand_node.raw_content
+				operand_node.saveNode(results_dict)
+			
+		
 			instr_node.saveEdge(operand_node, results_dict)
 			if operand_node.type=="instr":
 				operands.append(operand_node.memaddr)
@@ -452,18 +503,21 @@ def process_instruction(f,i,results_dict, current_func_name, fd_nodes,fd_edges):
 
 	instr_node.content = " ".join(operands)
 	instr_node.mnemonic_content = " ".join(mnemonic_operands)
-	Message("\n                    instr by ops:  ")
-	Message(instr_node.content)
-	Message("\n                    instr       :  ")
-	Message(instr_node.mnemonic_content)
-	Message("\n")
+	instr_node.raw_content = idc.GetDisasm(i)
+	#Message("\n                    instr by ops:  ")
+	#Message(instr_node.content)
+	#Message("\n                    instr       :  ")
+	#Message(instr_node.mnemonic_content)
+	#Message("\n                    raw instr   :  ")
+	#Message(instr_node.raw_content)
+	#Message("\n")
 	
 	instr_node.saveNode(results_dict)
 	
 		
 	# save xrefs From i
 	for xref in XrefsFrom(i,0):
-		xref_node = processXrefFrom(f, xref,i, fd_nodes, fd_edges)
+		xref_node = processXrefFrom(f, xref,i, current_func_name, fd_nodes, fd_edges)
 		if xref_node is not None:
 			instr_node.saveEdge(xref_node, results_dict)
 			
@@ -579,8 +633,8 @@ results_dict = {}
 funcs = Functions()
 for f in funcs:
 	func = get_func(GetFunctionAttr(f, FUNCATTR_START))
-	if not func is None and \
-	   Name(func.startEA)=='Call_Decryption_Routine_45E320': # 'sub_452740':
+	if not func is None: # and \
+	   #Name(func.startEA)=='Call_Decryption_Routine_45E320': # 'sub_452740':
 	   #Name(func.startEA)=='sub_933C00':
 	   #Name(func.startEA)=='ERR_peek_last_error_line':
 	   #Name(func.startEA)=='sub_404BE0':
