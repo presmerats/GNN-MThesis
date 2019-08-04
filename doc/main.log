@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2019.5.25)  4 AUG 2019 19:22
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2019.5.25)  4 AUG 2019 22:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -816,11 +816,7 @@ subscribe by emailing sympa@lirmm.fr with 'subscribe <list> <firstname name>'
 \c@algocf=\count179
 \algocf@algoframe=\box74
 \algocf@algobox=\box75
-) (/media/disk/home/pau/Projectes/GNN-MThesis/doc/main.aux
-
-LaTeX Warning: Label `experiments' multiply defined.
-
-)
+) (/media/disk/home/pau/Projectes/GNN-MThesis/doc/main.aux)
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 48.
@@ -837,7 +833,8 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 48.
 LaTeX Font Info:    ... okay on input line 48.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 48.
 LaTeX Font Info:    ... okay on input line 48.
- (/usr/share/texlive/texmf-dist/tex/latex/ucs/ucsencs.def
+
+(/usr/share/texlive/texmf-dist/tex/latex/ucs/ucsencs.def
 File: ucsencs.def 2011/01/21 Fixes to fontencodings LGR, T3
 )
 (/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
@@ -929,7 +926,7 @@ Package caption Info: float package is loaded.
 Package caption Info: End \AtBeginDocument code.
 
 (/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/01_front_page.tex
-<./img/upclogo.png, id=39, 462.97969pt x 63.23625pt>
+<./img/upclogo.png, id=47, 462.97969pt x 63.23625pt>
 File: ./img/upclogo.png Graphic file (type png)
  <use ./img/upclogo.png>
 Package pdftex.def Info: ./img/upclogo.png used on input line 11.
@@ -972,101 +969,53 @@ l.58
 (/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/04_introduction.tex)
 (/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/05_state_of_the_art.tex)
 (/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/06_methodology.tex)
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/07_implementation.tex)
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/08_evaluation.tex
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 5.
+(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/07_implementation.tex
+<img/Features_and_models_diagram.png, id=77, 816.04875pt x 864.22874pt>
+File: img/Features_and_models_diagram.png Graphic file (type png)
 
-(/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
-File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 5.
-
-Underfull \hbox (badness 10000) in paragraph at lines 8--9
-
- []
-
-<img/exp01.png, id=67, 513.117pt x 373.395pt>
-File: img/exp01.png Graphic file (type png)
- <use img/exp01.png>
-Package pdftex.def Info: img/exp01.png used on input line 15.
-(pdftex.def)             Requested size: 459.51054pt x 334.39441pt.
- [2]
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tables/exp_models_vs_features
-ets_all.tex
-Overfull \hbox (7.85052pt too wide) in paragraph at lines 4--59
-[][]
- []
-
-) [3 </media/disk/home/pau/Projectes/GNN-MThesis/doc/img/exp01.png>]
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tables/top3.tex) [4]
-Underfull \hbox (badness 10000) in paragraph at lines 34--35
-
- []
-
-
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tables/_regression_randomfore
-st_featureset_logs_sfs.tex)
-<img/randomForest.png, id=88, 528.7755pt x 373.395pt>
-File: img/randomForest.png Graphic file (type png)
-
-<use img/randomForest.png>
-Package pdftex.def Info: img/randomForest.png used on input line 48.
-(pdftex.def)             Requested size: 386.95897pt x 273.25978pt.
- [5])
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/09_conclusion.tex
-
-Package caption Warning: \label without proper reference on input line 14.
-See the caption package documentation for explanation.
-
-
-LaTeX Warning: Reference `experiments' on page 6 undefined on input line 8.
-
-[6 </media/disk/home/pau/Projectes/GNN-MThesis/doc/img/randomForest.png>]
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/tables/final.tex))
+<use img/Features_and_models_diagram.png>
+Package pdftex.def Info: img/Features_and_models_diagram.png used on input line
+ 7.
+(pdftex.def)             Requested size: 459.51054pt x 486.64177pt.
+) [2]
+(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/08_evaluation.tex)
+(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/09_conclusion.tex)
 (/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/10_references.tex
-[7] (/media/disk/home/pau/Projectes/GNN-MThesis/doc/main.bbl))
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/11_annex.tex) [8]
+[3 </media/disk/home/pau/Projectes/GNN-MThesis/doc/img/Features_and_models_diag
+ram.png>] (/media/disk/home/pau/Projectes/GNN-MThesis/doc/main.bbl))
+(/media/disk/home/pau/Projectes/GNN-MThesis/doc/./tex/11_annex.tex [4])
+[5]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 77.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 77.
-
-(/media/disk/home/pau/Projectes/GNN-MThesis/doc/main.aux)
+ (/media/disk/home/pau/Projectes/GNN-MThesis/doc/main.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 77.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 77.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: F5AF17117CDFBC0A34C6A15856F25677;391.
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: There were multiply-defined labels.
-
+(rerunfilecheck)             Checksum: 645B7F2748B3E6AC43C3759D34E84439;587.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 77.
  ) 
 Here is how much of TeX's memory you used:
- 21359 strings out of 493029
- 384543 string characters out of 6136234
- 504669 words of memory out of 5000000
- 24414 multiletter control sequences out of 15000+600000
- 14984 words of font info for 35 fonts, out of 8000000 for 9000
+ 21308 strings out of 493029
+ 383253 string characters out of 6136234
+ 489372 words of memory out of 5000000
+ 24388 multiletter control sequences out of 15000+600000
+ 15760 words of font info for 36 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,10n,92p,1437b,776s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texliv
-e/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf/fonts/
-type1/public/cm-super/sfbx0900.pfb></usr/share/texmf/fonts/type1/public/cm-supe
-r/sfbx1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr
-/share/texmf/fonts/type1/public/cm-super/sfbx2074.pfb></usr/share/texmf/fonts/t
-ype1/public/cm-super/sfcc1200.pfb></usr/share/texmf/fonts/type1/public/cm-super
-/sfcc1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0900.pfb></usr/
-share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/ty
-pe1/public/cm-super/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/
-sfti1200.pfb>
-Output written on /media/disk/home/pau/Projectes/GNN-MThesis/doc/main.pdf (9 pa
-ges, 221694 bytes).
+ 62i,6n,92p,1049b,776s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texmf/
+fonts/type1/public/cm-super/sfbx0900.pfb></usr/share/texmf/fonts/type1/public/c
+m-super/sfbx1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb
+></usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf/f
+onts/type1/public/cm-super/sfbx2074.pfb></usr/share/texmf/fonts/type1/public/cm
+-super/sfcc1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfcc1440.pfb>
+</usr/share/texmf/fonts/type1/public/cm-super/sfrm0900.pfb></usr/share/texmf/fo
+nts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/type1/public/cm-
+super/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfti1200.pfb>
+Output written on /media/disk/home/pau/Projectes/GNN-MThesis/doc/main.pdf (6 pa
+ges, 243309 bytes).
 PDF statistics:
- 162 PDF objects out of 1000 (max. 8388607)
- 134 compressed objects within 2 object streams
- 29 named destinations out of 1000 (max. 500000)
- 92 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 148 PDF objects out of 1000 (max. 8388607)
+ 123 compressed objects within 2 object streams
+ 23 named destinations out of 1000 (max. 500000)
+ 103 words of extra memory for PDF output out of 10000 (max. 10000000)
 
