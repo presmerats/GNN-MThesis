@@ -22,6 +22,7 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold
 from sklearn.metrics import f1_score
+from sklearn.model_selection import ParameterGrid
 
 
 import torch.nn as nn
@@ -830,10 +831,11 @@ def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, 
         This function is called for each k-fold cv run.
         So here X_test and y_test correspond to the cv testing fold and X_train and y_train to the num folds for training 
     """
-
+    # print("in train_nn_model_one_fold")
+    # pprint(nn_model_params)
     global device 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    results_dict={}
+    results_dict={} 
 
     
     #results_dict['test_nn']={}
@@ -959,7 +961,9 @@ def train_nn_model_cv(X_train, y_train, X_test, y_test, nn_model_params, scores,
 
     """
 
-   
+    # print("in train_nn_model_cv")
+    # pprint(nn_model_params)
+
     kfld = KFold(n_splits=numfolds)
     cv_error_score_history = []
     num_fold = 0
@@ -1011,7 +1015,7 @@ def train_nn_model_cv(X_train, y_train, X_test, y_test, nn_model_params, scores,
 
     return results_dict
 
-def unroll_all_possible_model_combos_with_tfidf(X_train, nn_models_params, nclasses, tfvec_params):
+def unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses, tfvec_params):
 
     """
         1)update each dict with tfvec_params
@@ -1025,7 +1029,28 @@ def unroll_all_possible_model_combos_with_tfidf(X_train, nn_models_params, nclas
         list(ParameterGrid(param_grid))
 
     """
-    pass
+    all_combos = []
+    for model_class_key,v in nn_models_params.items():
+        pprint(model_class_key)
+        pprint(v)
+        for m in v['params_set']:
+            m['model_class'] = [v['model']]
+            m.update(copy.deepcopy(tfvec_params))
+            if 'num_epochs' not in m.keys():
+                m['num_epochs'] = [50]
+            if 'num_classes' not in m.keys():
+                m['num_classes'] = [nclasses]
+
+        pprint(v)
+
+        
+
+        list_params_sets = ParameterGrid(v['params_set'])
+        all_combos.extend(list(list_params_sets))
+
+    return all_combos
+
+
 
 def unroll_all_possible_model_combos(X_train, nn_models_params, nclasses):
 

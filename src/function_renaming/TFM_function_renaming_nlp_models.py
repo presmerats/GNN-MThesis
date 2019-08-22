@@ -319,6 +319,29 @@ def cv_train_nlp_models(X_train_numeric, X_train_doc,
     return results_dict
 
 
+def final_setup_params(param_set_original):
+    param_set = copy.deepcopy(param_set_original)
+    tf_current_params = {}
+    list_to_remove_keys = []
+    for k,v in param_set.items():
+        jj =k.find('tvec__')
+        if jj==-1:
+            continue 
+        list_to_remove_keys.append(k)
+        tf_current_params[k[6:]]=v  
+
+    for k in list_to_remove_keys:
+        param_set.pop(k)
+
+    #correct format for later
+    param_set2 = {
+        'model_class': param_set.pop('model_class'),
+        'num_epochs': param_set.pop('num_epochs'),
+        'model_kwargs': param_set
+    }
+    param_set = param_set2
+
+    return tf_current_params, param_set
 
 def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
                  y_train, 
@@ -354,39 +377,62 @@ def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
             -> choose them assemble them together in this function and similar functions
     """
 
-    tfidfv = TfidfVectorizer(max_features=500,
-                             ngram_range=(2,3),
-                             max_df=0.8,
-                             min_df=0.1)
+    tfvec_params = {
+             #'tvec__max_features':[100, 2000],
+             'tvec__max_features':[100,110],
+             #'tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
+             'tvec__ngram_range': [(2, 3),(3, 3)],
+             #'tvec__stop_words': [None, 'english'],
+             'tvec__max_df': [0.8],
+             'tvec__min_df': [0.1]
+            }
 
-    #print(X_train_doc[0])
+    print("Before unrolling:")
+    pprint(nn_models_params)
 
-    X_train_embedding = tfidfv.fit_transform(X_train_doc)
-    # the test must not be fit, just transformed
-    X_test_embedding = tfidfv.transform(X_test_doc)
-
-    X_train_embedding = X_train_embedding.toarray()
-    X_test_embedding =  X_test_embedding.toarray()
-
-    # merge features from both code and other
-    ftrcomb = FeatureCombinator(X_train_numeric, y_train)
-    X_train_embedding = ftrcomb.transform(X_train_embedding, y_train)
-
-    ftrcomb = FeatureCombinator(X_test_numeric, y_train)
-    X_test_embedding = ftrcomb.transform(X_test_embedding, y_test)
-
-
-
-    # add to unroll_all_possible_model_combos so it can be tested with different TfidfVectorizer parameters
     # prepare all model candidates
-    nn_models_params_unrolled = unroll_all_possible_model_combos(X_train_embedding, nn_models_params, nclasses)
+    # nn_models_params_unrolled = unroll_all_possible_model_combos(X_train_embedding, nn_models_params, nclasses)
+    nn_models_params_unrolled = unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses,tfvec_params)
 
-
+    pprint(nn_models_params_unrolled)
 
     # CV training for all candidates
     error_scores = []
     for param_set in nn_models_params_unrolled:
         try:
+            # read tfvec params from param_set
+            # select the ones with tvec
+            tf_current_params, param_set = final_setup_params(param_set)
+            
+            print("After selecting tfidf params:")
+            pprint(tf_current_params)  
+            pprint(param_set)
+
+            tfidfv = TfidfVectorizer(**tf_current_params)
+
+            X_train_embedding = tfidfv.fit_transform(X_train_doc)
+            X_test_embedding = tfidfv.transform(X_test_doc)
+
+            X_train_embedding = X_train_embedding.toarray()
+            X_test_embedding =  X_test_embedding.toarray()
+
+            ftrcomb = FeatureCombinator(X_train_numeric, y_train)
+            X_train_embedding = ftrcomb.transform(X_train_embedding, y_train)
+            ftrcomb = FeatureCombinator(X_test_numeric, y_train)
+            X_test_embedding = ftrcomb.transform(X_test_embedding, y_test)
+
+            # add the last tweaks to the params_set (neural net input size cols)
+
+            
+            #size of input = num X columns 
+            param_set['model_kwargs']['d1'] = X_train_embedding.shape[1]
+            #print("set param_set['model_kwargs']['d1']=",X_train_embedding.shape[1] )
+
+
+            # print("in nn_and_nlp_train_models")
+            # pprint(param_set)
+    
+
             results_dict = train_nn_model_cv(X_train_embedding, y_train, X_test_embedding, y_test, param_set, scores, nclasses, numfolds=3 )
             error_scores.append(results_dict['cv_avg_error'])
         except Exception as err:
@@ -406,7 +452,31 @@ def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
 
     # now retrain and test the model
     try:
-        results_dict, model = train_nn_model_one_fold(X_train_embedding, y_train, X_test_embedding, y_test, best_model_params, scores, nclasses )
+        tf_current_params, param_set = final_setup_params(best_model_params)
+            
+
+        tfidfv = TfidfVectorizer(**tf_current_params)
+
+        X_train_embedding = tfidfv.fit_transform(X_train_doc)
+        X_test_embedding = tfidfv.transform(X_test_doc)
+
+        X_train_embedding = X_train_embedding.toarray()
+        X_test_embedding =  X_test_embedding.toarray()
+
+        ftrcomb = FeatureCombinator(X_train_numeric, y_train)
+        X_train_embedding = ftrcomb.transform(X_train_embedding, y_train)
+        ftrcomb = FeatureCombinator(X_test_numeric, y_train)
+        X_test_embedding = ftrcomb.transform(X_test_embedding, y_test)
+
+        # add the last tweaks to the params_set (neural net input size cols)
+
+        
+        #size of input = num X columns 
+        param_set['model_kwargs']['d1'] = X_train_embedding.shape[1]
+        
+    
+
+        results_dict, model = train_nn_model_one_fold(X_train_embedding, y_train, X_test_embedding, y_test, param_set, scores, nclasses )
     except Exception as err:
             print("Error with "+param_set['model']+" and "+scores[0])
             traceback.print_exc()
@@ -587,8 +657,8 @@ if __name__=='__main__':
     nclasses = pickle.load(open('nclasses.pickle','rb'))
 
     features = 'document'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    print_training_stats('v1',fileversion='nlp')
+    # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    # print_training_stats('v1',fileversion='nlp')
 
     nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
     print_training_stats('v1',fileversion='nlp')
