@@ -16,6 +16,7 @@ import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 from random import shuffle
+import math
 
 
 import torch
@@ -66,7 +67,12 @@ def sanitize(json_str):
     return """""" + json_str
 
 def readGraph(folder, filename):
+    """
     # read nodes, edges and  edge attributes
+    use networkx to read edge list txt file 
+                 read nodes txt file, 
+                 parse for each line the node attrbiutes and add them to the graph 
+    """
     g = nx.read_edgelist(folder+filename)
     # read node attributes
     with open(folder+filename.replace('edges','nodes'),'r') as f:
@@ -78,7 +84,11 @@ def readGraph(folder, filename):
             tokens = line[firstsep:]
             nodeid = line[:firstsep].replace(' ','')
             
-            attr_dict = json.loads(tokens)
+            try:
+                attr_dict = json.loads(tokens)
+            except Exception as err:
+                traceback.print_exc()
+                print("JSON error with ", tokens)
             
             if nodeid not in g.node.keys():
                 g.add_node(nodeid)
@@ -98,6 +108,10 @@ def readGraph(folder, filename):
     return g
 
 def prepareLabelDict(g, attr):
+    """
+    recover a specific attribute from each node , save them in a key(nodeid) value dict.
+    """
+
     label_dict = {}
     for node in g.nodes():
         if attr == 'all':
@@ -108,6 +122,10 @@ def prepareLabelDict(g, attr):
     return label_dict
 
 def plotGraph(g, label=None):
+    """
+         plot graph with nx.daw() function
+         coloring each node by it's type attribute value.
+    """
     
     # color plot
     attrs={}
@@ -150,6 +168,9 @@ def plotGraph(g, label=None):
             node_color=colors.values())
     
 def plotGraphFunction(folder, filename, label=None):
+    """
+    read fraph and plot it
+    """
     g = readGraph(folder, filename)
     plotGraph(g,label)
 
@@ -162,6 +183,11 @@ def read_config_file():
     return conf
         
 class FunctionsDataset(Dataset):
+    """
+        class that contains the methods to 
+                read a folder with nx formated graphs
+                and create a Pytorch Geometric on disk dataset
+    """
     node_translation = {}  # translates from nodeid like im34,r2 to an autoincremented integer
     nodeidmax = -1
 
@@ -188,11 +214,10 @@ class FunctionsDataset(Dataset):
     my_classes = set([])
     
     def __init__(self, root, transform=None, pre_transform=None):
-        print("before super init")
         super(FunctionsDataset, self).__init__(root, transform, pre_transform)
-        print(" end of __init__()")
-        print(self.bow_vocab[:10])
-        print(self.instr_types)
+        #print(" end of __init__()")
+        #print(self.bow_vocab[:10])
+        #print(self.instr_types)
 
     @property
     def raw_file_names(self):
@@ -200,17 +225,23 @@ class FunctionsDataset(Dataset):
 
     @property
     def processed_file_names(self):
+        """
+        returns the list of processed filenames.
+                The first time it is called, it will update the self.myprocessed_filenames.
+
         #return self.myprocessed_filenames
         # update the list of processed filenames
         # assumes base dir?? how to resolve that?
         
+
+        """
         if len(self.myprocessed_filenames)==0:
 
             # if myprocessed_filenames is not initialized,
             # read all filenames from processed folder
-            print(self.bow_vocab[:10])
-            print(self.x86_instr_set[:10])
-            print(self.instr_types)
+            #print(self.bow_vocab[:10])
+            #print(self.x86_instr_set[:10])
+            #print(self.instr_types)
 
             processed_path = os.path.join(self.root, 'processed')
             print("processed_path",processed_path)
@@ -226,6 +257,11 @@ class FunctionsDataset(Dataset):
     
     @property
     def num_classes(self):
+        """
+
+        read the num classes by the subdirs in raw/graphs01
+
+        """
         k = len(self.my_classes)
         if k <= 0 or True:
             k=0
@@ -238,8 +274,11 @@ class FunctionsDataset(Dataset):
     
     @property
     def num_features(self):
+        """
         # this should be dynamic!!
         # load one of the processed files and count the features in there!
+        """
+
         graph0 = self.get(0)
         return graph0.x.shape[1]
         #return 4
@@ -248,12 +287,42 @@ class FunctionsDataset(Dataset):
         return len(self.processed_file_names)
 
     def download(self):
+        """
         # Download to `self.raw_dir`.
         # this step is not implemented. You need to manually
         # copy the folders that contain the output of the plugin
         # inside the raw folder
+        """
         print("Not implemented. Missing folders with graph files in txt for Nx format, for each program to be included in the dataset")
+
+
+    def save_changes(self, idx, data):
+        """
+            When modifying an attribute,
+            for example self.y, 
+            this method must be called
+
+            Cleaner way would be to inherit from torch.utils.Data and save the filepath and implement a method save.
+        """
+
         
+        
+        pointers = []
+        if isinstance(idx, int):
+            # transform this into filename from a list of processed paths
+            
+            try:
+                #realfile = self.processed_paths[idx]
+                realfile = self.myprocessed_filenames[idx]
+                filename = os.path.join(self.processed_dir,realfile)
+                torch.save(data, filename)
+            except:
+                #print(idx, "self.processed_file_names:", self.processed_file_names[:10])
+                raise IndexError("error getting: ", idx)
+        else:
+            print("Error not implemented without integer as index")
+
+
 
     def process(self):
         """
@@ -263,6 +332,7 @@ class FunctionsDataset(Dataset):
         """
         
         # Read data into huge `Data` list.
+        start = time.time()
         print(" FunctionsDataset: process()")
         print("self.processed_paths",self.processed_paths[:5])
         print("self.root",self.root)
@@ -300,24 +370,34 @@ class FunctionsDataset(Dataset):
                         self.myprocessed_filenames.append(newfile)
                         #print(i,filename)
                         i += 1
+        end = time.time()
         print()
-        print("Finished reading-processing dataset,")
+        print("Finished reading-processing dataset in", round(end-start),"s")
         print("processed: {} total files, {} created graph files, {} problematic files".format(
             i+len(self.problematic_files),i,len(self.problematic_files)))
         print()
 
 
     def shuffle(self):
+        """
         # randomize the list of processed files form disk
+        CUrrently deactivated
+        """
         #shuffle(self.processed_file_names)
         return self
          
     def get(self, idx):
+        """
+
+        method to load or slice graphs from the dataset
+
         # idx is a torch.LongTensor
         # extract a list from the longTensor
         # load each file separately --
         # load then in the final data tensor
+        """
         pointers = []
+        
         if isinstance(idx, int):
             # transform this into filename from a list of processed paths
             
@@ -380,6 +460,9 @@ class FunctionsDataset(Dataset):
 
 
     def verify_created_graph(self, data):
+        """
+        some minor verifications for use afeter slicing a dataset
+        """
 
         # rule0: verify only of data is a nx object
         # otherwise return
@@ -398,6 +481,17 @@ class FunctionsDataset(Dataset):
 
 
     def parseGraph(self, filename):
+        """
+        COMMENT:
+            reads a graph filename, get's it's label and creates a NX graph with target and code features
+        CODE: 
+            y = extracts class label from folder name,
+            g=readGraph()
+            g= verify_created_graph()
+            data = createGraphFromNxwithTarget
+            data = add_code_features()
+            return data
+        """
         try:
             y = self.extractClassLabelFromFolderName(os.path.dirname(filename))
             g = readGraph('',filename)
@@ -405,8 +499,8 @@ class FunctionsDataset(Dataset):
                 #print("problem with: ", filename, len(g.nodes()), len(g.edges()))
                 return None
             xlen = len(g.nodes())
-            print(filename)
-            data = self.createGraphFromNXwithTarget(g,y,xlen,undirected=True)
+            #print(filename)
+            data = self.createGraphFromNXwithTarget(g,y,xlen,undirected=True, filename=filename)
             data = self.add_code_features(data,'',filename)
             data.filename = filename
 
@@ -418,7 +512,10 @@ class FunctionsDataset(Dataset):
         
     
     def extractClassLabelFromFolderName(self, root):
+        """
         # extract class from folder name
+        only used in version 0 dataset (big_noisy_dataset
+        """
         class_label = os.path.dirname(root)
         class_label = os.path.basename(class_label)
         y = [0]
@@ -434,8 +531,8 @@ class FunctionsDataset(Dataset):
             y = [3]
             #print("class", y)
         else:
-            print("Unknown class! ",root,class_label)
-
+            #print("Unknown class! ",root,class_label)
+            pass
 
         
         self.my_classes.add(y[0])
@@ -465,6 +562,10 @@ class FunctionsDataset(Dataset):
         
     def translateNodeIds(self,nodeid,g):
         """
+            nodeid's contain id and str of the type of the node.
+            This function translates all node ids of a graph into integers,
+            and removes type information from nodeid
+
             Pre:
                 nodeid is a string (usually string but could be anything)
             Post:
@@ -522,7 +623,7 @@ class FunctionsDataset(Dataset):
             a vector with a 1 in the actual type 
             and 0's in all other types
             
-            version2: return index_type?
+            version2: return index_type instead of vector of 0's and 1's
         """
         if typelist is None:
             typelist = self.instr_types
@@ -586,6 +687,7 @@ class FunctionsDataset(Dataset):
     def update_edge_list(self, edge_list_1, n1, node_type):
         """
             edge_list_1 is a dict that contains a list for each type of node
+            append node n1 or create a new list with node_type and append n1
         """
         if node_type not in edge_list_1.keys():
             edge_list_1[node_type]=[n1]
@@ -599,6 +701,7 @@ class FunctionsDataset(Dataset):
         """
             pre: edge_list a dict of lists of ints
 
+            merge edge_list , by incrementing the element id  values when necessary to avoid colision of ids
         """
         result_list = []
         previous_max_id = 0
@@ -772,13 +875,16 @@ class FunctionsDataset(Dataset):
 
 
     def avg_degree(self, g):
+        """
+            avg all degrees of graph nodes
+        """
         degrees = dict(g.degree())
         sum_of_edges = sum(degrees.values())
         return sum_of_edges/len(g.nodes)
 
-    def topological_features(self, g):
+    def topological_features(self, g, filename=None):
         """
-            Set of topological graph features
+            Set of topological graph features (from NetworkX package)
 
             They are appended into a list 
 
@@ -861,7 +967,9 @@ class FunctionsDataset(Dataset):
             degree_assortativity = nx.algorithms.assortativity.degree_assortativity_coefficient(g)
             if math.isnan(degree_assortativity):
                 degree_assortativity = 0.0
-        except:
+        except Exception as err:
+            traceback.print_exc()
+            print("Assortativity error with  file:", filename)
             degree_assortativity = 0.0
         features.append(degree_assortativity)
         times.append(time.time() - start)
@@ -871,7 +979,9 @@ class FunctionsDataset(Dataset):
             degree_pearson_correlation_coefficient = nx.algorithms.assortativity.degree_pearson_correlation_coefficient(g)
             if math.isnan(degree_pearson_correlation_coefficient):
                 degree_pearson_correlation_coefficient = 0.0
-        except:
+        except Exception as err:
+            traceback.print_exc()
+            print("degree_pearson_correlation_coefficient error with  file:", filename)
             degree_pearson_correlation_coefficient = 0.0
         features.append(degree_pearson_correlation_coefficient)
         times.append(time.time() - start)
@@ -885,7 +995,7 @@ class FunctionsDataset(Dataset):
         return times, torch.LongTensor(features)
 
 
-    def createGraphFromNXwithTarget(self,g,y,xlen, undirected=True):
+    def createGraphFromNXwithTarget(self,g,y,xlen, undirected=True, filename=None):
         """
             Creates a PyTorch Geometric dataset
             from a NetworkX graph
@@ -898,7 +1008,7 @@ class FunctionsDataset(Dataset):
         dataset =  self.createGraphFromNX(g,xlen, undirected)
         y = torch.LongTensor(y)
         dataset.y = y 
-        dataset.x_topo_feats, dataset.x_topo_times = self.topological_features(g)
+        dataset.x_topo_feats, dataset.x_topo_times = self.topological_features(g, filename)
         
 
         return dataset
@@ -911,6 +1021,8 @@ class FunctionsDataset(Dataset):
                 - y the class of the graph
                 - x_topo_feats the topological features of the graph
                 -> this function will add a series of code features in the form of a vector
+                    - concatenates all instructions words into code str
+                    - computes numregs and other code features
 
             filename:
                 node.txt file that contains those code_features
@@ -1053,6 +1165,9 @@ class FunctionsDataset(Dataset):
 
 def find_node(fnodes, search_memaddr, search_content, regex):
     """
+    find node in the nodes file.
+    function to check if graph/code features have been constructed correctly
+
     """
 
     fnodes.seek(0)
@@ -1208,7 +1323,8 @@ def check_instructions(assembly_listing_file, nodes_file):
 
 def find_instr_in_code(document, search_memaddr, search_content, regex):
     """
-    """
+            to check for the presence of a search_content in some line in document (code listing)
+    """ 
     if search_content.strip() == '':
         return False
 
@@ -1232,6 +1348,10 @@ def find_instr_in_code(document, search_memaddr, search_content, regex):
     return False
 
 def find_registers(instruction_string):
+    """
+    chec registrers are found in an instruction string
+    """
+
     registers = ["eax","ebx","ecx","edx","esi","edi", "ebp","esp",
                  "rax","rbx","rcx","rdx",
                  "ah","bh","ch","dh","si","di", "bp","sp",
@@ -1274,7 +1394,9 @@ def find_howmany_registers(instruction_string):
 
 
 def check_document_features(code_feats_dict, nodes_file, assembly_listing_file):
-     # tracking errors
+    """
+            tracking document(code listing) errors
+    """
     line_split_errors = 0
     code_errors = 0
     not_found_instrs = []

@@ -44,5 +44,60 @@ The features that are derived from the topological aspects of graphs, like assor
 No testing of these topological features is performed, as the Python library NetworkX is used by a large community and has a great reputation. 
 
 
+\section{Labeling of the dataset}
+
+In this annex, a description of the process of labeling of the dataset is given.
+
+The task of renaming functions in assembler code will be performed on a dataset of binaries that have been compiled with debugging information, that is with the so called symbols, which are the names of the functions or subroutines contained in the program. So, in the dataset every function keeps its original name.
+
+
+The goal of the task is to predict a function name, in a more general way, by giving a name that describes or is a synonym of that main task performed by the function being renamed.  The current labels (the original names of the functions) are too specific. Thus, we need to assign as a label a name that is much more generalistic, in the sense that it indicates what is the main purpose of the function. The following steps have been followed.
+
+First, a series of topics have been chosen:
+- cryptographic
+- networking
+- graphical user interface
+- disk
+- data structures
+- memory
+- users
+- computation
+
+Given the type of program binaries used as a dataset (network servers, clients and cryptographic applications), those topics cover the main functionalities of them.
+
+Second, to be able to give a richer sense to the function names, a series of types of actions have been chosen:
+- configure 
+- verify
+- save
+- delete
+- update
+- create 
+- get 
+- answer
+- read
+- write
+- send
+- receive
+- show
+- hide
+- start
+- stop
+- sync
+- parse
+- match
+- encrypt
+- data
+- file
+- compute
+- work
+
+They have been chose based on the visual observation the real names in the dataset and by common sense also.
+
+Third, 2 labeling strategies are created, one that consists of applying only the topic and a more comprehensive that assigns a topic and a task to a function. For example, the first labeling strategy may rename the function aes_encrypt as cryptography, while the second strategy may rename it as cryptography_encrypt. During the training of the models, those 2 labeling strategies will be compared. It is desirable that the second strategy is implemented over the first one, but the chance of success in this second strategy is lower as there are much more classes than in the second one. 
+
+Finally, the labels have been assigned following very simple rules based on the real name of each function in the dataset and the number of appearances of each topic and task within it. The script uses the topics and tasks and their synonyms. It counts how many times each topic and each task appears in the real name of the function. The topic and the task that have the maximum number of appearances are assigned to the function. Two dataset are build, one with the first labelling strategy (assigning only the topic) and one with the second strategy (topic and task). The first dataset has 10 classes (9 + unknown). The second dataset has 170 classes. 
+
+During the training, some of the classes have been ignored due to the low frequency of appearance.
+
 
 \end{appendices} 

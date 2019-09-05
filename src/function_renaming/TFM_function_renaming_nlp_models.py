@@ -22,6 +22,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+from sklearn.compose import ColumnTransformer
+
+
 
 from datetime import datetime
 
@@ -40,6 +44,11 @@ from sklearn.base import TransformerMixin
 from sklearn.pipeline import Pipeline, FeatureUnion
 
 class FeatureCombinator(TransformerMixin):
+    """
+    used in a sklearn Pipeline for combining TFIDF and other features into one feature matrix
+    """
+
+
     def __init__(self, X2, y):
         self.X2 = X2
         self.y = y
@@ -102,6 +111,10 @@ class FeatureCombinator(TransformerMixin):
         
 
 class FeatureVerify(TransformerMixin):
+    """
+    debuging class for sklearn Pipeline
+    """
+
 
     def transform(self, X, y, *_):
         pprint(X)
@@ -117,6 +130,10 @@ class FeatureVerify(TransformerMixin):
         
 
 def prepare_nlp_models():
+    """
+    dictionary of model classes and all their possible parameter values to train
+    """
+
     models_params = {
 
         LogisticRegression.__name__: {
@@ -205,6 +222,13 @@ def cv_train_nlp_models(X_train_numeric, X_train_doc,
     results_dict={}
 
     for model_name in models_params.keys():
+        """
+        for all model and theri possibble params, 
+                    build a Pipeline(tfidf, featureComb, classifier)
+                    run GridSearchCV to optimize tfidf params and classifier params
+
+        Returns best cross-val model retrained and tested
+        """
 
         print("Training ", model_name)
         model_dict = models_params[model_name]
@@ -319,7 +343,182 @@ def cv_train_nlp_models(X_train_numeric, X_train_doc,
     return results_dict
 
 
+
+def prepare_pipeline_params(parameters):
+
+
+    tf_params = {
+         #'preprocessor__tfidf__tvec__max_features':[100, 2000],
+         'preprocessor__tfidf__tvec__max_features':[100],
+         #'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
+         'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
+         #'tvec__stop_words': [None, 'english'],
+         'preprocessor__tfidf__tvec__max_df': [0.8],
+         'preprocessor__tfidf__tvec__min_df': [0.1]
+        }
+
+    final_parameters = []
+    for param_set in parameters:
+        final_parameter = copy.deepcopy(tf_params)
+
+        for k,v in param_set.items():
+            final_parameter['clf__'+k]=v
+
+        #pprint(final_parameter)
+        #print()
+        final_parameters.append(final_parameter)
+
+    return final_parameters
+
+
+class ToNumpyTransformer(TransformerMixin):
+    def transform(self, X1, *_):
+        # print("ToNumpyTransformer")
+        # print("colums ")
+        # print(X1.columns)
+        # print(X1.shape)
+        # print()
+        return X1.to_numpy()
+
+    def fit(self, X1, *_):
+        return self
+
+
+class DummyDebug(TransformerMixin):
+    def transform(self, X1, *_):
+        print("DummyDebug")
+        print("shape ")
+        print(X1.shape)
+        #print(X1[0:1])
+        print()
+        return X1
+
+    def fit(self, X1, *_):
+        return self
+
+class PreTfidf(TransformerMixin):
+    def transform(self, X1, *_):
+        # print("pre TFIDF")
+        # print(X1.columns)
+        # print()
+        return X1['document'].array
+        
+    def fit(self, X1, *_):
+        return self
+
+def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols, 
+            y_train, 
+            X_test_all, test_numeric_cols, test_nlp_cols, 
+            y_test, 
+            models_params, scores,
+            features,
+            dataset_version,
+            fileversion='nlp',
+             ): 
+    """
+        Improved generation of the pipeline,
+        flexible enough to use with the training
+    """
+
+    results_dict={}
+
+    for model_name in models_params.keys():
+        """
+        for all model and theri possibble params, 
+                    build a Pipeline(tfidf, featureComb, classifier)
+                    run GridSearchCV to optimize tfidf params and classifier params
+
+        Returns best cross-val model retrained and tested
+        """
+
+        print("Training ", model_name)
+        model_dict = models_params[model_name]
+        model = model_dict['model']()
+        parameters = model_dict['params_set']
+        results_dict[model_name]={}
+
+
+        final_parameters = prepare_pipeline_params(parameters)
+
+        pprint(train_numeric_cols)
+        print()
+        pprint(train_nlp_cols)
+        print()
+        
+        baseline_transformer = Pipeline(steps=[
+             ('tonumpy', ToNumpyTransformer()), # probably it's no needed
+             ('scaler', StandardScaler()),
+             #('debug', DummyDebug()),
+             ])
+
+        tfidf_transformer = Pipeline([
+            ('preTfIdf', PreTfidf()),
+            ('tvec', TfidfVectorizer()),
+            #('debug', DummyDebug()),
+        ])
+
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('convfeats', baseline_transformer, train_numeric_cols),
+                ('tfidf', tfidf_transformer, train_nlp_cols)]
+        )
+
+        train_pipeline = Pipeline(steps=[
+                        ('preprocessor', preprocessor),
+                        ('clf', model_dict['model']())
+                        ])
+
+        # t_pipe = Pipeline([
+        #       ('tvec', TfidfVectorizer()),
+        #       ('features',FeatureCombinator(X_train_numeric,y_train)),
+        #       ('clf', model_dict['model']())
+        #     ])
+
+        # pprint(train_pipeline[0].get_params().keys())
+        # pprint(train_pipeline[1].get_params().keys())
+        # pprint(train_pipeline.get_params().keys())
+        
+        for score in scores:
+            try:
+                start = time.time()
+
+                print("GridseachCV for ", score)
+                clf = GridSearchCV(train_pipeline,final_parameters,cv=5, scoring=score, refit=True)
+                clf.fit(X_train_all,y_train )
+
+                end = time.time()
+
+
+                y_true, y_pred = y_test, clf.predict(X_test_all)
+                
+
+                results_dict[model_name][score] = classification_report(y_true, y_pred, output_dict=True)
+                results_dict[model_name][score]['params'] = clf.best_params_
+                results_dict[model_name][score]['cv_score'] = clf.best_score_
+                results_dict[model_name][score]['time'] = round(end-start)
+                results_dict[model_name][score]['model_instance'] = clf
+
+                #results_dict[model_name]['best']=clf 
+            except Exception as err:
+                print("Error with "+model_name+" and "+score)
+                traceback.print_exc()
+
+        print("\n\n\nBefore save results, fileversion=",fileversion,"\n\n\n")
+        
+        pprint(results_dict[model_name])
+        save_results(results_dict, features,dataset_version, fileversion=fileversion)
+
+    return results_dict
+
+
+
+
 def final_setup_params(param_set_original):
+    """
+        transform paraM-set original
+        separating them into tvec__ prefix params, and clf__ prefix params
+
+    """
     param_set = copy.deepcopy(param_set_original)
     tf_current_params = {}
     list_to_remove_keys = []
@@ -343,7 +542,41 @@ def final_setup_params(param_set_original):
 
     return tf_current_params, param_set
 
-def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
+
+def final_setup_params_v2(param_set_original):
+    """
+        transform paraM-set original
+        separating them into tvec__ prefix params, and clf__ prefix params
+
+        v2 uses preprocessor__tvec__ instead of removing it
+    """
+    param_set = copy.deepcopy(param_set_original)
+    tf_current_params = {}
+    list_to_remove_keys = []
+    for k,v in param_set.items():
+        jj =k.find('tvec__')
+        if jj==-1:
+            continue 
+        list_to_remove_keys.append(k)
+        tf_current_params[k]=v  
+
+    for k in list_to_remove_keys:
+        param_set.pop(k)
+
+    #correct format for later
+    param_set2 = {
+        'model_class': param_set.pop('model_class'),
+        'num_epochs': param_set.pop('num_epochs'),
+        'model_kwargs': param_set
+    }
+    param_set = param_set2
+
+    return tf_current_params, param_set
+
+
+
+
+def cv_train_nn_nlp_models(X_train_numeric, X_train_doc,
                  y_train, 
                  X_test_numeric,  X_test_doc,
                  y_test, 
@@ -361,7 +594,7 @@ def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
     Then it will test its prediction and write down the results
 
     """
-    print("\nnn_and_nlp_train_models, nclasses=",nclasses)
+    print("\ncv_train_nn_nlp_models, nclasses=",nclasses)
 
     """
         Rules for combinint tfidf and other features :
@@ -429,7 +662,7 @@ def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
             #print("set param_set['model_kwargs']['d1']=",X_train_embedding.shape[1] )
 
 
-            # print("in nn_and_nlp_train_models")
+            # print("in cv_train_nn_nlp_models")
             # pprint(param_set)
     
 
@@ -496,6 +729,178 @@ def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
     return results_dict
 
 
+def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
+                train_nlp_cols, 
+                y_train, 
+                X_test_all, test_numeric_cols, test_nlp_cols, 
+                y_test, 
+                nn_models_params, scores, 
+                nclasses, numfolds=3, 
+                features='', dataset_version='', 
+                fileversion='baseline' ):
+    """
+    This function will take all model parameter sets, and create an iterator over all combinations.
+
+    for each combination of parameter values and model class, it will launch a cross validation training. 
+
+    Then later it will retrain the best performing model over the full training set
+
+    Then it will test its prediction and write down the results
+
+    """
+    print("\ncv_train_nn_nlp_models, nclasses=",nclasses)
+
+    """
+        Rules for combinint tfidf and other features :
+        the document will always live in the first position of the X vector
+
+        difficult to cope with X being an nd.array or not
+
+        SOL:
+            -> build different pieces
+                - list of list for document and list of funcs 
+                - nd.array for numeric values for nn
+                - 
+            -> choose them assemble them together in this function and similar functions
+    """
+
+
+
+    print("Before unrolling:")
+    pprint(nn_models_params)
+
+
+    # tfidf params
+    tfvec_params = {
+             #'preprocessor__tfidf__tvec__max_features':[100, 2000],
+             'preprocessor__tfidf__tvec__max_features':[100],
+             #'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
+             'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
+             #'preprocessor__tfidf__tvec__stop_words': [None, 'english'],
+             'preprocessor__tfidf__tvec__max_df': [0.8],
+             'preprocessor__tfidf__tvec__min_df': [0.1]
+            }
+
+    # prepare all model candidates
+    # nn_models_params_unrolled = unroll_all_possible_model_combos(X_train_embedding, nn_models_params, nclasses)
+    nn_models_params_unrolled = unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses,tfvec_params)
+
+    pprint(nn_models_params_unrolled)
+
+
+
+
+    baseline_transformer = Pipeline(steps=[
+             ('tonumpy', ToNumpyTransformer()), # probably it's no needed
+             ('scaler', StandardScaler()),
+             #('debug', DummyDebug()),
+             ])
+
+    tfidf_transformer = Pipeline([
+        ('preTfIdf', PreTfidf()),
+        ('tvec', TfidfVectorizer()),
+        #('debug', DummyDebug()),
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('convfeats', baseline_transformer, train_numeric_cols),
+            ('tfidf', tfidf_transformer, train_nlp_cols)]
+    )
+
+    tfidf_pipeline = Pipeline(steps=[
+                    ('preprocessor', preprocessor),
+                    ])
+
+    # CV training for all candidates
+    error_scores = []
+    for param_set in nn_models_params_unrolled:
+        try:
+            # read tfvec params from param_set
+            # select the ones with tvec
+            tf_current_params, param_set = final_setup_params_v2(param_set)
+            
+            print("After selecting tfidf params:")
+            pprint(tf_current_params)  
+            pprint(param_set)
+
+            tfidf_pipeline.set_params(**tf_current_params)
+            X_train_embedding = tfidf_pipeline.fit_transform(X_train_all)
+            X_test_embedding = tfidf_pipeline.transform(X_test_all)
+
+            # X_train_embedding = X_train_embedding.toarray()
+            # X_test_embedding =  X_test_embedding.toarray()
+
+            # ftrcomb = FeatureCombinator(X_train_numeric, y_train)
+            # X_train_embedding = ftrcomb.transform(X_train_embedding, y_train)
+            # ftrcomb = FeatureCombinator(X_test_numeric, y_train)
+            # X_test_embedding = ftrcomb.transform(X_test_embedding, y_test)
+
+            # add the last tweaks to the params_set (neural net input size cols)
+
+            
+            #size of input = num X columns 
+            param_set['model_kwargs']['d1'] = X_train_embedding.shape[1]
+            #print("set param_set['model_kwargs']['d1']=",X_train_embedding.shape[1] )
+
+
+            # print("in cv_train_nn_nlp_models")
+            # pprint(param_set)
+    
+
+            results_dict = train_nn_model_cv(X_train_embedding, y_train, X_test_embedding, y_test, param_set, scores, nclasses, numfolds=3 )
+            error_scores.append(results_dict['cv_avg_error'])
+        except Exception as err:
+            print("Error with "+param_set+" and "+scores[0])
+            traceback.print_exc()
+
+    # choose best model 
+    best_error = max(error_scores)
+    best_error_index = error_scores.index(best_error)
+    best_model_params = nn_models_params_unrolled[best_error_index]
+    
+    # print("\nBest model params, with error ",best_error)
+    # pprint(best_model_params)
+    # print("\nall error scores ")
+    # pprint(error_scores)
+
+
+    # now retrain and test the model
+    try:
+        tf_current_params, param_set = final_setup_params_v2(best_model_params)
+            
+
+        tfidf_pipeline.set_params(**tf_current_params)
+        X_train_embedding = tfidf_pipeline.fit_transform(X_train_all)
+        X_test_embedding = tfidf_pipeline.transform(X_test_all)
+
+        # add the last tweaks to the params_set (neural net input size cols)
+
+        
+        #size of input = num X columns 
+        param_set['model_kwargs']['d1'] = X_train_embedding.shape[1]
+        
+        results_dict, model = train_nn_model_one_fold(X_train_embedding.toarray(), y_train, X_test_embedding.toarray(), y_test, param_set, scores, nclasses )
+    except Exception as err:
+            print("Error with "+param_set['model']+" and "+scores[0])
+            traceback.print_exc()
+
+    # reorganize results
+    score = scores[0]
+    model_name = list(results_dict.keys())[0]
+    results_dict[model_name][score]['score']= scores[0]
+    results_dict[model_name][score]['model_instance']=model
+
+    # print("\n After retraining: ")
+    # pprint(results_dict)
+    
+    save_results(results_dict, features, dataset_version, fileversion=fileversion)
+
+    
+    return results_dict
+
+
+
 
 # def save_results(results_dict, features, dataset_version, min_count):
 #     # append results to results_dict on disk
@@ -524,56 +929,89 @@ def nn_and_nlp_train_models(X_train_numeric, X_train_doc,
 #     #return results_dict
 
 
-def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',min_count=100):
+def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',min_count=100, fileversion='nlp'):
     
     """
         Filter features following the indication
     """
     
-    X_train_numeric, X_train_doc = filter_features_new(X_train, features)
-    X_test_numeric, X_test_doc = filter_features_new(X_test, features)
+    # X_train_numeric, X_train_doc = filter_features_new(X_train, features)
+    # X_test_numeric, X_test_doc = filter_features_new(X_test, features)
+
+    # models_and_params = prepare_nlp_models()
+    # results_dict = cv_train_nlp_models(
+    #     X_train_numeric, X_train_doc, y_train, 
+    #     X_test_numeric, X_test_doc, y_test, 
+    #     models_and_params, 
+    #     #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
+    #     scores=['f1_micro'],
+    #     features=features,
+    #     dataset_version=dataset_version,
+    #     fileversion='nlp'
+    #     )
+
+
+    # Numeric is a np.array, doc is a list of strings
+    X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
+    X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
 
     models_and_params = prepare_nlp_models()
-    results_dict = cv_train_nlp_models(
-        X_train_numeric, X_train_doc, y_train, 
-        X_test_numeric, X_test_doc, y_test, 
+    results_dict = cv_train_nlp_models_v2(
+        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
+        X_test_all, test_numeric_cols, test_nlp_cols, y_test, 
         models_and_params, 
         #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
         scores=['f1_micro'],
         features=features,
         dataset_version=dataset_version,
-        fileversion='nlp'
+        fileversion=fileversion
         )
+
 
     #save_results(results_dict, features,dataset_version, fileversion='nlp')
 
 
 
-def nlp_nn_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3):
+def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, fileversion='nlp'):
     
     """
         Filter features following the indication
     """ 
 
-    X_train_numeric, X_train_doc = filter_features_new(X_train, features)
-    X_test_filtered, X_test_doc = filter_features_new(X_test, features)
+    # X_train_numeric, X_train_doc = filter_features_new(X_train, features)
+    # X_test_filtered, X_test_doc = filter_features_new(X_test, features)
     
+    # nn_models_and_params = prepare_nn_models()
+
+
+    # results_dict = cv_train_nn_nlp_models(
+    #     X_train_numeric, X_train_doc, y_train, 
+    #     X_test_filtered, X_test_doc, y_test,  
+    #     nn_models_and_params, 
+    #     scores=['f1_micro'], nclasses=nclasses, 
+    #     numfolds=3,
+    #     features=features,
+    #     dataset_version=dataset_version,
+    #     fileversion='nlp'
+    #     )
+
+
+    # Numeric is a np.array, doc is a list of strings
+    X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
+    X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
+
     nn_models_and_params = prepare_nn_models()
 
-
-    results_dict = nn_and_nlp_train_models(
-        X_train_numeric, X_train_doc, y_train, 
-        X_test_filtered, X_test_doc, y_test,  
+    results_dict = cv_train_nn_nlp_models_v2(
+        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
+        X_test_all, test_numeric_cols, test_nlp_cols, y_test,  
         nn_models_and_params, 
         scores=['f1_micro'], nclasses=nclasses, 
         numfolds=3,
         features=features,
         dataset_version=dataset_version,
-        fileversion='nlp'
+        fileversion=fileversion
         )
-
-
-
 
 # def print_training_stats(dataset_version='v1'):
 #     """
@@ -627,6 +1065,40 @@ if __name__=='__main__':
 
     """
 
+    #-----------------tfidf-params-optimization------------------
+
+    X_train = pickle.load(open('X_train.pickle','rb'))
+    X_test = pickle.load(open('X_test.pickle','rb'))
+    y_train = pickle.load(open('y_train.pickle','rb'))
+    y_test = pickle.load(open('y_test.pickle','rb'))
+    nclasses = pickle.load(open('nclasses.pickle','rb'))
+
+    min_count=0
+    dataset_version='v1'
+    features = 'document'
+
+
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
+    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
+
+
+
+    features = 'document and topo feats'
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
+    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
+
+    features = 'document and code feats'
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
+    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
+
+    features = 'document and topo and code feats'
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
+    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
+
+
+    exit()
+    #-------------------------------------------------------------
+
 
     # dataset = FunctionsDataset(root='./tmp/symbols_dataset_1')
     # dataset_version='v1'
@@ -657,11 +1129,15 @@ if __name__=='__main__':
     nclasses = pickle.load(open('nclasses.pickle','rb'))
 
     features = 'document'
-    # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    print_training_stats('v1',fileversion='nlp')
+
+    # nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
     # print_training_stats('v1',fileversion='nlp')
 
-    nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
+    nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses,fileversion='nlp')
     print_training_stats('v1',fileversion='nlp')
+    
 
 
 
@@ -672,7 +1148,7 @@ if __name__=='__main__':
 
     # features = 'document and list funcs'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)
-    # nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    # nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
     # print_training_stats('v1',fileversion='nlp')
 
     # features = 'document_simplified and list funcs'
@@ -681,10 +1157,10 @@ if __name__=='__main__':
 
 
     features = 'document and topo feats'
-    # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    print_training_stats('v1',fileversion='nlp')
 
-    nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,'document and topo feats',dataset_version,nclasses)
+    #nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,'document and topo feats',dataset_version,nclasses)
     # print_training_stats('v1',fileversion='nlp')
 
 
@@ -698,10 +1174,10 @@ if __name__=='__main__':
 
 
     features = 'document and code feats'
-    # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    print_training_stats('v1',fileversion='nlp')
 
-    nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
+    #nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
     # print_training_stats('v1',fileversion='nlp')
 
 
@@ -716,10 +1192,10 @@ if __name__=='__main__':
 
 
     features = 'document and topo and code feats'
-    # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
+    print_training_stats('v1',fileversion='nlp')
 
-    nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
+    #nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
     # print_training_stats('v1',fileversion='nlp')
 
 

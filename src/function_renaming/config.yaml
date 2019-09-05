@@ -1,6 +1,7 @@
 ---
 instr_types: ['instr','register','immediate','memory',
-        'displacement','phrase','func','unknown']
+        'displacement','phrase','func','unknown',
+        'idpspec0','idpspec1','idpspec2','idpspec3','idpspec4','idpspec5',]
 x86_instr_set: ['AAA', 'AAD', 'AAM', 'AAS', 'ADC', 'ADCX', 'ADD', 
                      'ADDPD', 'ADDPS', 'ADDSD', 'ADDSS', 'ADDSUBPD', 
                      'ADDSUBPS', 'ADOX', 'AESDEC', 'AESDECLAST', 'AESENC',

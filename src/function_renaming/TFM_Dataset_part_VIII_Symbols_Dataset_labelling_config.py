@@ -1,3 +1,248 @@
+synonyms = {
+    
+    ('gui','config'): [
+            ('gui','config'),
+            ('gui','update'),
+            ('gui', 'create'),
+            ('gui', 'users'),
+            ('gui', 'verify'),
+            ],
+    ('gui',): [
+            ('gui','hide'),
+            ('gui','show'),
+            ('gui','work'),
+            ('gui',),
+            ('gui', 'compute'),
+            ('gui', 'data'),
+            ('gui', 'process'),
+            ('gui', 'file'),
+            ('gui', 'data'),
+            ('gui', 'get'),
+            ('gui', 'delete'),
+            ('gui', 'stop'),
+            ('datastruct', 'gui'),
+            ('gui', 'sync'),
+            ('gui', 'match'),
+            ('network', 'gui'),
+            ('gui', 'read'),
+            ('disk', 'gui'),
+            ],
+
+    ('network','send'): [
+            ('network','get'),
+            ('network','send'), 
+            ('network','receive'),
+            ('network','save'),
+            ('network','data'),
+            ('network','answer'),
+            ('network','get'), 
+            ('cryptography','send'),
+            ('network', '-get'),
+            ('network', 'write'),
+            ('network', 'read'),
+            ('cryptography', 'get'),
+            ('cryptography', 'get'),
+            ('cryptography', 'data'),
+            ('cryptography', 'answer'),
+            ('network', 'start'),
+            ('network', 'sync'),
+            ('process', 'answer'),
+            ('network', 'request'),
+            ('gui', 'send'),
+            ('network', 'stop'),
+            ('datastruct', 'receive'),
+            ('process', 'receive'),
+            ('disk', 'send'),
+            ],
+    ('network','parse'): [
+            ('network','parse'),
+            ('network','file'),
+            ('disk','parse'),
+            ('disk','match'),
+            ('cryptography', 'match'),
+            ('network', 'match'),
+            ('network', 'pase'),
+            ('datastruct', 'parse'),
+            ('cryptography', 'parse'),
+            ('network', 'process'),
+            ('process', 'parse'),
+
+            ],
+    ('network','config'): [
+            ('network','config'),
+            ('network','verify'),
+            ('network', 'update'),
+            ('network', 'delete'),
+            ('network', 'create'),
+            ('networkt', 'config'),
+            ('network', 'datastruct'),
+
+            ],
+    ('network',): [
+         ('network',),
+         ('network', 'work'),
+         ('network', 'show'),
+         ],
+
+    ('disk','file'): [
+         ('disk', 'config'),
+         ('process', 'file'),
+          ('network', 'disk'),
+
+        ],
+    ('disk','read'): [
+        ('disk','verify'),
+        ('disk','get'),
+        ],
+    ('disk','write'): [ 
+        ('disk','delete'),
+        ('disk', 'create'),
+        ('disk', 'data'),
+        ('disk', 'update'), 
+        ('disk', 'save'),
+   
+        ],
+    ('disk',): [('disk','work'),],
+
+
+    ('cryptography','encrypt'): [
+            ('cryptography','compute'),
+            ('cryptography','encrypt'),
+            ('cryptography','verify'),
+            ('cryptogrpahy', 'encrypt'),
+            ('network', 'encrypt'),
+            ('cryptography', 'write'),
+            ('cryptography', 'decrypt'),
+            ('cryptography', 'start'),
+            ('disk', 'cryptography'),
+            ],
+    ('cryptography','config'): [
+
+            ('cryptogrpahy', 'config'),
+            ('cryptogrpahy', 'config'),
+            ('cryptography', 'save'),
+            ('cryptography', 'update'),
+            ('cryptography', 'stop'),
+            ('cryptography', 'configure'),
+            
+
+            ],
+    ('cryptography',): [
+            ('cryptography','work'),
+            ('cryptography', 'create'),
+            ('cryptography', 'delete'),
+            ('network', 'cryptography'),
+            ('cryptography', 'read'),
+            
+            ],
+
+    ('datastruct',): [
+            ('datastruct','work'),
+            ('datastruct','config'),
+            ('dd',),
+            ('datastruct', 'data'),
+            ('datastruct', 'update'),
+            ('datastruct', 'verify'),
+            ('datastruct', 'create'),
+            ('datastruct', 'delete'),
+            ('datastruct', 'users'),
+            ('cryptography', 'datastruct'),
+            ('datastruct', 'get'),
+            ('datastruct', 'start'),
+            ('datastruct', 'save'),
+            ('disk', 'datastruct'),
+            ('datastruct', 'write'),
+            ('datastruct', 'sync'),
+            ('datastruct', 'stop'),
+            ('datastruct', 'process'),
+
+
+
+
+
+            ],
+
+    ('memory','config'): [],
+    ('memory','read'): [
+            ('memory','verify'),
+            ('memory', '-read'),
+            ('memory', 'red'),
+            ('memory', 'data'),
+            ('process', 'data'),   
+            ('memory', 'L'),
+            ('memory', 'get'),
+            
+            ],
+    ('memory','write'): [
+            ('memory','update'),
+            ('memory','delete'), 
+            ('memory','create'),
+            ('memory', 'writw'),
+            ('memroy', 'write'),
+            ('memory', 'wriite'),
+            ('memory', 'wirte'),
+            ('memory', 'set'),
+            ('memory', 'wirite')
+
+
+
+            ],
+    ('memory',): [('memory','work'),],
+
+
+    
+    ('process','sync'): [ 
+            ('process','start'),
+            ('process','stop'),
+            ('process','sync'),
+            ('disk', 'sync'),
+            ('process', 'get'),
+            ],    #<--- redo this one
+    ('process','config'): [
+                ('process','create'),
+                ('process','update'), 
+                ('process','delete'),
+                ('process', 'cofnig'),
+                ('process', 'verify'),
+                ('process', 'read'),
+                ('process', 'read'),
+                ('process', 'work'),
+                ('process', 'write'),
+            
+
+                ],  #<-- 
+    ('process',): [],
+
+    ('users',): [('users','create'),
+                ('users','update'),
+                ('users','delete'),
+                ('users','verify'),
+                ('users','config'),
+                ('users','save'),
+                ('users', 'work'),
+                ('users', 'get'),
+                ('users', 'data'),
+                ('users', 'write'),
+                ('users', 'set'),
+                ('cryptography', 'users'),
+
+                ],
+
+    ('computation',): [
+                ('process', 'compute'),
+                ('datastruct', 'compute'),
+                ('network', 'compute'),
+                ('users', 'compute'),
+                ('memory', 'compute'),
+                ('computation', 'work'),
+                ('disk', 'compute'),
+                ('computation', 'update'),
+                ('computation', 'config'),
+                ],
+}
+
+
+
 combinations2 = [
 
 
@@ -28,8 +273,8 @@ combinations2 = [
 
 
     ('process','update'),
-    ('process','sync'),
-    ('process','config'),
+    ('process','sync'),    #<--- redo this one
+    ('process','config'),  #<-- 
     ('process',),
 
     ('users',),

@@ -125,13 +125,13 @@ def kFolding(dataset, k):
     loader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
     for data in loader:
         shuffleTrainTestValMasks(data)
-        print(type(dataset.train_mask))
-        print(type(data.train_mask))
-        print("outside function train mask: ", data.train_mask[:5])
-        print("outside function  val mask: ", data.val_mask[:5])
-        print("outside function test mask: ", data.test_mask[:5])
-        print(" dataset.train_mask.size() ", dataset.train_mask.size())
-        print(" data.train_mask.size() ", data.train_mask.size())
+        # print(type(dataset.train_mask))
+        # print(type(data.train_mask))
+        # print("outside function train mask: ", data.train_mask[:5])
+        # print("outside function  val mask: ", data.val_mask[:5])
+        # print("outside function test mask: ", data.test_mask[:5])
+        # print(" dataset.train_mask.size() ", dataset.train_mask.size())
+        # print(" data.train_mask.size() ", data.train_mask.size())
         #dataset.train_mask = torch.stack((dataset.train_mask,data.train_mask), dim=1)
         dataset.train_mask = torch.cat([dataset.train_mask, data.train_mask], dim=0)
         dataset.val_mask = torch.cat([dataset.val_mask,data.val_mask],dim=0)
@@ -149,7 +149,7 @@ def kFolding(dataset, k):
         #     length_train_samples =length_train_samples = int(ysize * 0.8)
         #     #length_val_samples = 0 not used anymore!
         
-        print("Kfolding: ")
+        #print("Kfolding: ")
             
         samples_per_fold = int(length_train_samples/k)
         for i in range(k):
@@ -159,9 +159,9 @@ def kFolding(dataset, k):
                 if j!=i:
                     training_indices.extend(data.train_mask[j*samples_per_fold:(j+1)*samples_per_fold])
             
-            print(training_indices[:5])
-            print(validation_indices[:5])
-            print()
+            # print(training_indices[:5])
+            # print(validation_indices[:5])
+            # print()
 
             train_sets.append((torch.LongTensor(training_indices), torch.LongTensor(validation_indices)))
 
@@ -193,8 +193,26 @@ def datasetFromKFold(Kfold, dataset):
         data.test_mask = transformMask(data.test_mask)
 
 
+def restoreMasks(Kfolds, dataset):
+    loader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
+    for data in loader: 
 
+        Kfold = Kfolds[0]
+        
+        ysize = list(data.y.size())[0]
+        data.train_mask = torch.zeros(ysize,1, dtype=torch.long)
+        data.train_mask[ Kfold[0]] = 1
+        data.val_mask = torch.zeros(ysize,1, dtype=torch.long)
+        data.val_mask[ Kfold[1]] = 1
+        data.test_mask = torch.ones(ysize,1, dtype=torch.long) - data.train_mask - data.val_mask
 
+        # make train_mask contain all train and val , and val none
+        data.train_mask = transformMask(data.train_mask)
+        data.val_mask = transformMask(data.val_mask)
+        data.train_mask = torch.cat((data.train_mask, data.val_mask))
+        data.val_mask = torch.LongTensor([])
+
+        data.test_mask = transformMask(data.test_mask)
 
  
  #--------------------error---------------------------------------   
@@ -218,16 +236,17 @@ def errors(t,y):
         
     """
 
-    print("\n\n errors()::------------------------")
+    #print("\n\n errors()::------------------------")
 
     t = t.to('cpu')
     y = y.to('cpu')
     num_samples = list(t.size())[0]
 
-    print("t",t)
-    print("t[2:4] ",t[2:4])
-    print(" t.size() ",t.size())
-    print(" errors(), num_samples: ", num_samples)
+    #print("t",t)
+    #print("t[2:4] ",t[2:4])
+    #print(" t.mean ", torch.mean(t))
+    #print(" t.size() ",t.size())
+    #print(" errors(), num_samples: ", num_samples)
 
     length_cuts = int(num_samples/10)
     num_cuts = int(num_samples/length_cuts)
@@ -246,11 +265,11 @@ def errors(t,y):
         t2 = t[i*length_cuts:(i+1)*length_cuts]
         t2 = t2.to(device)
         
-        print(t2)
+        # print(t2)
         t_sum += sum(t2).item()
-        print(t_sum)
+        # print(t_sum)
         
-    print(" t_sum: ", t_sum)
+    #print(" t_sum: ", t_sum)
 
 
     t_avg = float(t_sum/float(num_samples))
@@ -259,13 +278,15 @@ def errors(t,y):
         t2 = t[i*length_cuts:(i+1)*length_cuts]
         t2 = t2.to(device)
         #t2 = torch.squeeze(t2,1)
-        print(" t2.sizer() ", t2.size())
+        #print(" t2.sizer() ", t2.size())
         
         t_tavg_sum += sum((t2 - t_avg)**2).item()
         
 
         #maxmin = max(t) - min(t)
         #smean = torch.mean(t)
+
+
 
     #print("t shape",list(t.size()))
     #print("num_samples", num_samples)
@@ -277,11 +298,10 @@ def errors(t,y):
     #print((t - t_avg)**2)
     #print(sum((t - t_avg)**2))
     
-    print(" t_tavg_sum", t_tavg_sum)
-    print(num_samples)
-    print()
+    #print(" t_tavg_sum", t_tavg_sum)
+    #print(num_samples)
     sample_variance = t_tavg_sum/(num_samples - 1)
-    print("sample_variance ", sample_variance)
+    #print("sample_variance ", sample_variance)
     import math
     sample_std = math.sqrt(sample_variance)
 
@@ -290,7 +310,7 @@ def errors(t,y):
     
     
     normalizer = sample_std
-    print("normalizer ", normalizer)
+    #print("normalizer ", normalizer)
     
     #print("normalizer", normalizer)
 
@@ -302,12 +322,13 @@ def errors(t,y):
         y2 = y2.to(device)
         y2 = torch.squeeze(y2,1)
 
-        print(" t2.sizer() ", t2.size(), " y2.size() ", y2.size())
+        #print(" t2.size() ", t2.size(), " y2.size() ", y2.size())
         thesum = torch.sum(t2 - y2, 0)
-        print("thesum.size() ", thesum.size())
+        #print("thesum.size() ", thesum.size())
+        #print("thesum.item() ", thesum.item())
         thesq = thesum**2
         rmse += thesq.item()
-        print(rmse)
+        #print(rmse)
 
 
 
@@ -316,10 +337,10 @@ def errors(t,y):
     #nrmse = rmse*num_samples/((num_samples-1)*sample_variance)
     nrmse = rmse
     rmse = math.sqrt(rmse)
-    print(" rmse.sqrt() ", rmse)
-    print(" normalizer ", normalizer)
+    #print("rmse.sqrt(): ", rmse)
+
     nrmse = math.sqrt(nrmse)/normalizer
-    print(nrmse)
+    #print("nrmse: ", nrmse)
     #print("rmse",rmse)
     #print("nrmse", nrmse)
     return rmse, nrmse, normalizer
@@ -467,7 +488,7 @@ def finalTraining(model_list,  dataset ):
 
 def testModel(model_list, dataset,  res_dict, start):
     
-    print("testModel(), dataset.test_mask: ", dataset.test_mask[:5])
+    #print("testModel(), dataset.test_mask: ", dataset.test_mask[:5])
     #print("testModel(), testing_indices: ", testing_indices[:5])
 
     global device
@@ -482,12 +503,22 @@ def testModel(model_list, dataset,  res_dict, start):
     
     model.eval()
     loader = DataLoader(dataset, batch_size= len(dataset), shuffle=True)
-    t = torch.FloatTensor(dataset[0].y.size())
+    
+    t = torch.FloatTensor([])
+    #t = torch.FloatTensor(dataset.y) # cannot access dataset.y
     t = t.to(device)
-    print(dataset[0].y.size())
-    y = torch.FloatTensor(dataset[0].y.size())
+
+    
+    y = torch.FloatTensor([])
     y = y.to(device)
     y = torch.unsqueeze(y, dim=1)
+    
+    test_mask = dataset.test_mask
+    test_mask = test_mask.to(device)
+    test_mask = torch.squeeze(test_mask, dim=1)
+    #print(type(test_mask))
+    #print("squeezed test_mask (flattenned): " ,test_mask)
+
     for batch in loader:
         data = batch.to(device)
 
@@ -505,18 +536,21 @@ def testModel(model_list, dataset,  res_dict, start):
         #y.append(pred[data.test_mask])
 
 
-        ground_truth = torch.index_select(data.y, 0, data.test_mask)
-        print("testModels()")
-        print("data.y.size() ", data.y.size())
-        print("t.size() ", t.size())
 
-        print("data.y[data.test_mask].size() " ,ground_truth.size())
-        print(" data.test_mask[:3] ",data.test_mask[:3])
+        ground_truth = torch.index_select(data.y, 0, test_mask)
+        # print("\ntestModels() data batch")
+        # print("data.test_mask", test_mask)
+        # print("data.y.size() ", data.y.size())
+        # print("t.size() ", ground_truth.size())
+        # print("t.mean() ", torch.mean(ground_truth))
         t = torch.cat((t ,ground_truth) )
-        print("pred.size() ", pred.size())
-        print(" y.size() ", y.size())
-        prediction = torch.index_select(pred, 0, data.test_mask)
+
+
+        #print("pred.size() ", pred.size())
+        #print(" y.size() before torch.cat ", y.size())
+        prediction = torch.index_select(pred, 0, test_mask)
         y = torch.cat((y , prediction) )
+        #print("y.size() finally", y.size())
         
 
     negatives = False
@@ -547,7 +581,7 @@ def testModel(model_list, dataset,  res_dict, start):
     thedataset = os.path.splitext(thedataset)[0]
     
     thetime = str(round_half_up(endtime-start,3) )
-    print(" endtime", endtime, " start", start, " endtime - start ", endtime-start, " total time ", thetime)
+    #print(" endtime", endtime, " start", start, " endtime - start ", endtime-start, " total time ", thetime)
 
 
     result = str(model)+" " \
@@ -595,12 +629,22 @@ def modelSelection(dataset, model_list, res_dict={'tables':{}, 'scatterplots':{}
     # 1. training and validation
     kfolds = kFolding(dataset,k)
     #print("test_mask after kfodling(): ", dataset[0].train_mask[:5])
-    print("kfolds train after kfodling(): ", kfolds[0][0][:5])
-    print("kfolds val after kfodling(): ", kfolds[0][1][:5])
-    print("test_mask after kfodling(): ", dataset.test_mask[:5])
+    # print("\n kfolds train after kfodling(): ", kfolds[0][0][:5])
+    # print("kfolds val after kfodling(): ", kfolds[0][1][:5])
+    # print(" len train_mask of one kfold  after kfolds(): ", len(kfolds[0][0]))
+    # print(" len val_mask of one kfold  after kfolds(): ", len(kfolds[0][1]))
+    # print("test_mask after kfodling(): ", dataset.test_mask[:5])
+    # print(" len test_mask after kfolds(): ", len(dataset.test_mask))
+    # print()
+
+
     for modeldict in model_list['models']:
         for kfold in kfolds:
             datasetFromKFold(kfold,dataset)
+            # print("\n for each kfold:\n len train_mask of one kfold  after kfolds(): ", len(dataset.train_mask))
+            # print(" len val_mask of one kfold  after kfolds(): ", len(dataset.val_mask))
+            # print(" len test_mask after kfolds(): ", len(dataset.test_mask))
+            # print()
             trainValidate(dataset, modeldict,  res_dict)
         modeldict['cv_val_loss']=modeldict['cv_val_loss']/len(kfolds)
 
@@ -609,6 +653,11 @@ def modelSelection(dataset, model_list, res_dict={'tables':{}, 'scatterplots':{}
     selectBestModel(model_list)
 
     # 3. final training
+    restoreMasks( kfolds, dataset)
+    # print("\n for finaltrainig:\n len train_mask: ", len(dataset.train_mask))
+    # print(" len val_mask : ", len(dataset.val_mask))
+    # print(" len test_mask : ", len(dataset.test_mask))
+    # print()
     finalTraining(model_list, dataset)
 
 
@@ -815,7 +864,7 @@ def reporting(res_dict):
         #ax.xlabel('target betweenness')
         #ax.ylabel('betweenness prediction');
         # 45 degree 
-        newt = np.append(newt,[0.9,1])
+        #newt = np.append(newt,[0.9,1])
         ax.plot(newt, newt, color = 'red', linewidth = 2)
         # ranges
         #ax.xlim(0, 1)

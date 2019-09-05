@@ -21,10 +21,11 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import time
 from IPython.display import display, HTML
 import os
 import json
-import datetime
+from datetime import datetime
 import copy
 import traceback
 from pprint import pprint
@@ -115,7 +116,7 @@ def REC(m):
 def F1(m):
     m['F1']=2.0*(m['PRE']*m['REC'])/(m['PRE']+m['REC'])
     
-def macroAndMicroScores(m):
+def macro_micro_scores(m):
     # average all precisions
     # average all recalls
     # compute macroF1
@@ -159,14 +160,41 @@ def macroAndMicroScores(m):
     m['microPRE'] = microPRE
     m['microREC'] = microREC
     m['microF1'] = microF1
-    
 
-def F1Score(pred, target):
+
+    
+def overall_accuracy(m):
+
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+
+    for k,v in m.items():
+        tp += v['TP']
+        tn += v['TN']
+        fp += v['FP']
+        fn += v['FN']
+
+    m['accuracy'] = (tp + tn)/(tp + tn + fp + fn)
+
+
+
+def F1Score(pred, target, nclasses = None):
+    """
+        returns a filled dict called 
+        measures = { 
+        i:{'TP':0, 'TN':0, 'FP':0, 
+           'FN':0, 'PRE':0.0, 'REC': 0.0, 'F1':0.0} 
+        for i in range(num_classes)}
+    """
     predset = set(pred)
     targetset = set(target)
     #print(predset)
     #print(targetset)
-    if len(predset)<=len(targetset) and \
+    if nclasses:
+        num_classes = nclasses
+    elif len(predset)<=len(targetset) and \
        max(predset)<=max(targetset):
         num_classes = max(len(predset),len(targetset))
         
@@ -193,6 +221,7 @@ def F1Score(pred, target):
         i:{'TP':0, 'TN':0, 'FP':0, 
            'FN':0, 'PRE':0.0, 'REC': 0.0, 'F1':0.0} 
         for i in range(num_classes)}
+
     for i in range(num_classes):
         for j in range(len(preddict[i])):
             if preddict[i][j] in targetdict[i]:
@@ -226,10 +255,17 @@ def F1Score(pred, target):
             #print("could not compute F1 on class ",k)
             pass
 
-    macroAndMicroScores(measures)
+    overall_accuracy(measures)
+
+    macro_micro_scores(measures)
 
     return measures
 
+def accuracy(pred, batch):
+    correct = pred.eq(batch.y).sum().item()
+    #acc = correct / test_dataset.sum().item()
+    acc = correct / batch.num_graphs
+    return acc
 
 # k-fold cross-validation
 
@@ -262,44 +298,35 @@ def printDatasetBalance(dataset):
         print(class_counts)
     
     
-def balancedDatasetSplit_list(dataset, prop):
+# def balancedDatasetSplit_list(dataset, prop):
     
-    dataset = dataset.shuffle()
-    n = len(dataset)
-    test_lim= int(prop*n)
-    num_classes = dataset.num_classes
+#     dataset = dataset.shuffle()
+#     n = len(dataset)
+#     test_lim= int(prop*n)
+#     num_classes = dataset.num_classes
     
-    train_dataset = []
-    test_dataset = []
-    datasets_byclass = {i:[] for i in range(num_classes)}
+#     train_dataset = []
+#     test_dataset = []
+#     datasets_byclass = {i:[] for i in range(num_classes)}
     
     
-    # for each class repeat balanced split
-    for graph in dataset:
-        datasets_byclass[int(graph.y.item())].append(graph)
+#     # for each class repeat balanced split
+#     for graph in dataset:
+#         datasets_byclass[int(graph.y.item())].append(graph)
     
-    for c in range(num_classes):
-        nc = len(datasets_byclass[c])
-        limit = int(prop*nc)
-        train_dataset.extend(datasets_byclass[c][:limit])
-        test_dataset.extend(datasets_byclass[c][limit:])
+#     for c in range(num_classes):
+#         nc = len(datasets_byclass[c])
+#         limit = int(prop*nc)
+#         train_dataset.extend(datasets_byclass[c][:limit])
+#         test_dataset.extend(datasets_byclass[c][limit:])
         
-    return train_dataset, test_dataset
+#     return train_dataset, test_dataset
 
-    
-def balancedDatasetSplit_slice(dataset, prop):
-    
-    #dataset = dataset.shuffle()
+
+def group_examples_by_class(dataset):
+
     n = len(dataset)
-    test_lim= int(prop*n)
     num_classes = dataset.num_classes
-    
-    x=torch.Tensor([True,False,True])==True
-
-    train_list = []
-    test_list = []
-    #train_dataset_slice = [False]*n
-    #test_dataset_slice = [False]*n
     datasets_byclass = {i:[] for i in range(num_classes)}
     
     #print("train_dataset_slice", train_dataset_slice)
@@ -314,12 +341,30 @@ def balancedDatasetSplit_slice(dataset, prop):
         #print(datasets_byclass)
         # datasets_byclass saves indices of the list myprocessed_filenames
 
-    # print()
-    # print("datasets_byclass",datasets_byclass.keys())
-    # print("datasets_byclass",datasets_byclass)
-    # for k in datasets_byclass.keys():
-    #     print("class ",k," count: ",len(datasets_byclass[k]))    
-    # print()
+    return datasets_byclass
+
+    
+def original_prop_dataset_split_slice(dataset, prop):
+    """
+        Splits into training and testing,
+
+        the proportions of each class from the original dataset are preserved throught each subset split.
+
+    """
+    
+    #dataset = dataset.shuffle()
+    n = len(dataset)
+    test_lim= int(prop*n)
+    num_classes = dataset.num_classes
+    
+    x=torch.Tensor([True,False,True])==True
+
+    train_list = []
+    test_list = []
+    #train_dataset_slice = [False]*n
+    #test_dataset_slice = [False]*n
+    datasets_byclass = group_examples_by_class(dataset)
+
 
     for c in datasets_byclass.keys(): #range(num_classes):
         nc = len(datasets_byclass[c])
@@ -401,7 +446,59 @@ def balancedDatasetSplit_slice(dataset, prop):
     
     return train_dataset, test_dataset
 
+
+def find_min_num_instances_of_all_classes(dataset):
+    """
+    # find the min number of instances of all classes
+    """
+    n = len(dataset)
+    num_classes = dataset.num_classes
+    min_num_instances = n
+    if size is None:
+        for c in datasets_byclass.keys(): #range(num_classes):
+            nc = len(datasets_byclass[c])
+            if nc < min_num_instances:
+                min_num_instances = nc
+    else:
+        min_num_instances = int(size/prop)
+
+    return min_num_instances 
+
+
+def balanced_dataset_split_slice(dataset, prop, size=None):
+    """
+        This functions will split the dataset into train and test but in a balanced way, all classes will have the same number of examples in training and testing 
+
+    """
+    
+    n = len(dataset)
+    test_lim= int(prop*n)
+    num_classes = dataset.num_classes
+    
+    x=torch.Tensor([True,False,True])==True
+
+    train_list = []
+    test_list = []
+
+    datasets_byclass = group_examples_by_class(dataset)
+
+    min_num_instances = find_min_num_instances_of_all_classes(dataset)
+
+    for c in datasets_byclass.keys(): #range(num_classes):
+        limit = int(prop*min_num_instances)
+        train_list.extend(datasets_byclass[c][:limit])
+        test_list.extend(datasets_byclass[c][limit:min_num_instances])
+
+    train_dataset = dataset[torch.LongTensor(train_list)]
+    test_dataset = dataset[torch.LongTensor(test_list)]
+    
+    return train_dataset, test_dataset
+
 def randomDatasetSplit_slice(dataset, prop):
+    """
+        random dataset splits without balancing or proportion measuring
+
+    """
     
     #dataset = dataset.shuffle()
     n = len(dataset)
@@ -425,6 +522,11 @@ def randomDatasetSplit_slice(dataset, prop):
 
 
 def randomDatasetKfoldSplit_slice(dataset, k):
+    """
+        simple resizing of folds into len(dataset)/num_folds
+                no class balance verification
+
+    """
     #dataset = dataset.shuffle()
     n = len(dataset)    
     foldsize = int(n/k)
@@ -444,6 +546,13 @@ def randomDatasetKfoldSplit_slice(dataset, k):
 
 
 def balancedDatasetKfoldSplit_slice(dataset,k):
+    """
+            balanced resizing of folds into len(dataset)/num_folds
+                num samples per class is no the minimum of all,
+                it's based on len(dataset)/num_folds/num_classes
+                so some classes could have less than this number.
+
+    """
     
     #dataset = dataset.shuffle()
     n = len(dataset)
@@ -485,6 +594,11 @@ def balancedDatasetKfoldSplit_slice(dataset,k):
 
 
 def unbalancedDatasetKfoldSplit_slice(dataset,k):
+    """
+         unbalanced split , get num items per class, then divide by num_folds
+         -> the classes are equitatively distributed in each fold 
+         = original proportions are transmitted to folds 
+    """
     
     #dataset = dataset.shuffle()
     n = len(dataset)
@@ -523,6 +637,9 @@ def unbalancedDatasetKfoldSplit_slice(dataset,k):
 
 
 def kFolding(train_dataset, k):
+    """
+        not used anymore 
+    """
     n = len(train_dataset)
     fold_size = int(n/k)
     
@@ -546,7 +663,11 @@ def kFolding(train_dataset, k):
     return train_sets
 
 def kFolding2(train_dataset, k, balanced=True, unbalanced_split=False):
-
+    """
+        main kfold split function, 
+                can use random, balanced and unbalanced(proportional) splits
+                builds a list of tuples of 2 list of indices( the train indices and the validation indices)
+    """
     #print(" train_dataset len:", len(train_dataset))
     folds =[]
     if unbalanced_split:
@@ -571,45 +692,100 @@ def kFolding2(train_dataset, k, balanced=True, unbalanced_split=False):
     
 
 
+def save_partial_dataset_symlinks(dataset, new_name='training_set'):
+    """
+        symlinks version
+        recreate the processed and raw folders inside a dataset
+        and instead of copying the processed files into processed folder, just use symlinks
+    
+        another version would be:
+            save myprocessed_filenames as  pickle or json and then load it to setup a derived sub dataset of the original dataset
+    """
+    source_folder = os.path.abspath(os.path.join(dataset.root,'processed'))
+    
+    basefolder = os.path.abspath(os.path.dirname(dataset.root))
+    
+    # inside raw/graphs01 folders to count the classes later
+    walkdir = os.path.join(dataset.root,'raw','graphs01')
+    #print(walkdir)
+    for root, dirs, files in os.walk(walkdir,topdown=False):
+        for rawdir in dirs:
+            if root == walkdir:
+                raw_path = os.path.join(
+                                    basefolder,
+                                    new_name,
+                                    'raw',
+                                    'graphs01',
+                                    rawdir)
+                os.makedirs(raw_path)
+    
+    processed_path = os.path.join(
+                        basefolder,
+                        new_name,
+                        'processed')
+    destination_folder = processed_path
+    #print(dataset.root,basefolder, source_folder, destination_folder)
+    os.makedirs(processed_path)
+    
 
-def prepare_dataset(dataset, nfolds=3, prop=0.8, dataset_type="balanced", print_debug=False):
-    try:
-        dataset = dataset.shuffle()
-    except:
-        print("WARNING: couldn't call dataset.shuffle. Passing")
-    k = nfolds
+    for filename in dataset.myprocessed_filenames:
+        os.symlink(os.path.join(source_folder,filename),
+                   os.path.join(destination_folder,filename))
+
+
+
+def prepare_dataset(dataset, prop=0.8, dataset_type="balanced", randomize=True, print_debug=False, desired_size=None):
+    """
+        Splits the dataset into training and tesing, adding a k-fold split in the training subset.
+
+        Accepts dataset_type = balanced, balanced_strict and non-balanced 
+
+        proportional:
+            - replicates the proportions of classes in each testing and k-fold subset
+        balanced:
+            - finds the minimum size of a class, and creates subsets (testing and k-fold) with this size in each class
+        non-balanced(or any other keyword):
+            just random shuffle and splitting
+
+        Output:
+            train_dataset, test_dataset
+            which contain both
+
+    """
+    if randomize:
+        try:
+            dataset = dataset.shuffle()
+        except:
+            print("WARNING: couldn't call dataset.shuffle. Passing")
+
     n = len(dataset)
-    if dataset_type=="balanced":
-        train_dataset, test_dataset = balancedDatasetSplit_slice(dataset, prop=prop)
+    if dataset_type=="proportional":
+        train_dataset, test_dataset = original_prop_dataset_split_slice(dataset, prop=prop)
+    elif dataset_type=="balanced":
+        train_dataset, test_dataset = balanced_dataset_split_slice(dataset, prop=prop, size=desired_size)
     else:
         train_dataset, test_dataset = randomDatasetSplit_slice(dataset, prop=prop)
 
     if print_debug:
-        print(" n:",n," k folds=",k)
+        print(" n:",n)
         print("Datasets balancing: ")
         printDatasetBalance(dataset )
         printDatasetBalance(train_dataset )
         printDatasetBalance(test_dataset )
         print()
-        # print()
-        # print(" origianl dataset ", dataset.myprocessed_filenames[:3])
-        # print(" new train dataset ", train_dataset.myprocessed_filenames[:3])
-        # print(" new test dataset ", test_dataset.myprocessed_filenames[:3])
-        # print()
-
     return train_dataset, test_dataset
 
 
-def accuracy(pred, batch):
-    correct = pred.eq(batch.y).sum().item()
-    #acc = correct / test_dataset.sum().item()
-    acc = correct / batch.num_graphs
-    return acc
+
 
 
 
 
 def train_model_GGNN(model, loader, optimizer, train_loss_history):
+    """
+        specific training for models of class GGNN1,GGNN2,GGNN2,..
+    """
+
     global device 
     
     model.train()
@@ -695,6 +871,9 @@ def train_model_META(model, loader, optimizer, train_loss_history):
 
 
 def train_model(model, loader, optimizer, train_loss_history):
+    """
+        Indirection method to select model based on class name
+    """
     
     if model.__class__.__name__.startswith('META'):
         return train_model_META(model, loader, optimizer, train_loss_history)
@@ -704,6 +883,9 @@ def train_model(model, loader, optimizer, train_loss_history):
 
 
 def val_loss_model_GGNN(model, loader, optimizer, val_history):
+    """
+        validation (testing) on validation fold for GGNNi models
+    """
     global device 
     
     model.eval()
@@ -724,6 +906,7 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
         total_pred.extend(pred.flatten().tolist())
         total_gt.extend(data.y.flatten().tolist())
         
+        # pick the max of the softmaex values -> selected class for each!
         _, predacc = pred.max(dim=1)
         total_acc.extend(predacc.flatten().tolist())
         
@@ -752,6 +935,9 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
 
 
 def val_loss_model_META(model, loader, optimizer, val_history):
+    """
+        validation (testing) on validation fold for METAi models
+    """
     global device 
     
     model.eval()
@@ -787,6 +973,7 @@ def val_loss_model_META(model, loader, optimizer, val_history):
         total_pred.extend(pred.flatten().tolist())
         total_gt.extend(data.y.flatten().tolist())
         
+        # why is this??
         _, predacc = pred.max(dim=1)
         total_acc.extend(predacc.flatten().tolist())
         
@@ -815,6 +1002,9 @@ def val_loss_model_META(model, loader, optimizer, val_history):
 
 
 def val_loss_model(model, loader, optimizer, val_history):
+    """
+         indirection method to select validation vbased on class name
+    """
     if model.__class__.__name__.startswith('META'):
         return val_loss_model_META(model, loader, optimizer, val_history)
     else:
@@ -854,6 +1044,9 @@ def final_model_train(modeldict, train_dataset):
 
 
 def model_save_name(modeldict):
+    """
+        prepare name from modeldict + datetime.now() parsed as string
+    """
     #classname = modeldict['model_instance'].__class__.__name__
     thename = modeldict['name']
     architecture = ""
@@ -864,7 +1057,7 @@ def model_save_name(modeldict):
     lr = modeldict['learning_rate']
     wd = modeldict['weight_decay']
     bs = modeldict['batch_size']
-    d = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+    d = datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
 
     #classname + "_" + architecture + "_" + \
     finalname = thename + "_" + architecture + "_" + \
@@ -877,7 +1070,8 @@ def save_model(modeldict):
     
     
     """
-        based on :
+        mkdir models and save model with filename with datetime.
+        Format of model saving based on :
         https://pytorch.org/tutorials/beginner/saving_loading_models.html
     """
     
@@ -904,6 +1098,9 @@ def save_model(modeldict):
         return None
         
 def loadModel(model, path):
+    """
+    loading the model from disks
+    """
     global device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -915,6 +1112,10 @@ def loadModel(model, path):
     
 
 def getModelParamsFromFilename(path):
+    """
+        Recreate a model instance with the correc params.
+        The params are read from the filename on disk
+    """
     import contextvars
 
 
@@ -959,6 +1160,10 @@ def getModelParamsFromFilename(path):
     return modeldict
     
 def loadModelFromFile(path):
+    """
+        Extract parameters of the model from filename and instancia a model object
+
+    """
 
     # extract params from name
     modeldict = getModelParamsFromFilename(path)
@@ -977,6 +1182,9 @@ def loadModelFromFile(path):
     return modeldict
 
 def testSavingLoadingModel(train_dataset, test_dataset):
+    """
+    testing method to detect failures in the above save-load methods
+    """
 
     global device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -1023,18 +1231,32 @@ def testSavingLoadingModel(train_dataset, test_dataset):
 
     
 def save_models(modelsdict):
+    """
+        save al models in the results_dict under 'best_models' key
+    """
     for k,modeldict in modelsdict['best_models'].items(): 
         save_model(modeldict)
 
 def reportTrainedModel(modeldict):
+    """
+        given a unique model dict prints a description line
+    """
     print(" trained model: ",modeldict['model'].__name__,
               modeldict['kwargs'], " epochs:",modeldict['epochs'],
              ' val loss=',modeldict['cv_val_loss'],
           ' val accuracy=',modeldict['cv_val_accuracy'],
          ' val microF1=',modeldict['cv_val_microF1'],
-          ' val macroF1=',modeldict['cv_val_macroF1'])
+          ' val macroF1=',modeldict['cv_val_macroF1'],
+          ' time=',round(modeldict['time'],2),'s') 
     
 def select_best_model(model_list, train_dataset):
+    """
+    selects the best model in a results dictionary according to validation scores.
+                for each of the scores (loss, acc, microF1, macroF1)
+                if retrains the model on all the training set, 
+                saves the trained instance onto the dict and returns it
+    """
+    
     # select the best model (lower validation loss)
     losses = np.array([ modeldict['cv_val_loss'] for modeldict in model_list])
     accuracies = np.array([ modeldict['cv_val_accuracy'] for modeldict in model_list])
@@ -1069,6 +1291,10 @@ def select_best_model(model_list, train_dataset):
 
 def hpsearch(model_list, hyperparameters_dict):
     """
+
+        given a dict of parameteres and a list of values for each, 
+                it generates a dict for each combination of parameter values (cross-product
+
         hyperparameters = {
     
             'd1': [5,10,20,40,80,160],
@@ -1119,7 +1345,13 @@ def hpsearch(model_list, hyperparameters_dict):
 
     return model_list
 
-def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False, debug_training=True):    
+def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False, debug_training=True):   
+    """
+    given a list of models and their parameters (in a dictionary format), 
+                perform cross-validation to select the best model based on accuracy, microF1 and macroF1
+                Reports trained models,
+                selects the best model to be trained 
+    """ 
 
     global device 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -1128,6 +1360,9 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
     # not working
     if force_numclasses is not None:
         train_dataset.num_classes = force_numclasses
+
+
+    start = time.time()
 
     kfolds = kFolding2(train_dataset,k, balanced, unbalanced_split)
 
@@ -1150,7 +1385,8 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             model = modelclass(**kwargs) # model parameters are inside kwargs dict
             model = model.to(device)
             modeldict['model_instance'] = model
-            
+            start2 = time.time()
+
             lr = modeldict['learning_rate']
             wd = modeldict['weight_decay']
             bs = modeldict['batch_size']
@@ -1190,8 +1426,11 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             print("Problem training model "+modeldict['model'].__name__)
             traceback.print_exc()
 
+        end2 = time.time()
+        modeldict['time'] = end2 - start2
         # report model results
         if debug_training: 
+
             reportTrainedModel(modeldict)
         
 
@@ -1201,7 +1440,10 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
     modelsdict = select_best_model(model_list, train_dataset)
 
     
-    
+    end = time.time()
+    elapsed = end - start
+    modelsdict['training_time'] = elapsed
+    print("total training time ",elapsed)
 
     
     return modelsdict
@@ -1209,6 +1451,11 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
 
     
 def reportModelSelectionResult(modeldict, resultsdict):
+    """
+        Print score of the best models 
+        save_models() to disk
+        generate a dataframe with resulting scores for each model
+    """
 
     i = resultsdict['autoincrement']
     resultsdict['autoincrement']+=1
@@ -1274,6 +1521,9 @@ def reportModelSelectionResult(modeldict, resultsdict):
     return res
 
 def reportTest(batch, pred, measures, test_dataset):
+    """
+        show score measures on a test prediction results
+    """
     print("len(test_dataset): ", len(test_dataset))
     print("num graphs: ", batch.num_graphs)
     print(pred)
@@ -1281,6 +1531,10 @@ def reportTest(batch, pred, measures, test_dataset):
     print('Accuracy: {:.4f}'.format(measures['accuracy'])," macroF1:",measures['macroF1'], " microF1:", measures['microF1'])
 
 def testModel(model, test_dataset, debug=False):
+    """
+    Tests model on the test dataset
+    """
+
     global device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -1308,6 +1562,7 @@ def testModel(model, test_dataset, debug=False):
 
 
         #_, pred = model(test_dataset).max(dim=1)
+        # pick the max of the softmaex values -> selected class for each!
         _, pred = model(data).max(dim=1)
         acc = accuracy(pred, data)    
         pred2 = pred.to('cpu')
@@ -1324,16 +1579,20 @@ def testModel(model, test_dataset, debug=False):
         
     return measures
 
-def report_all_test(modelsdict):
+def report_all_test(results_dict):
+    """
+        Gets the results in results_dict and createas a pandas dataframe to be later displayed
+    """
+
     reportDict = [{'name':k, 
                    'accuracy': round(v['accuracy'],4),
                   'macroF1': round(v['macroF1'],4),
-                  'microF1': round(v['microF1'],4)} for k,v in modelsdict['testing'].items()]
+                  'microF1': round(v['microF1'],4)} for k,v in results_dict['testing'].items()]
     #print(reportDict)
     res = pd.DataFrame(reportDict)
     res = res.sort_values(by=['accuracy'])
 
-    d = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+    d = datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
     print(d)
 
     display(res)
@@ -1371,7 +1630,7 @@ def saveResults(modelsdict):
             
     
     
-    d = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+    d = datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
     if not os.path.exists('./results'):
         os.mkdir('./results')
     results_file = './results/experiment_'+d
@@ -1387,11 +1646,14 @@ def test_saving_model():
     dataset = dataset.shuffle()
     k = 3
     n = len(dataset)
-    train_dataset, test_dataset = balancedDatasetSplit_slice(dataset, prop=0.8)
+    train_dataset, test_dataset = original_prop_dataset_split_slice(dataset, prop=0.8)
     testSavingLoadingModel(train_dataset, test_dataset)
 
 
-def test_multiple_models(resultsdict, test_dataset ):    
+def test_multiple_models(resultsdict, test_dataset ):  
+    """
+     tests all the best models in best_models_list, and saves the result 
+    """  
     if 'testing' not in resultsdict.keys():
         resultsdict['testing']={}
 
@@ -1413,7 +1675,7 @@ if __name__=='__main__':
     k = 3
     n = len(dataset)
     print(" n:",n," k folds=",k)
-    train_dataset, test_dataset = balancedDatasetSplit_slice(dataset, prop=0.8)
+    train_dataset, test_dataset = original_prop_dataset_split_slice(dataset, prop=0.8)
     print("Datasets balancing: ")
     printDatasetBalance(dataset )
     printDatasetBalance(train_dataset )
