@@ -612,7 +612,10 @@ def unbalancedDatasetKfoldSplit_slice(dataset,k):
     datasets_byclass = {i:[] for i in range(num_classes)}
     for i in range(n):
         graph = dataset[i]
-        datasets_byclass[int(graph.y.item())].append(i)
+        if isinstance(graph.y,int):
+            datasets_byclass[graph.y].append(i)
+        else:
+            datasets_byclass[int(graph.y.item())].append(i)
 
 
     # save for each class the num_items
@@ -724,7 +727,8 @@ def save_partial_dataset_symlinks(dataset, new_name='training_set'):
                         new_name,
                         'processed')
     destination_folder = processed_path
-    #print(dataset.root,basefolder, source_folder, destination_folder)
+    
+    print("INside save_partial_dataset_symlink:",dataset.root,basefolder, source_folder, destination_folder)
     os.makedirs(processed_path)
     
 

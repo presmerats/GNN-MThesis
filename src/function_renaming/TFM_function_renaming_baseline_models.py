@@ -55,18 +55,23 @@ def save_results(results_dict, features, dataset_version, fileversion='baseline'
     append results to resutls_dict on disk(json format)
                  serializes model object as a pickle file
                  writes the filen path to 'model_instance' key
+
+    it assumes it is executed from the root folder src/function_renaming
+    and so will save results json files to results/name.json
     """
 
     if dataset_version=='v1' and fileversion=='baseline':
-        filepath = 'training_results.json'
+        filepath = 'results/training_results.json'
     elif dataset_version=='v2' and fileversion=='baseline':
-        filepath = 'training_results_v2.json'
+        filepath = 'results/training_results_v2.json'
     elif dataset_version=='v1' and fileversion=='nlp':
-        filepath = 'nlp_training_results.json'
+        filepath = 'results/nlp_training_results.json'
     elif dataset_version=='v2' and fileversion=='nlp':
-        filepath = 'nlp_training_results_v2.json'
+        filepath = 'results/nlp_training_results_v2.json'
     else:
         filepath = fileversion
+        if filepath.find('results/')!= 0:
+            filepath = 'results/'+filepath
         
     r = json.load(open(filepath,'r'))
 
@@ -141,6 +146,57 @@ def print_training_stats(dataset_version='v1', fileversion='baseline'):
 
     pprint(best_models)
 
+
+def balance_maximum_classes(dataset, max_count=-1):
+    """
+        shuffle and then count items by class,
+            use a threshold to remove classes with more items than the threshold
+
+    """
+
+    dataset.shuffle()
+
+    class_counts = {}
+    for i in range(len(dataset)):
+        cl = dataset[i].y 
+        if cl not in class_counts.keys():
+            class_counts[cl]=0
+        class_counts[cl]+=1
+
+    pprint(class_counts)
+
+    undersample_classes = []
+    for k,v in class_counts.items():
+        if max_count>-1 and v>max_count:
+            undersample_classes.append(k)
+            print(" classes to undersample ",k)
+            
+
+    #max_class_count = min(class_counts.values())
+    # deactivated feature by using now the max
+    max_class_count = max_count if max_count > -1 else max(class_counts.values())
+    print("max class count set to ", max_class_count)
+
+    purged_list = []
+    final_class_counts = {}
+    for i in range(len(dataset)):
+        cl = dataset[i].y 
+    
+        if cl not in final_class_counts.keys():
+            final_class_counts[cl]=0
+        
+        if final_class_counts[cl]>max_class_count:
+            continue
+
+        final_class_counts[cl]+=1
+        purged_list.append(i)
+
+    pprint(final_class_counts)
+
+    #return purged_list 
+    return purged_list , len(list(final_class_counts.keys())) 
+
+
 def purge_minimum_classes(dataset, min_count=40):
     """
     shuffle and then count items by class,
@@ -199,9 +255,13 @@ def purge_minimum_classes(dataset, min_count=40):
     return purged_list , len(list(final_class_counts.keys())) 
 
 
-def filter_features(dataset, samples_list, features):
+def pack_features(dataset, samples_list):
     """
-    get selected columns of topological features matrix, code features matrix , document(code bag of words)
+
+    for before dataset split, gets all features from topo, code and document
+    and puts them into a np.ndarray()
+
+    get all columns of topological features matrix, code features matrix , document(code bag of words)
                  and return a numpy array/matrix
 
     # IN:purged_list, features, dataset, 
@@ -214,81 +274,85 @@ def filter_features(dataset, samples_list, features):
         topos = dataset[j].__getattribute__('x_topo_feats')
             
 
-        if features == 'x_topo_feats':
-            cfeats.extend(topos)
+        # if features == 'x_topo_feats':
+        #     cfeats.extend(topos)
             
-        elif features =='code_feats' or features=='code feats':
-            cfeats =[ d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        # elif features =='code_feats' or features=='code feats':
+        #     cfeats =[ d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             
-        # document, topological and code features
-        elif features =='topo and code feats' or features=='feats_topo_code':
-            cfeats =[d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
-            cfeats.extend(topos)
+        # # document, topological and code features
+        # elif features =='topo and code feats' or features=='feats_topo_code':
+        #     cfeats =[d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
+        #     cfeats.extend(topos)
 
-        elif features == 'document':
-            cfeats = d['document']
+        # elif features == 'document':
+        #     cfeats = d['document']
 
-        elif features == 'document_simplified':
-            cfeats = d['document_simplified']
+        # elif features == 'document_simplified':
+        #     cfeats = d['document_simplified']
 
-        elif features =='document and list funcs':
-            cfeats =[d['document'], d['list_funcs']]
+        # elif features =='document and list funcs':
+        #     cfeats =[d['document'], d['list_funcs']]
 
-        elif features =='document_simplified and list funcs':
-            cfeats =[d['document_simplified'], d['list_funcs']]
+        # elif features =='document_simplified and list funcs':
+        #     cfeats =[d['document_simplified'], d['list_funcs']]
 
-        # document and topological features
-        elif features =='document and topo feats':
-            cfeats =[d['document'], d['list_funcs']]
-            cfeats.extend(topos)
+        # # document and topological features
+        # elif features =='document and topo feats':
+        #     cfeats =[d['document'], d['list_funcs']]
+        #     cfeats.extend(topos)
 
-        elif features =='document_simplified and topo feats':
-            cfeats =[d['document_simplified'], ]
-            cfeats.extend(topos)
+        # elif features =='document_simplified and topo feats':
+        #     cfeats =[d['document_simplified'], ]
+        #     cfeats.extend(topos)
 
-        elif features =='document_simplified and list_funcs and topo feats':
-            cfeats =[d['document_simplified'], d['list_funcs']]
-            cfeats.extend(topos)
+        # elif features =='document_simplified and list_funcs and topo feats':
+        #     cfeats =[d['document_simplified'], d['list_funcs']]
+        #     cfeats.extend(topos)
 
-        # document and code features
-        #code_feats = {
-        #         'nregs': num_regs,
-        #         'num_distinct_regs': num_distinct_regs,
-        #         'ninstrs': num_instrs,
-        #         'ndispls': num_displs,
-        #         'nimms': num_imms,
-        #         'nmaddrs': num_memaddrs,
-        #         'num_funcs': num_funcs,
-        #         'document': doc,              -> removed
-        #         'document_simplified': doc2,  -> removed
-        #         'list_regs': list_regs,       -> removed
-        #         'list_funcs': list_funcs      -> removed
-        #     }
-        elif features =='document and code feats':
-            cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
+        # # document and code features
+        # #code_feats = {
+        # #         'nregs': num_regs,
+        # #         'num_distinct_regs': num_distinct_regs,
+        # #         'ninstrs': num_instrs,
+        # #         'ndispls': num_displs,
+        # #         'nimms': num_imms,
+        # #         'nmaddrs': num_memaddrs,
+        # #         'num_funcs': num_funcs,
+        # #         'document': doc,              -> removed
+        # #         'document_simplified': doc2,  -> removed
+        # #         'list_regs': list_regs,       -> removed
+        # #         'list_funcs': list_funcs      -> removed
+        # #     }
+        # elif features =='document and code feats':
+        #     cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
 
-        elif features =='document_simplified and code feats':
-            cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        # elif features =='document_simplified and code feats':
+        #     cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             
-        elif features =='document_simplified and list_funcs and code feats':
-            cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        # elif features =='document_simplified and list_funcs and code feats':
+        #     cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             
-        # document, topological and code features
-        elif features =='document and topo and code feats':
-            cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
-            cfeats.extend(topos)
+        # # document, topological and code features
+        # elif features =='document and topo and code feats':
+        #     cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
+        #     cfeats.extend(topos)
 
-        elif features =='document_simplified and topo and code feats':
-            cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
-            cfeats.extend(topos)
+        # elif features =='document_simplified and topo and code feats':
+        #     cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        #     cfeats.extend(topos)
             
-        elif features =='document_simplified and list_funcs and topo and code feats':
-            cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
-            cfeats.extend(topos)
+        # elif features =='document_simplified and list_funcs and topo and code feats':
+        #     cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        #     cfeats.extend(topos)
 
-        elif features =='all':
-            cfeats =[d['document'],d['document_simplified'],d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
-            cfeats.extend(topos)
+        # elif features =='all':
+        #     cfeats =[d['document'],d['document_simplified'],d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        #     cfeats.extend(topos)
+
+
+        cfeats =[d['document'],d['document_simplified'],d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        cfeats.extend(topos)
 
         X.append(cfeats)
             
@@ -296,6 +360,40 @@ def filter_features(dataset, samples_list, features):
     X = np.array(X)
 
     return X
+
+
+
+def pack_features_graph_version(dataset, samples_list):
+    """
+        This is applied before the dataset split, and usually will contain all the features,
+        the feature selection will be performed later when training specific model with specific features
+
+        Remake of filter_features, 
+        but this time a column containing the index of the row in the original dataset is added at the end 
+        X[:,-1] contains the num of the row it comes from.
+        This will be used it further functions to split the dataset
+    """
+
+    
+    X = []
+    for j in samples_list:
+        d = dataset[j].__getattribute__('code_feats')
+        topos = dataset[j].__getattribute__('x_topo_feats')
+
+        # get all the features
+        cfeats =[d['document'],d['document_simplified'],d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        cfeats.extend(topos)
+
+        # add the row number to the last column
+        cfeats.append(j)
+
+        X.append(cfeats)
+            
+
+    X = np.array(X)
+
+    return X
+
 
 
 def filter_features_new(X_train, features):
@@ -476,6 +574,12 @@ def filter_features_new(X_train, features):
             list_cols = list(range(3,l))
             cfeats_train.extend(X_train[j,list_cols])
             
+        doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2] ))
+
+        list_cols = list(range(3,l))
+        cfeats_train.extend(X_train[j,list_cols])
+        
+
         X_tr.append(cfeats_train)
         X_tr_doc.append(doc_feats)
         
@@ -498,182 +602,184 @@ def filter_features_new_v2(X_train, features):
 
         transform the columns of the matrix in a dataframe
     """
-    X_tr = []
-    X_tr_doc = []
-    for j in range(len(X_train)):
+    # X_tr = []
+    # X_tr_doc = []
+    # for j in range(len(X_train)):
            
-        cfeats_train = []
-        doc_feats = []
+    #     cfeats_train = []
+    #     doc_feats = []
         
-        # when features =='all':
-        #     cfeats =[
-        #         d['document'],
-        #         d['document_simplified'],
-        #         d['list_funcs'], 
-        #         d['nregs'], 
-        #         d['num_distinct_regs'], 
-        #         d['ninstrs'], 
-        #         d['ndispls'], 
-        #         d['nimms'], 
-        #         d['nmaddrs'], 
-        #         d['num_funcs'],]
-        #     cfeats.extend(topos)
+    #     # when features =='all':
+    #     #     cfeats =[
+    #     #         d['document'],
+    #     #         d['document_simplified'],
+    #     #         d['list_funcs'], 
+    #     #         d['nregs'], 
+    #     #         d['num_distinct_regs'], 
+    #     #         d['ninstrs'], 
+    #     #         d['ndispls'], 
+    #     #         d['nimms'], 
+    #     #         d['nmaddrs'], 
+    #     #         d['num_funcs'],]
+    #     #     cfeats.extend(topos)
         
 
-        l = X_train.shape[1]
+    #     l = X_train.shape[1]
 
-        if features == 'x_topo_feats':
-            cfeats_train.extend(X_train[j,10:l])
+    #     if features == 'x_topo_feats':
+    #         cfeats_train.extend(X_train[j,10:l])
             
             
-        elif features =='code_feats' or features=='code feats':
-            # cfeats =[ d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+    #     elif features =='code_feats' or features=='code feats':
+    #         # cfeats =[ d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             
-            cfeats_train.extend(X_train[j,3:10])
-            
-
-        # document, topological and code features
-        elif features =='topo and code feats' or features=='feats_topo_code':
-            # cfeats =[d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
-            # cfeats.extend(topos)
-
-            list_cols = list(range(3,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         cfeats_train.extend(X_train[j,3:10])
             
 
-        elif features == 'document':
-            #cfeats = d['document']
-            doc_feats = ''.join(''.join(X_train[j,0]))
+    #     # document, topological and code features
+    #     elif features =='topo and code feats' or features=='feats_topo_code':
+    #         # cfeats =[d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
+    #         # cfeats.extend(topos)
+
+    #         list_cols = list(range(3,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        elif features == 'document_simplified':
-            #cfeats = d['document_simplified']
-            doc_feats = ''.join(''.join(X_train[j,1]))
+    #     elif features == 'document':
+    #         #cfeats = d['document']
+    #         doc_feats = ''.join(''.join(X_train[j,0]))
             
 
-        elif features =='document and list funcs':
-            #cfeats =[d['document'], d['list_funcs']]
-            doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2]))
+    #     elif features == 'document_simplified':
+    #         #cfeats = d['document_simplified']
+    #         doc_feats = ''.join(''.join(X_train[j,1]))
             
 
-        elif features =='document_simplified and list funcs':
-            #cfeats =[d['document_simplified'], d['list_funcs']]
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+    #     elif features =='document and list funcs':
+    #         #cfeats =[d['document'], d['list_funcs']]
+    #         doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2]))
+            
+
+    #     elif features =='document_simplified and list funcs':
+    #         #cfeats =[d['document_simplified'], d['list_funcs']]
+    #         doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
             
             
 
-        # document and topological features
-        elif features =='document and topo feats':
-            #cfeats =[d['document'], d['list_funcs']]
-            #cfeats.extend(topos)
+    #     # document and topological features
+    #     elif features =='document and topo feats':
+    #         #cfeats =[d['document'], d['list_funcs']]
+    #         #cfeats.extend(topos)
 
-            doc_feats = ''.join(''.join(X_train[j,0]))
+    #         doc_feats = ''.join(''.join(X_train[j,0]))
 
-            list_cols = list(range(10,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(10,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        elif features =='document_simplified and topo feats':
-            # cfeats =[d['document_simplified'], ]
-            # cfeats.extend(topos)
-            doc_feats = ''.join(''.join(X_train[j,1]))
+    #     elif features =='document_simplified and topo feats':
+    #         # cfeats =[d['document_simplified'], ]
+    #         # cfeats.extend(topos)
+    #         doc_feats = ''.join(''.join(X_train[j,1]))
 
-            list_cols = list(range(10,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(10,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        elif features =='document_simplified and list_funcs and topo feats':
-            # cfeats =[d['document_simplified'], d['list_funcs']]
-            # cfeats.extend(topos)
+    #     elif features =='document_simplified and list_funcs and topo feats':
+    #         # cfeats =[d['document_simplified'], d['list_funcs']]
+    #         # cfeats.extend(topos)
 
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+    #         doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
 
-            list_cols = list(range(10,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(10,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        # document and code features
-        #code_feats = {
-        #         'nregs': num_regs,
-        #         'num_distinct_regs': num_distinct_regs,
-        #         'ninstrs': num_instrs,
-        #         'ndispls': num_displs,
-        #         'nimms': num_imms,
-        #         'nmaddrs': num_memaddrs,
-        #         'num_funcs': num_funcs,
-        #         'document': doc,              -> removed
-        #         'document_simplified': doc2,  -> removed
-        #         'list_regs': list_regs,       -> removed
-        #         'list_funcs': list_funcs      -> removed
-        #     }
-        elif features =='document and code feats':
-            #cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
+    #     # document and code features
+    #     #code_feats = {
+    #     #         'nregs': num_regs,
+    #     #         'num_distinct_regs': num_distinct_regs,
+    #     #         'ninstrs': num_instrs,
+    #     #         'ndispls': num_displs,
+    #     #         'nimms': num_imms,
+    #     #         'nmaddrs': num_memaddrs,
+    #     #         'num_funcs': num_funcs,
+    #     #         'document': doc,              -> removed
+    #     #         'document_simplified': doc2,  -> removed
+    #     #         'list_regs': list_regs,       -> removed
+    #     #         'list_funcs': list_funcs      -> removed
+    #     #     }
+    #     elif features =='document and code feats':
+    #         #cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
             
-            doc_feats = ''.join(''.join(X_train[j,0]))
+    #         doc_feats = ''.join(''.join(X_train[j,0]))
 
-            list_cols = list(range(3,10))
-            cfeats_train.extend(X_train[j,list_cols])
-            
-
-        elif features =='document_simplified and code feats':
-            #cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
-            doc_feats = ''.join(''.join(X_train[j,1]))
-
-            list_cols = list(range(3,10))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(3,10))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        elif features =='document_simplified and list_funcs and code feats':
-            #cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+    #     elif features =='document_simplified and code feats':
+    #         #cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+    #         doc_feats = ''.join(''.join(X_train[j,1]))
+
+    #         list_cols = list(range(3,10))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
-
-            list_cols = list(range(3,10))
-            cfeats_train.extend(X_train[j,list_cols])
+    #     elif features =='document_simplified and list_funcs and code feats':
+    #         #cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             
 
-        # document, topological and code features
-        elif features =='document and topo and code feats':
-            #cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
-            #cfeats.extend(topos)
+    #         doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
 
-            doc_feats = ''.join(''.join(X_train[j,0]))
-
-            list_cols = list(range(3,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(3,10))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        elif features =='document_simplified and topo and code feats':
-            #cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
-            #cfeats.extend(topos)
-            doc_feats = ''.join(''.join(X_train[j,1]))
+    #     # document, topological and code features
+    #     elif features =='document and topo and code feats':
+    #         #cfeats =[d['document'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],  ]
+    #         #cfeats.extend(topos)
 
-            list_cols = list(range(3,l))
-            cfeats_train.extend(X_train[j,list_cols])
-            
-            
-        elif features =='document_simplified and list_funcs and topo and code feats':
-            # cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
-            # cfeats.extend(topos)
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+    #         doc_feats = ''.join(''.join(X_train[j,0]))
 
-            list_cols = list(range(3,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(3,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
 
-        elif features =='all':
-            doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2] ))
+    #     elif features =='document_simplified and topo and code feats':
+    #         #cfeats =[d['document_simplified'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+    #         #cfeats.extend(topos)
+    #         doc_feats = ''.join(''.join(X_train[j,1]))
 
-            list_cols = list(range(3,l))
-            cfeats_train.extend(X_train[j,list_cols])
+    #         list_cols = list(range(3,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
             
-        X_tr.append(cfeats_train)
-        X_tr_doc.append(doc_feats)
+            
+    #     elif features =='document_simplified and list_funcs and topo and code feats':
+    #         # cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+    #         # cfeats.extend(topos)
+    #         doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+
+    #         list_cols = list(range(3,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
+            
+
+    #     elif features =='all':
+    #         doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2] ))
+
+    #         list_cols = list(range(3,l))
+    #         cfeats_train.extend(X_train[j,list_cols])
+            
+    #     X_tr.append(cfeats_train)
+    #     X_tr_doc.append(doc_feats)
         
             
-    X_train_numeric_features  = np.array(X_tr)
-    X_train_doc = X_tr_doc 
+    # X_train_numeric_features  = np.array(X_tr)
+    # X_train_doc = X_tr_doc 
+
+    X_train_numeric_features, X_train_doc = filter_features_new(X_train, features)
 
     X_train_all = pd.DataFrame(
                 data=X_train_numeric_features,
@@ -795,6 +901,61 @@ def filter_features_new_v2(X_train, features):
 #     return X_train, X_test, y_train, y_test
 
 
+def load_dataset_split(folder='tmp/symbols_dataset_3_precomp_split_unchanged'):
+    X_train = pickle.load(open(os.path.join(folder,'X_train.pickle'),'rb'))
+    X_test = pickle.load(open(os.path.join(folder,'X_test.pickle'),'rb'))
+    y_train = pickle.load(open(os.path.join(folder,'y_train.pickle'),'rb'))
+    y_test = pickle.load(open(os.path.join(folder,'y_test.pickle'),'rb'))
+    nclasses = pickle.load(open(os.path.join(folder,'nclasses.pickle'),'rb'))
+
+    return X_train, X_test, y_train, y_test, nclasses
+
+
+def dataset_split_core(dataset, purged_list, nclasses):
+    n = len(purged_list)
+    y = [dataset[j].y for j in purged_list]
+    y = np.array(y)
+
+    X = pack_features(dataset,purged_list)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, 
+        y,
+        #stratify=y,
+        random_state = 7)
+
+    return X_train, X_test, y_train, y_test, nclasses
+
+
+def dataset_split_core_graph_version(dataset, purged_list, nclasses):
+
+    n = len(purged_list)
+    y = [dataset[j].y for j in purged_list]
+    y = np.array(y)
+
+    X = pack_features_graph_version(dataset,purged_list)
+
+    # make X have a last column with the dataset index
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, 
+        y,
+        #stratify=y,
+        random_state = 7)
+
+    # Build the train and test dataset with X last columns which contains the dataset index
+    train_list = X_train[:,-1].tolist()
+    test_list = X_test[:,-1].tolist()
+    train_dataset = dataset[torch.LongTensor(train_list)]
+    test_dataset = dataset[torch.LongTensor(test_list)]
+
+    # remove X last columns which contains the dataset index
+    X_train = X_train[:,:-1]
+    X_test  = X_test[:,:-1]
+
+    return X_train, X_test, y_train, y_test, nclasses, train_dataset, test_dataset
+
+
 def dataset_split_shared_splits(dataset, features='all', min_count=0):
     """
     purge minimum classes, prepare X and y and then do train test splits
@@ -805,19 +966,68 @@ def dataset_split_shared_splits(dataset, features='all', min_count=0):
 
     purged_list, nclasses = purge_minimum_classes(dataset,min_count)
 
-    n = len(purged_list)
-    y = [dataset[j].y for j in purged_list]
-    y = np.array(y)
+    return dataset_split_core(dataset, purged_list, nclasses)
+    # n = len(purged_list)
+    # y = [dataset[j].y for j in purged_list]
+    # y = np.array(y)
 
-    X = filter_features(dataset,purged_list, features)
+    # X = filter_features(dataset,purged_list, features)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, 
-        y,
-        #stratify=y,
-        random_state = 7)
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X, 
+    #     y,
+    #     #stratify=y,
+    #     random_state = 7)
 
-    return X_train, X_test, y_train, y_test, nclasses
+    # return X_train, X_test, y_train, y_test, nclasses
+
+
+
+def dataset_split_shared_splits_graph_version(dataset, features='all', min_count=0):
+    """
+    purge minimum classes, prepare X and y and then do train test splits
+
+    change it , set all featues topo + code
+    then if the alg is just for topo then just remove code features
+    """
+
+    purged_list, nclasses = purge_minimum_classes(dataset,min_count)
+
+    return dataset_split_core_graph_version(dataset, purged_list, nclasses)
+   
+    
+
+def dataset_split_balanced_major_classes(dataset, features='all', max_count=-1):
+    """
+    undersample majority classes, minority classes intact
+    """
+
+    purged_list, nclasses = balance_maximum_classes(dataset,max_count)
+    return dataset_split_core(dataset, purged_list, nclasses)
+    
+    # n = len(purged_list)
+    # y = [dataset[j].y for j in purged_list]
+    # y = np.array(y)
+
+    # X = filter_features(dataset,purged_list, features)
+
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X, 
+    #     y,
+    #     #stratify=y,
+    #     random_state = 7)
+
+    # return X_train, X_test, y_train, y_test, nclasses
+
+
+def dataset_split_balanced_major_classes_graph_version(dataset, features='all', max_count=-1):
+    """
+    undersmaple major classes, min classes intact
+    """
+
+    purged_list, nclasses = balance_maximum_classes(dataset,max_count)
+    return dataset_split_core_graph_version(dataset, purged_list, nclasses)
+    
 
 
 class mlp1(torch.nn.Module):
@@ -849,6 +1059,29 @@ class mlp2(torch.nn.Module):
         x = F.log_softmax(x, dim=1)
         
         return x
+
+def prepare_nn_models_quick():
+    models_params = {
+
+        mlp1.__name__: {
+            'model': mlp1,
+            'params_set': [
+                # {
+                #  'd2': [50,100,300],
+                #  'num_epochs': [100,300,],
+                #  },
+                 {
+                 'd1': [1],
+                 'd2': [3],
+                 'num_epochs': [2],
+                 }
+                 
+            ]
+        },
+    }
+
+    return models_params
+
 
 
 def prepare_nn_models():
@@ -883,6 +1116,43 @@ def prepare_nn_models():
     }
 
     return models_params
+
+
+def prepare_models_quick():
+    """
+    dictionary of model classes and all their possible parameter values to train
+    """
+    models_params = {
+
+        LogisticRegression.__name__: {
+            'model': LogisticRegression,
+            'params_set': [
+                {
+                 'multi_class': ['ovr'],
+                 #'penalty': ['l1','l2'],
+                 'penalty': ['l2'],
+                 'solver': ['newton-cg'],
+                 'max_iter': [100,], #'max_iter': [200],
+                 #'C':[1,10,100,1000],
+                 'C':[1],
+                 },
+            ]
+        },
+        RandomForestClassifier.__name__: {
+            'model': RandomForestClassifier,
+            'params_set': [
+                {
+                 # 'n_estimators': [4,16,50,100,500],
+                 # 'max_depth': [2,4,8,16],
+                 'n_estimators': [16],
+                 'max_depth': [8],
+                 },
+            ]
+        },
+    }
+    return models_params
+
+
 
 def prepare_models():
     models_params = {
@@ -958,7 +1228,7 @@ def prepare_models():
 
 
 
-def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, features='', dataset_version='' ):
+def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, features='', dataset_version='',fileversion='baseline', ):
     """
     for each model type and score, do CV, retrain and testing , then save to results_dict
     """
@@ -997,7 +1267,7 @@ def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, fea
                 print("Error with "+model_name+" and "+score)
                 traceback.print_exc()
 
-        save_results(results_dict, features,dataset_version)
+        save_results(results_dict, features,dataset_version, fileversion)
 
 
     return results_dict
@@ -1212,6 +1482,16 @@ def train_nn_model_cv(X_train, y_train, X_test, y_test, nn_model_params, scores,
     # print("in train_nn_model_cv")
     # pprint(nn_model_params)
 
+    if isinstance(X_train, np.ndarray):
+        X_train2 = X_train 
+    else:
+        X_train2 = X_train.toarray()
+
+    if isinstance(X_test, np.ndarray):
+        X_test2 = X_test
+    else:
+        X_test2 = X_test.toarray()
+
     kfld = KFold(n_splits=numfolds)
     cv_error_score_history = []
     num_fold = 0
@@ -1230,7 +1510,8 @@ def train_nn_model_cv(X_train, y_train, X_test, y_test, nn_model_params, scores,
 
             test 
         """
-        cv_fold_results_dict, _ =  train_nn_model_one_fold(X_train.toarray(), y_train, X_test.toarray(), y_test, nn_model_params, scores, nclasses )
+
+        cv_fold_results_dict, _ =  train_nn_model_one_fold(X_train2, y_train, X_test2, y_test, nn_model_params, scores, nclasses )
 
         model_name = ''
         for k,v in cv_fold_results_dict.items():
@@ -1458,7 +1739,7 @@ def nn_train_models(X_train, y_train, X_test, y_test, nn_models_params, scores, 
 
 
 
-def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3):
+def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, fileversion='baseline', baseline_models=None, baseline_nn_models=None):
     
     """
         Filter features following the indication
@@ -1466,17 +1747,27 @@ def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, da
     X_train_numeric, X_train_doc = filter_features_new(X_train, features)
     X_test_numeric, X_test_doc = filter_features_new(X_test, features)
 
-    models_and_params = prepare_models()
+
+    if baseline_models is None:
+        models_and_params = prepare_models()
+    else:
+        models_and_params = baseline_models
+
     results_dict = cv_train_models(
         X_train_numeric, y_train, 
         X_test_numeric, y_test, 
         models_and_params, 
         scores=['f1_micro',],
         features=features,
-        dataset_version=dataset_version)
+        dataset_version=dataset_version,
+        fileversion=fileversion)
 
 
-    nn_models_and_params = prepare_nn_models()
+    if baseline_nn_models is None:
+        nn_models_and_params = prepare_nn_models()
+    else:
+        nn_models_and_params = baseline_nn_models
+
     results_dict = nn_train_models(
         X_train_numeric, y_train, 
         X_test_numeric, y_test, 
@@ -1484,7 +1775,8 @@ def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, da
         scores=['f1_micro'], nclasses=nclasses, 
         numfolds=3,
         features=features,
-        dataset_version=dataset_version
+        dataset_version=dataset_version,
+        fileversion=fileversion
         )
     
 

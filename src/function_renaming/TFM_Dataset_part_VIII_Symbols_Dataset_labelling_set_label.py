@@ -36,7 +36,7 @@ from TFM_Dataset_part_VIII_Symbols_Dataset_labelling_config import *
 
 
 
-def modify_data_y_and_label(idx,y,thelabel):
+def modify_data_y_and_label(idx,y,thelabel, dataset):
     dataobj = dataset[idx]
     dataobj.__setattr__('label',thelabel)
     dataobj.y = y
@@ -122,12 +122,16 @@ def read_labels_from_csv_v2(csv_file, version=1):
 
 def label_tuple_to_string(label_tuple):
     k = label_tuple
-    if len(k) == 2:        
+    if isinstance(k,tuple) and len(k) == 2:        
         return k[0]+'_'+k[1]
 
-    elif len(k)==1:
+    elif isinstance(k,tuple) and len(k)==1:
         return k[0]
 
+    else:
+        #print(type(k),k,k[0],k[1])
+        return k
+        
 
 def find_tuple_as_key(t, label_dict):
     """
@@ -160,7 +164,7 @@ def find_tuple_as_synonym_match(t, label_dict):
     """
         find if the tuple t 
         is one of the synonyms of the keys in the label_dict,
-        and return it,
+        and return the key,
 
         return None otherwise
     """
@@ -172,13 +176,13 @@ def find_tuple_as_synonym_match(t, label_dict):
                 and k[0].lower() == t[0].lower() \
                 and k[1].lower() == t[1].lower():
                 
-                return label_tuple_to_string(k)
+                return label_tuple_to_string(tuple_key)
 
             elif len(k)==1 \
                 and len(k) == len(t) \
                 and k[0].lower() == t[0].lower():
                     
-                    return label_tuple_to_string(k)
+                    return label_tuple_to_string(tuple_key)
 
     return None
 
@@ -253,7 +257,7 @@ def get_file_func_names(filename):
 
 
 
-def set_labels_on_dataset(dataset, labels):
+def set_labels_on_dataset(dataset, labels, file_on_disk='labels_id_v3'):
     """
     given a dict of func-name: label
 
@@ -263,11 +267,23 @@ def set_labels_on_dataset(dataset, labels):
     for each graph in the dataset
         get_file_func_names()
         label = labels[filename][funcname]
-        modify_data_y_and_label(i, labels_to_int[label], label)
+        modify_data_y_and_label(i, labels_to_int[label], label, dataset)
     """
 
+    print("\nverifying labels dict:")
+    ll = 0
+    for k,v in labels.items():
+        
+        for k2,v2 in v.items():
+            print(k,k2,v2)
+            ll+=1
+            if ll>10:
+                break
+
+    print()
+
     unique_labels = list(set([ v2 for k,v in labels.items() for k2,v2 in v.items()]))
-    #print("how many unique labels: ",len(unique_labels))
+    print("how many unique labels: ",len(unique_labels))
 
     int_id = 0
     labels_to_int = { }
@@ -276,7 +292,7 @@ def set_labels_on_dataset(dataset, labels):
         int_id+=1
     #print("Last id of unique labels: ",int_id)
 
-    json.dump(labels_to_int,open('labels_id_v1','w'))
+    json.dump(labels_to_int,open(file_on_disk,'w'))
 
     errors = 0
     for i in range(len(dataset)):
@@ -295,7 +311,7 @@ def set_labels_on_dataset(dataset, labels):
             label = ''
 
         #modify_data_label(i,label)            
-        modify_data_y_and_label(i,labels_to_int[label],label)
+        modify_data_y_and_label(i,labels_to_int[label],label, dataset)
         
 
     print("how many unique labels: ",len(unique_labels))
@@ -312,7 +328,20 @@ if __name__ == '__main__':
     print(dataset.num_features)
     csv_file ='./labels-mod3-verified-20000-recovered2.csv'
     labels = iterative_read_labels_from_csv(csv_file, version=2)
-    set_labels_on_dataset(dataset, labels)
+
+    # print("\n computed labels:")
+    # pprint(labels)
+    # print()
+
+    set_labels_on_dataset(dataset, labels, file_on_disk='labels_id_v3')
+
+    # print("result of labeling the dataset")
+    # for  i in range(len(dataset)):
+    #     data = dataset[i]
+    #     print(data.y, data.label)
+
+
+
     exit()
 
     # v1 labels--dataset----------------------------
@@ -328,7 +357,7 @@ if __name__ == '__main__':
     #labels = read_labels_from_csv( csv_file, version=2)
     #pprint(labels)
 
-    set_labels_on_dataset(dataset, labels)
+    set_labels_on_dataset(dataset, labels,file_on_disk='labels_id_v1')
 
 
 
@@ -344,7 +373,7 @@ if __name__ == '__main__':
     #pprint(labels)
 
 
-    set_labels_on_dataset(dataset, labels)
+    set_labels_on_dataset(dataset, labels,file_on_disk='labels_id_v2')
 
     for  i in range(len(dataset)):
         data = dataset[i]

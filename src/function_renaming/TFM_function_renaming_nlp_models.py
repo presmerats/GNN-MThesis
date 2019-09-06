@@ -144,9 +144,9 @@ def prepare_nlp_models():
                  #'penalty': ['l1','l2'],
                  'penalty': ['l2'],
                  'solver': ['newton-cg'],
-                 'max_iter': [70], #'max_iter': [200],
+                 'max_iter': [100,200,], #'max_iter': [200],
                  #'C':[1,10,100,1000],
-                 'C':[10],
+                 'C':[0.1,1,10],
 
                  },
                  
@@ -161,17 +161,18 @@ def prepare_nlp_models():
         #          },
         #     ]
         # },
-        # RandomForestClassifier.__name__: {
-        #     'model': RandomForestClassifier,
-        #     'params_set': [
-        #         {
-        #          # 'n_estimators': [4,16,50,100,500],
-        #          # 'max_depth': [2,4,8,16],
-        #          'n_estimators': [5],
-        #          'max_depth': [4],
-        #          },
-        #     ]
-        # },
+        RandomForestClassifier.__name__: {
+            'model': RandomForestClassifier,
+            'params_set': [
+                {
+                 # 'n_estimators': [4,16,50,100,500],
+                 # 'max_depth': [2,4,8,16],
+                 'n_estimators': [4,16],
+                 'max_depth': [4,8],
+                 
+                 },
+            ]
+        },
         # XGBClassifier.__name__: {
         #     'model': XGBClassifier,
         #     'params_set': [
@@ -348,13 +349,13 @@ def prepare_pipeline_params(parameters):
 
 
     tf_params = {
-         #'preprocessor__tfidf__tvec__max_features':[100, 2000],
-         'preprocessor__tfidf__tvec__max_features':[100],
-         #'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
-         'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
+         'preprocessor__tfidf__tvec__max_features':[100, 200,500],
+         #'preprocessor__tfidf__tvec__max_features':[100],
+         'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
+         #'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
          #'tvec__stop_words': [None, 'english'],
-         'preprocessor__tfidf__tvec__max_df': [0.8],
-         'preprocessor__tfidf__tvec__min_df': [0.1]
+         'preprocessor__tfidf__tvec__max_df': [0.7,0.8,0.9],
+         'preprocessor__tfidf__tvec__min_df': [0.1,0.2]
         }
 
     final_parameters = []
@@ -929,46 +930,6 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
 #     #return results_dict
 
 
-def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',min_count=100, fileversion='nlp'):
-    
-    """
-        Filter features following the indication
-    """
-    
-    # X_train_numeric, X_train_doc = filter_features_new(X_train, features)
-    # X_test_numeric, X_test_doc = filter_features_new(X_test, features)
-
-    # models_and_params = prepare_nlp_models()
-    # results_dict = cv_train_nlp_models(
-    #     X_train_numeric, X_train_doc, y_train, 
-    #     X_test_numeric, X_test_doc, y_test, 
-    #     models_and_params, 
-    #     #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
-    #     scores=['f1_micro'],
-    #     features=features,
-    #     dataset_version=dataset_version,
-    #     fileversion='nlp'
-    #     )
-
-
-    # Numeric is a np.array, doc is a list of strings
-    X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
-    X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
-
-    models_and_params = prepare_nlp_models()
-    results_dict = cv_train_nlp_models_v2(
-        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
-        X_test_all, test_numeric_cols, test_nlp_cols, y_test, 
-        models_and_params, 
-        #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
-        scores=['f1_micro'],
-        features=features,
-        dataset_version=dataset_version,
-        fileversion=fileversion
-        )
-
-
-    #save_results(results_dict, features,dataset_version, fileversion='nlp')
 
 
 
@@ -976,6 +937,8 @@ def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, feature
     
     """
         Filter features following the indication
+
+        Not used?
     """ 
 
     # X_train_numeric, X_train_doc = filter_features_new(X_train, features)
@@ -1012,6 +975,79 @@ def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, feature
         dataset_version=dataset_version,
         fileversion=fileversion
         )
+
+
+
+
+
+
+
+
+def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, fileversion='nlp', nlp_models=None, nn_models = None):
+    
+    """
+        Filter features following the indication
+    """
+    
+    # X_train_numeric, X_train_doc = filter_features_new(X_train, features)
+    # X_test_numeric, X_test_doc = filter_features_new(X_test, features)
+
+    # models_and_params = prepare_nlp_models()
+    # results_dict = cv_train_nlp_models(
+    #     X_train_numeric, X_train_doc, y_train, 
+    #     X_test_numeric, X_test_doc, y_test, 
+    #     models_and_params, 
+    #     #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
+    #     scores=['f1_micro'],
+    #     features=features,
+    #     dataset_version=dataset_version,
+    #     fileversion='nlp'
+    #     )
+
+
+    # Numeric is a np.array, doc is a list of strings
+    X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
+    X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
+
+
+    if nn_models is None:
+        nn_models_and_params = prepare_nn_models()
+    else:
+        nn_models_and_params = nn_models
+
+    results_dict = cv_train_nn_nlp_models_v2(
+        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
+        X_test_all, test_numeric_cols, test_nlp_cols, y_test,  
+        nn_models_and_params, 
+        scores=['f1_micro'], nclasses=nclasses, 
+        numfolds=3,
+        features=features,
+        dataset_version=dataset_version,
+        fileversion=fileversion
+        )
+
+
+
+
+    if nlp_models is None:
+        models_and_params = prepare_nlp_models()
+    else:
+        models_and_params = nlp_models 
+
+    results_dict = cv_train_nlp_models_v2(
+        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
+        X_test_all, test_numeric_cols, test_nlp_cols, y_test, 
+        models_and_params, 
+        #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
+        scores=['f1_micro'],
+        features=features,
+        dataset_version=dataset_version,
+        fileversion=fileversion
+        )
+
+ 
+
+
 
 # def print_training_stats(dataset_version='v1'):
 #     """
@@ -1067,6 +1103,8 @@ if __name__=='__main__':
 
     #-----------------tfidf-params-optimization------------------
 
+    
+
     X_train = pickle.load(open('X_train.pickle','rb'))
     X_test = pickle.load(open('X_test.pickle','rb'))
     y_train = pickle.load(open('y_train.pickle','rb'))
@@ -1076,25 +1114,45 @@ if __name__=='__main__':
     min_count=0
     dataset_version='v1'
     features = 'document'
-
-
     nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
     print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
-
-
 
     features = 'document and topo feats'
     nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
     print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
 
-    features = 'document and code feats'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
-    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
 
-    features = 'document and topo and code feats'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
-    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
 
+
+    dataset = FunctionsDataset(root='./tmp/symbols_dataset_2')
+    dataset_version='v2'
+    features = 'document'
+    min_count=0
+    X_train, X_test, y_train, y_test, nclasses = dataset_split_shared_splits(dataset, features= features, min_count=min_count)
+
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
+    print_training_stats('v2',fileversion='tfidf_params_hp_search.json')
+
+    features = 'document and topo feats'
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
+    
+
+
+
+
+    print_training_stats('v2',fileversion='tfidf_params_hp_search.json')
+
+    dataset = FunctionsDataset(root='./tmp/symbols_dataset_3')
+    dataset_version='v3'
+    features = 'document'
+    min_count=0
+    X_train, X_test, y_train, y_test, nclasses = dataset_split_shared_splits(dataset, features= features, min_count=min_count)
+
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
+    print_training_stats('v3',fileversion='tfidf_params_hp_search.json')
+
+    features = 'document and topo feats'
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
 
     exit()
     #-------------------------------------------------------------

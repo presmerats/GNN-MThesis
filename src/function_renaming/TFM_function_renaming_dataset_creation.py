@@ -262,15 +262,23 @@ class FunctionsDataset(Dataset):
         read the num classes by the subdirs in raw/graphs01
 
         """
-        k = len(self.my_classes)
-        if k <= 0 or True:
-            k=0
-            # read the num classes by the subdirs in raw/graphs01
-            rawfolder = os.path.join(self.root, 'raw/graphs01')
-            for item in os.listdir(rawfolder):
-                if os.path.isdir(os.path.join(rawfolder, item)):
-                    k+=1
-        return k 
+        # new approach
+        return len(
+            list(
+                set(
+                    [self.get(j).y for j in range(self.__len__() )]
+                    )))
+
+        # # old approach
+        # k = len(self.my_classes)
+        # if k <= 0 or True:
+        #     k=0
+        #     # read the num classes by the subdirs in raw/graphs01
+        #     rawfolder = os.path.join(self.root, 'raw/graphs01')
+        #     for item in os.listdir(rawfolder):
+        #         if os.path.isdir(os.path.join(rawfolder, item)):
+        #             k+=1
+        # return k 
     
     @property
     def num_features(self):
