@@ -1384,12 +1384,13 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
         modelclass = modeldict['model']
         kwargs = modeldict['kwargs']
 
-        
+
+        start2 = time.time()
         try:
             model = modelclass(**kwargs) # model parameters are inside kwargs dict
             model = model.to(device)
             modeldict['model_instance'] = model
-            start2 = time.time()
+            
 
             lr = modeldict['learning_rate']
             wd = modeldict['weight_decay']

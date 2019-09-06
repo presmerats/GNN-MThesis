@@ -190,6 +190,7 @@ class FunctionsDataset(Dataset):
     """
     node_translation = {}  # translates from nodeid like im34,r2 to an autoincremented integer
     nodeidmax = -1
+    only_graph_features = False
 
     conf = read_config_file()
     instr_types = conf['instr_types']
@@ -414,6 +415,18 @@ class FunctionsDataset(Dataset):
                 realfile = self.myprocessed_filenames[idx]
                 filename = os.path.join(self.processed_dir,realfile)
                 data = torch.load(filename)
+                if self.only_graph_features:
+                    # remove topo/code/document features from data in memory
+                    delattr(data,'code_feats')
+                    delattr(data,'x_topo_feats')
+                    delattr(data,'x_topo_times')
+                    delattr(data,'label')
+                    delattr(data,'filename')
+                    if not isinstance(data.y,torch.Tensor):
+                        data.y = torch.LongTensor([[data.y]])
+                    #print(data.y[0].item())
+                    #print(type(data.y))
+                    #print(data.y.shape)
                 return data
             except:
                 #print(idx, "self.processed_file_names:", self.processed_file_names[:10])
@@ -1014,12 +1027,37 @@ class FunctionsDataset(Dataset):
                 - append static function code features
         """
         dataset =  self.createGraphFromNX(g,xlen, undirected)
+        # 20190906 recent change for later error
         y = torch.LongTensor(y)
-        dataset.y = y 
+        dataset.y = y
         dataset.x_topo_feats, dataset.x_topo_times = self.topological_features(g, filename)
         
 
         return dataset
+
+    def gnn_mode_on(self):
+        """
+
+            remove topo code and document features in memory (not in disk)
+            to allow for GNN processing by PyTorch Geometric
+
+        """
+
+        # activate a modifier of the get, that removes those features ONLY in memory
+        self.only_graph_features = True
+
+    def gnn_mode_off(self):
+        """
+
+            remove topo code and document features in memory (not in disk)
+            to allow for GNN processing by PyTorch Geometric
+
+        """
+
+        # activate a modifier of the get, that removes those features ONLY in memory
+        self.only_graph_features = False
+
+
 
     def add_code_features(self,data,folder,filename):
         """
@@ -1170,6 +1208,10 @@ class FunctionsDataset(Dataset):
 
 
         return data
+
+
+
+
 
 def find_node(fnodes, search_memaddr, search_content, regex):
     """
