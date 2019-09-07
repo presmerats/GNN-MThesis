@@ -38,7 +38,7 @@ class GGNN1(torch.nn.Module):
         x = self.fc2(x)
         #x = self.pool1(x, batch )
         x = F.log_softmax(x, dim=1)
-        #x = torch.argmax(x, dim=1)  # we output softmax to use the nll_loss
+        #x = torch.argmax(x, dim=1)   # we output softmax to use the nll_loss
         
         return x
     

@@ -267,7 +267,7 @@ class FunctionsDataset(Dataset):
         return len(
             list(
                 set(
-                    [self.get(j).y for j in range(self.__len__() )]
+                    [self.get(j).y[0].item() for j in range(self.__len__() )]
                     )))
 
         # # old approach

@@ -808,17 +808,31 @@ def train_model_GGNN(model, loader, optimizer, train_loss_history):
         if data.x is None:
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
+            del x
 
         #print("data.x",data.x)
 
         optimizer.zero_grad()
         out = model(data)
-        target = data.y
-        loss = F.nll_loss(out, target)
+        target = torch.squeeze(data.y)
+        #print(out.shape)
+        #print(out)
+        #print(target.shape)
+        #print(target)
+        #loss = F.nll_loss(nn.LogSoftmax(out), target)
+        m = nn.LogSoftmax(dim=1)
+        loss_func = nn.NLLLoss()
+        loss = loss_func(m(out), target)
         loss_train +=loss
         loss.backward()
         optimizer.step()
         total_num_graphs += data.num_graphs
+
+        del data
+        del out 
+        del target 
+
+
         
     loss_train = loss_train /total_num_graphs
     train_loss_history.append(loss_train.item()) 
@@ -841,12 +855,14 @@ def train_model_META(model, loader, optimizer, train_loss_history):
         if data.x is None:
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
+            del x
 
 
         #  if there's no edge_attr, creatae a ones with num_edges
         if data.edge_attr is None:
             edge_attr = torch.ones(data.num_edges,data.num_features)
             data.edge_attr = edge_attr.to(device)
+            del edge_attr
 
 
 
@@ -857,18 +873,25 @@ def train_model_META(model, loader, optimizer, train_loss_history):
         if data.u is None:
             u = torch.ones(data.y.size()[0], 1)
             data.u = u.to(device)
+            del u
 
         # by default put a 1 as a graph feature
         u = torch.ones(data.y.size()[0], 1)
         u = u.to(device)
         out = model(data)
-        # the output of metalayer is : x, edge_attr, u
-        target = data.y
-        loss = F.nll_loss(out, target)
+        target = torch.squeeze(data.y)
+        m = nn.LogSoftmax(dim=1)
+        loss_func = nn.NLLLoss()
+        loss = loss_func(m(out), target)
         loss_train +=loss
         loss.backward()
         optimizer.step()
         total_num_graphs += data.num_graphs
+
+        del data
+        del out
+        del target 
+        del u 
         
     loss_train = loss_train /total_num_graphs
     train_loss_history.append(loss_train.item()) 
@@ -905,6 +928,7 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
         if data.x is None:
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
+            del x
 
         pred = model(data)
         total_pred.extend(pred.flatten().tolist())
@@ -914,10 +938,20 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
         _, predacc = pred.max(dim=1)
         total_acc.extend(predacc.flatten().tolist())
         
-        target = data.y
-        loss = F.nll_loss(pred, target)
+        out = pred
+        target = torch.squeeze(data.y)
+        m = nn.LogSoftmax(dim=1)
+        loss_func = nn.NLLLoss()
+        loss = loss_func(m(out), target)
+
+        
         loss_val += loss
         total_num_graphs += data.num_graphs
+
+        del out
+        del pred 
+        del target
+        del data
         
     loss_val = loss_val / total_num_graphs
     val_history['loss'].append(loss_val.item())
@@ -957,12 +991,15 @@ def val_loss_model_META(model, loader, optimizer, val_history):
         if data.x is None:
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
+            del x
+
 
 
         #  if there's no edge_attr, creatae a ones with num_edges
         if data.edge_attr is None:
             edge_attr = torch.ones(data.num_edges,data.num_features)
             data.edge_attr = edge_attr.to(device)
+            del edge_attr
 
 
         # by default put a 1 as a graph feature
@@ -972,6 +1009,7 @@ def val_loss_model_META(model, loader, optimizer, val_history):
         if data.u is None:
             u = torch.ones(data.y.size()[0], 1)
             data.u = u.to(device)
+            del u
 
         pred = model(data)
         total_pred.extend(pred.flatten().tolist())
@@ -981,10 +1019,19 @@ def val_loss_model_META(model, loader, optimizer, val_history):
         _, predacc = pred.max(dim=1)
         total_acc.extend(predacc.flatten().tolist())
         
-        target = data.y
-        loss = F.nll_loss(pred, target)
+        out = pred
+        target = torch.squeeze(data.y)
+        m = nn.LogSoftmax(dim=1)
+        loss_func = nn.NLLLoss()
+        loss = loss_func(m(out), target)
+
         loss_val += loss
         total_num_graphs += data.num_graphs
+
+        del out
+        del pred 
+        del target
+        del data
         
     loss_val = loss_val / total_num_graphs
     val_history['loss'].append(loss_val.item())
