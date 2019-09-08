@@ -217,7 +217,8 @@ def cv_train_nlp_models(X_train_numeric, X_train_doc,
             models_params, scores,
             features,
             dataset_version,
-            fileversion,
+            results_folder,
+            models_folder='models/nlp_models/'
              ):
 
     results_dict={}
@@ -338,8 +339,8 @@ def cv_train_nlp_models(X_train_numeric, X_train_doc,
                 print("Error with "+model_name+" and "+score)
                 traceback.print_exc()
 
-        print("\n\n\nBefore save results, fileversion=",fileversion,"\n\n\n")
-        save_results(results_dict, features,dataset_version, fileversion='nlp')
+        print("\n\n\nBefore save results, results_folder=",results_folder,"\n\n\n")
+        save_results(results_dict, features,dataset_version, results_folder='nlp', models_folder=models_folder)
 
     return results_dict
 
@@ -414,7 +415,8 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
             models_params, scores,
             features,
             dataset_version,
-            fileversion='nlp',
+            results_folder='nlp',
+            models_folder='models/nlp_models/'
              ): 
     """
         Improved generation of the pipeline,
@@ -494,6 +496,7 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
                 
 
                 results_dict[model_name][score] = classification_report(y_true, y_pred, output_dict=True)
+                
                 results_dict[model_name][score]['params'] = clf.best_params_
                 results_dict[model_name][score]['cv_score'] = clf.best_score_
                 results_dict[model_name][score]['time'] = round(end-start)
@@ -504,10 +507,10 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
                 print("Error with "+model_name+" and "+score)
                 traceback.print_exc()
 
-        print("\n\n\nBefore save results, fileversion=",fileversion,"\n\n\n")
+        print("\n\n\nBefore save results, results_folder=",results_folder,"\n\n\n")
         
         pprint(results_dict[model_name])
-        save_results(results_dict, features,dataset_version, fileversion=fileversion)
+        save_results(results_dict, features,dataset_version, results_folder=results_folder,models_folder=models_folder)
 
     return results_dict
 
@@ -584,7 +587,8 @@ def cv_train_nn_nlp_models(X_train_numeric, X_train_doc,
                  nn_models_params, scores, 
                  nclasses, numfolds=3, 
                  features='', dataset_version='', 
-                 fileversion='baseline' ):
+                 results_folder='baseline',
+                 models_folder='models/baseline_models/' ):
     """
     This function will take all model parameter sets, and create an iterator over all combinations.
 
@@ -724,7 +728,7 @@ def cv_train_nn_nlp_models(X_train_numeric, X_train_doc,
     # print("\n After retraining: ")
     # pprint(results_dict)
     
-    save_results(results_dict, features, dataset_version, fileversion=fileversion)
+    save_results(results_dict, features, dataset_version, results_folder=results_folder, models_folder=models_folder)
 
     
     return results_dict
@@ -738,7 +742,8 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
                 nn_models_params, scores, 
                 nclasses, numfolds=3, 
                 features='', dataset_version='', 
-                fileversion='baseline' ):
+                results_folder='baseline',
+                models_folder='models/nlp_models/' ):
     """
     This function will take all model parameter sets, and create an iterator over all combinations.
 
@@ -787,8 +792,6 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
     nn_models_params_unrolled = unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses,tfvec_params)
 
     pprint(nn_models_params_unrolled)
-
-
 
 
     baseline_transformer = Pipeline(steps=[
@@ -881,7 +884,7 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
         #size of input = num X columns 
         param_set['model_kwargs']['d1'] = X_train_embedding.shape[1]
         
-        results_dict, model = train_nn_model_one_fold(X_train_embedding.toarray(), y_train, X_test_embedding.toarray(), y_test, param_set, scores, nclasses )
+        results_dict, model = train_nn_model_one_fold(X_train_embedding.toarray(), y_train, X_test_embedding.toarray(), y_test, param_set, scores, nclasses, extra_params=tf_current_params )
     except Exception as err:
             print("Error with "+param_set['model']+" and "+scores[0])
             traceback.print_exc()
@@ -895,7 +898,7 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
     # print("\n After retraining: ")
     # pprint(results_dict)
     
-    save_results(results_dict, features, dataset_version, fileversion=fileversion)
+    save_results(results_dict, features, dataset_version, results_folder=results_folder,models_folder=models_folder)
 
     
     return results_dict
@@ -933,7 +936,7 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
 
 
 
-def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, fileversion='nlp'):
+def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, results_folder='nlp', models_folder='models/nlp_models/'):
     
     """
         Filter features following the indication
@@ -955,7 +958,8 @@ def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, feature
     #     numfolds=3,
     #     features=features,
     #     dataset_version=dataset_version,
-    #     fileversion='nlp'
+    #     results_folder='nlp',
+    #     models_folder='models/nlp_models'
     #     )
 
 
@@ -973,7 +977,7 @@ def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, feature
         numfolds=3,
         features=features,
         dataset_version=dataset_version,
-        fileversion=fileversion
+        results_folder=results_folder
         )
 
 
@@ -983,7 +987,13 @@ def nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test, feature
 
 
 
-def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, fileversion='nlp', nlp_models=None, nn_models = None):
+def nlp_models_training_and_testing(
+            X_train, X_test, 
+            y_train, y_test, 
+            features, dataset_version='v1',
+            nclasses=3, results_folder='nlp', 
+            nlp_models=None, nn_models = None,
+            models_folder='models/nlp_models/'):
     
     """
         Filter features following the indication
@@ -1001,7 +1011,8 @@ def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, 
     #     scores=['f1_micro'],
     #     features=features,
     #     dataset_version=dataset_version,
-    #     fileversion='nlp'
+    #     results_folder='nlp',
+    #     models_folder=models_folder
     #     )
 
 
@@ -1023,7 +1034,8 @@ def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, 
         numfolds=3,
         features=features,
         dataset_version=dataset_version,
-        fileversion=fileversion
+        results_folder=results_folder,
+        models_folder=models_folder
         )
 
 
@@ -1042,7 +1054,8 @@ def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, 
         scores=['f1_micro'],
         features=features,
         dataset_version=dataset_version,
-        fileversion=fileversion
+        results_folder=results_folder,
+        models_folder=models_folder
         )
 
  
@@ -1084,6 +1097,7 @@ def nlp_models_training_and_testing(X_train, X_test, y_train, y_test, features, 
 #     pprint(best_models)
 
 
+
 if __name__=='__main__':
 
     """
@@ -1105,21 +1119,38 @@ if __name__=='__main__':
 
     
 
-    X_train = pickle.load(open('X_train.pickle','rb'))
-    X_test = pickle.load(open('X_test.pickle','rb'))
-    y_train = pickle.load(open('y_train.pickle','rb'))
-    y_test = pickle.load(open('y_test.pickle','rb'))
-    nclasses = pickle.load(open('nclasses.pickle','rb'))
+    X_train = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedX_train.pickle','rb'))
+    X_test = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedX_test.pickle','rb'))
+    y_train = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedy_train.pickle','rb'))
+    y_test = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedy_test.pickle','rb'))
+    nclasses = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangednclasses.pickle','rb'))
+
+    # dataset = FunctionsDataset(root='./tmp/symbols_dataset_3')
+    # dataset_version='v3'
+    # features = 'document'
+    # min_count=0
+    # X_train, X_test, y_train, y_test, nclasses = dataset_split_shared_splits(dataset, features= features, min_count=min_count)
+
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,results_folder='results/tfidf_params_hp_search.json')
+    print_training_stats('v3',results_folder='results/tfidf_params_hp_search_v3.json')
+
+    features = 'document and topo feats'
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,results_folder='results/tfidf_params_hp_search_v3.json')
+
+    exit()
+
+
+
 
     min_count=0
     dataset_version='v1'
     features = 'document'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
-    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,results_folder='tfidf_params_hp_search.json')
+    print_training_stats('v1',results_folder='tfidf_params_hp_search.json')
 
     features = 'document and topo feats'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')    
-    print_training_stats('v1',fileversion='tfidf_params_hp_search.json')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,results_folder='tfidf_params_hp_search.json')    
+    print_training_stats('v1',results_folder='tfidf_params_hp_search.json')
 
 
 
@@ -1130,31 +1161,19 @@ if __name__=='__main__':
     min_count=0
     X_train, X_test, y_train, y_test, nclasses = dataset_split_shared_splits(dataset, features= features, min_count=min_count)
 
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
-    print_training_stats('v2',fileversion='tfidf_params_hp_search.json')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,results_folder='tfidf_params_hp_search.json')
+    print_training_stats('v2',results_folder='tfidf_params_hp_search.json')
 
     features = 'document and topo feats'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
+    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,results_folder='tfidf_params_hp_search.json')
     
 
 
 
 
-    print_training_stats('v2',fileversion='tfidf_params_hp_search.json')
+    print_training_stats('v2',results_folder='tfidf_params_hp_search.json')
 
-    dataset = FunctionsDataset(root='./tmp/symbols_dataset_3')
-    dataset_version='v3'
-    features = 'document'
-    min_count=0
-    X_train, X_test, y_train, y_test, nclasses = dataset_split_shared_splits(dataset, features= features, min_count=min_count)
-
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
-    print_training_stats('v3',fileversion='tfidf_params_hp_search.json')
-
-    features = 'document and topo feats'
-    nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count,fileversion='tfidf_params_hp_search.json')
-
-    exit()
+    
     #-------------------------------------------------------------
 
 
@@ -1188,13 +1207,13 @@ if __name__=='__main__':
 
     features = 'document'
     nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    print_training_stats('v1',fileversion='nlp')
+    print_training_stats('v1',results_folder='nlp')
 
     # nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
-    nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses,fileversion='nlp')
-    print_training_stats('v1',fileversion='nlp')
+    nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses,results_folder='nlp')
+    print_training_stats('v1',results_folder='nlp')
     
 
 
@@ -1202,59 +1221,59 @@ if __name__=='__main__':
 
     # features = 'document_simplified'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
     # features = 'document and list funcs'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)
     # nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
     # features = 'document_simplified and list funcs'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
 
     features = 'document and topo feats'
     nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    print_training_stats('v1',fileversion='nlp')
+    print_training_stats('v1',results_folder='nlp')
 
     #nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,'document and topo feats',dataset_version,nclasses)
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
 
     # features = 'document_simplified and topo feats'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
     # features = 'document_simplified and list_funcs and topo feats'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
 
     features = 'document and code feats'
     nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    print_training_stats('v1',fileversion='nlp')
+    print_training_stats('v1',results_folder='nlp')
 
     #nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
 
 
     # features = 'document_simplified and code feats'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
     # features = 'document_simplified and list_funcs and code feats'
     # nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
 
     features = 'document and topo and code feats'
     nlp_models_training_and_testing(X_train, X_test, y_train, y_test,features,dataset_version,min_count)    
-    print_training_stats('v1',fileversion='nlp')
+    print_training_stats('v1',results_folder='nlp')
 
     #nlp_nn_models_training_and_testing(X_train, X_test, y_train, y_test,features, dataset_version,nclasses)
-    # print_training_stats('v1',fileversion='nlp')
+    # print_training_stats('v1',results_folder='nlp')
 
 
     # features = 'document_simplified and topo and code feats'

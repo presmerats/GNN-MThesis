@@ -3,6 +3,16 @@ This is a hack to use this kind of gnn layer with the stable version of
 PyTorch Geometric as of 2019-03-25
 
 """
+import time
+import os
+import json
+from datetime import datetime
+import copy
+import traceback
+from pprint import pprint
+import itertools
+import pickle
+
 import torch
 from torch import Tensor
 from torch.nn import Parameter as Param
@@ -17,19 +27,14 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.nn import MessagePassing
 #from torch_geometric.nn.conv.gated_graph_conv import GatedGraphConv
 from torch_geometric.nn.glob.glob import global_mean_pool, global_add_pool
+
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import time
+from sklearn.metrics import classification_report
+
 from IPython.display import display, HTML
-import os
-import json
-from datetime import datetime
-import copy
-import traceback
-from pprint import pprint
-import itertools
 
 
 class GatedGraphConv(MessagePassing):
@@ -346,7 +351,7 @@ def group_examples_by_class(dataset):
     
 def original_prop_dataset_split_slice(dataset, prop):
     """
-        Splits into training and testing,
+        Splits into training and tests,
 
         the proportions of each class from the original dataset are preserved throught each subset split.
 
@@ -1130,6 +1135,9 @@ def save_model(modeldict):
         
         if not os.path.exists('./models'):
             os.mkdir('./models')
+
+        if not os.path.exists('./models/gnn'):
+            os.mkdir('./models/gnn')
         
         # model naming convention
         model = modeldict['model_instance']
@@ -1331,11 +1339,12 @@ def select_best_model(model_list, train_dataset):
     
     best_model_microF1  = final_model_train(best_model_microF1 , train_dataset)
     modelsdict['best_models']['microF1'] = best_model_microF1
-    
+    modelsdict['best_models']['microF1']['cv_score']=best_model_microF1['cv_score']
+
     best_model_macroF1  = final_model_train(best_model_macroF1 , train_dataset)
     modelsdict['best_models']['macroF1'] = best_model_macroF1
 
-    modelsdict['testing']={}
+    modelsdict['tests']={}
     
     return modelsdict
     
@@ -1474,6 +1483,11 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             modeldict['cv_val_microF1']=modeldict['cv_val_microF1']/len(kfolds)
             modeldict['cv_val_macroF1']=modeldict['cv_val_macroF1']/len(kfolds)
 
+            # unified results format
+            modeldict['cv_score']=modeldict['cv_val_microF1']
+            modeldict['score']='f1_micro'
+            modeldict['model_instance'] = model.to('cpu')
+
         except:
             print("Problem training model "+modeldict['model'].__name__)
             traceback.print_exc()
@@ -1570,7 +1584,7 @@ def reportModelSelectionResult(modeldict, resultsdict):
         'best_model_microF1' : best_model_microF1, 
         'best_model_macroF1': best_model_macroF1})
 
-    return res
+    return res['best_model_microF1']
 
 def reportTest(batch, pred, measures, test_dataset):
     """
@@ -1621,8 +1635,10 @@ def testModel(model, test_dataset, debug=False):
         pred2 = pred2.flatten().tolist()
         target = data.y.to('cpu')
         target = target.flatten().tolist()
+
         measures = F1Score(pred2, target)
         measures['accuracy']=acc
+        measures.update( classification_report(target, pred2, output_dict=True))
         
         if debug:
             reportTest(data, pred, measures, test_dataset)
@@ -1639,7 +1655,7 @@ def report_all_test(results_dict):
     reportDict = [{'name':k, 
                    'accuracy': round(v['accuracy'],4),
                   'macroF1': round(v['macroF1'],4),
-                  'microF1': round(v['microF1'],4)} for k,v in results_dict['testing'].items()]
+                  'microF1': round(v['microF1'],4)} for k,v in results_dict['tests'].items()]
     #print(reportDict)
     res = pd.DataFrame(reportDict)
     res = res.sort_values(by=['accuracy'])
@@ -1649,7 +1665,7 @@ def report_all_test(results_dict):
 
     display(res)
         
-def saveResults(modelsdict):
+def save_results_gnn(modelsdict, models_folder='models/gnn/'):
     """
         not saving model instances
         only  names and parameters
@@ -1668,27 +1684,47 @@ def saveResults(modelsdict):
         mod['final_model']=model['final_model'].__class__.__name__
         savedict['models'].append(mod)
         
-    savedict['best_models']={}
-    for k,v2 in modelsdict['best_models'].items():
-        #v2['train_loss_history']=[]
-        #v2['val_loss_history']=[]
-        #v2['val_accuracy_history']=[]
-        savedict['best_models'][k]=copy.deepcopy(v2)
-        savedict['best_models'][k]['model'] =v2['model'].__name__
-        savedict['best_models'][k]['model_instance'] =v2['model_instance'].__class__.__name__
-        savedict['best_models'][k]['final_model'] =v2['final_model'].__class__.__name__
+    savedict['best_models']=copy.deepcopy(modelsdict['tests'])
+    for k,v2 in modelsdict['tests'].items():
+        for k3,v3 in v2.items():
 
-    savedict['tests'] = modelsdict['testing']
+            #v2['train_loss_history']=[]
+            #v2['val_loss_history']=[]
+            #v2['val_accuracy_history']=[]
+            # savedict['best_models'][k]=copy.deepcopy(v2)
+            # savedict['best_models'][k]['model'] =v2['model'].__name__
+            # savedict['best_models'][k]['model_instance'] =v2['model_instance'].__class__.__name__
+
+            # save model to disk 
+            
+            model_name = k
+            datetime_str=datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
+            model_filename = os.path.join(models_folder,model_name+'_'+datetime_str)
+                
+            try:
+                model_instance = v3['model_instance']
+                pickle.dump(model_instance,open(model_filename,'wb'))
+            except Exception as err:
+                print("need to implement model_instance saving to disk")
+                traceback.print_exc()
+
+            #savedict['best_models'][k]['final_model'] =k
+            savedict['best_models'][k][k3]['model_instance'] =model_filename
+
+    #savedict['tests'] = modelsdict['tests']
             
     
     
     d = datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
     if not os.path.exists('./results'):
         os.mkdir('./results')
-    results_file = './results/experiment_'+d
+    results_file = './results/training_GNN_'+d+'.json'
     
     with open(results_file, 'w') as outfile:
-        json.dump(savedict, outfile)
+        json.dump(savedict['best_models'], outfile)
+        
+
+    return results_file
 
 
 
@@ -1706,20 +1742,45 @@ def test_multiple_models(resultsdict, test_dataset ):
     """
      tests all the best models in best_models_list, and saves the result 
     """  
-    if 'testing' not in resultsdict.keys():
-        resultsdict['testing']={}
+    print("test_multiple_models")
+    if 'tests' not in resultsdict.keys():
+        resultsdict['tests']={}
 
 
     model_list = resultsdict['best_models_list']
     for model in model_list:
-        bmodel = model['final_model']
         print(model['name'])
-        print(model['filename'])
-        testresult = testModel(bmodel, test_dataset)
-        resultsdict['testing'][model['name']]=testresult
+        bmodel = model['final_model']
         
-    saveResults(resultsdict)
+        testresult = testModel(bmodel, test_dataset)
+        #resultsdict['models'][model['name']].update(testresult)
 
+        # unified format
+        if model['name'] not in resultsdict['tests'].keys():
+            resultsdict['tests'][model['name']]={}
+
+        resdict = {}
+        resdict = testresult
+        resdict['cv_score']=model['cv_score']
+        resdict['score']=model['score']
+        resdict['model_instance']=model['model_instance']
+        resdict['params'] = model['kwargs']
+        resdict['params']['batch_size']=model['batch_size']
+        resdict['params']['learning_rate']=model['learning_rate']
+        resdict['features']='graph'
+
+        datetime_str=datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
+        resultsdict['tests'][model['name']][resdict['score']+'_'+datetime_str]= resdict
+
+        
+        print(resdict['score']+'_'+datetime_str)
+        print(model['filename'])
+        pprint(resultsdict['tests'][model['name']].keys())
+        print("\n\n")
+
+        
+    results_file= save_results_gnn(resultsdict)
+    return results_file
 
 if __name__=='__main__':
     dataset = TUDataset(root='/tmp/ENZYMES', name='ENZYMES')
@@ -1739,19 +1800,19 @@ if __name__=='__main__':
 
     bmodel = final_model_train(modelsdict['best_models']['loss'], train_dataset)
     testresult = testModel(bmodel, test_dataset)
-    modelsdict['testing'][bmodel.__class__.__name__+'loss']=testresult
+    modelsdict['tests'][bmodel.__class__.__name__+'loss']=testresult
 
     bmodel = final_model_train(modelsdict['best_models']['accuracy'], train_dataset)
     testresult = testModel(bmodel, test_dataset)
-    modelsdict['testing'][bmodel.__class__.__name__+'accuracy']=testresult
+    modelsdict['tests'][bmodel.__class__.__name__+'accuracy']=testresult
 
     bmodel = final_model_train(modelsdict['best_models']['microF1'], train_dataset)
     testresult = testModel(bmodel, test_dataset)
-    modelsdict['testing'][bmodel.__class__.__name__+'microF1']=testresult
+    modelsdict['tests'][bmodel.__class__.__name__+'microF1']=testresult
 
     bmodel = final_model_train(modelsdict['best_models']['macroF1'], train_dataset)
     testresult = testModel(bmodel, test_dataset)
-    modelsdict['testing'][bmodel.__class__.__name__+'macroF1']=testresult
+    modelsdict['tests'][bmodel.__class__.__name__+'macroF1']=testresult
 
     report_all_test(modelsdict)
-    saveResults(modelsdict)     
+    save_results_gnn(modelsdict)     

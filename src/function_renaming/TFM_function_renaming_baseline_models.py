@@ -49,7 +49,7 @@ from TFM_graph_classification import *
 
 
 
-def save_results(results_dict, features, dataset_version, fileversion='baseline'):
+def save_results(results_dict, features, dataset_version, results_folder='baseline', models_folder='models/'):
     """
     # append results to results_dict on disk
     append results to resutls_dict on disk(json format)
@@ -60,16 +60,16 @@ def save_results(results_dict, features, dataset_version, fileversion='baseline'
     and so will save results json files to results/name.json
     """
 
-    if dataset_version=='v1' and fileversion=='baseline':
+    if dataset_version=='v1' and results_folder=='baseline':
         filepath = 'results/training_results.json'
-    elif dataset_version=='v2' and fileversion=='baseline':
+    elif dataset_version=='v2' and results_folder=='baseline':
         filepath = 'results/training_results_v2.json'
-    elif dataset_version=='v1' and fileversion=='nlp':
+    elif dataset_version=='v1' and results_folder=='nlp':
         filepath = 'results/nlp_training_results.json'
-    elif dataset_version=='v2' and fileversion=='nlp':
+    elif dataset_version=='v2' and results_folder=='nlp':
         filepath = 'results/nlp_training_results_v2.json'
     else:
-        filepath = fileversion
+        filepath = results_folder
         if filepath.find('results/')!= 0:
             filepath = 'results/'+filepath
         
@@ -85,7 +85,7 @@ def save_results(results_dict, features, dataset_version, fileversion='baseline'
             score_val['features'] = features
 
             datetime_str=datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
-            model_filename = 'baseline_models/'+model_name+'_'+datetime_str
+            model_filename = os.path.join(models_folder,model_name+'_'+datetime_str)
                 
             # remove model_instance and pickle it to disk
             try:
@@ -105,46 +105,168 @@ def save_results(results_dict, features, dataset_version, fileversion='baseline'
     #pprint(results_dict)
     #return results_dict
 
+def param_to_string(params_dict):
+    """
+        Model params dictionary to a string
+    """
+    result = ''
+    if params_dict is not None:
+        for k,v in params_dict.items():
+            result += '__'+str(k)+':'+str(v)
 
-def print_training_stats(dataset_version='v1', fileversion='baseline'):
+    if result.find('__')==0:
+        result=result[2:]
+    return result
+
+
+def params_to_string(params_list):
+    result =[]
+
+    for params in params_list:
+        result.append(param_to_string(params))
+    return result
+
+
+def get_params(param, list_dicts):
+    result = []
+
+    #print("get_params")
+    for d in list_dicts:
+        #pprint(d)
+        if isinstance(d, dict):
+            result.append(d[param])
+        else:
+            if len(d)>0 and isinstance(d[0],dict):
+                result.append(d[0][param])
+            else:
+                result.append(d)
+
+    return result
+
+
+
+def get_filepath(dataset_version, results_folder, results_file=None):
+    if results_file is not None:
+        filepath = results_file
+    elif dataset_version=='v1' and results_folder=='baseline':
+        filepath = 'results/training_results.json'
+    elif dataset_version=='v2' and results_folder=='baseline':
+        filepath = 'results/training_results_v2.json'
+    elif dataset_version=='v1' and results_folder=='nlp':
+        filepath = 'results/nlp_training_results.json'
+    elif dataset_version=='v2' and results_folder=='nlp':
+        filepath = 'results/nlp_training_results_v2.json'
+    else:
+        filepath=results_folder
+
+    return filepath
+
+
+def print_training_stats(dataset_version='v1', results_folder='baseline', results_file=None):
     """
     read json from disk and print the best model of each model type.
     print also it's scores obviously
     """
 
-    if dataset_version=='v1' and fileversion=='baseline':
-        filepath = 'training_results.json'
-    elif dataset_version=='v2' and fileversion=='baseline':
-        filepath = 'training_results_v2.json'
-    elif dataset_version=='v1' and fileversion=='nlp':
-        filepath = 'nlp_training_results.json'
-    elif dataset_version=='v2' and fileversion=='nlp':
-        filepath = 'nlp_training_results_v2.json'
-    else:
-        filepath=fileversion
+    filepath = get_filepath(dataset_version, results_folder, results_file)
     
     r = json.load(open(filepath,'r'))
     
-    info_res = [ (model,score,score_res['cv_score'], score_res['params'], score_res['features']) for model,model_res in r.items() 
-                   for score,score_res in model_res.items() ]
+    info_res = [ 
+        (model,score,score_res['cv_score'], 
+         score_res['params'], 
+         score_res['features'], 
+         score_res['weighted avg']) 
+        if 'weighted avg' in score_res.keys() 
+        else  
+        (model,score,score_res['cv_score'], 
+         score_res['params'], 
+         score_res['features'],
+         '')
+        for model,model_res in r.items() 
+            for score,score_res in model_res.items() 
+             ]
 
     # for each modell print the best result
     models = list(set([ a[0] for a in info_res]))
 
-    best_models = []    
+    best_models_list = []    
     for model in models:
 
         scores = [ a[2] for a in info_res if a[0]==model]
         params = [ a[3] for a in info_res if a[0]==model]
         score_names = [ a[1] for a in info_res if a[0]==model]
         features = [ a[4] for a in info_res if a[0]==model]
+        weighted_scores = [ a[5] for a in info_res if a[0]==model]
         max_score = max(scores)
         max_model = scores.index(max_score)
         max_model_params = params[max_model] # later this will be params
         score_name = score_names[max_model]
-        best_models.append((model, score_name, max_score, max_model_params,features[max_model]))
+        best_models_list.append((model, score_name, max_score, max_model_params,features[max_model],weighted_scores))
 
-    pprint(best_models)
+
+    # print all results for all models in a flat table
+    best_models = pd.DataFrame(data={
+        'model': [a[0] for a in best_models_list],
+        'parameters': params_to_string([a[3] for a in best_models_list]),
+        'data features': [a[4] for a in best_models_list],
+        'optimized score': [a[1] for a in best_models_list],
+        'avg score in cv': [a[2] for a in best_models_list],
+        'micro-precision': get_params('precision',[a[5] for a in best_models_list]),
+        'micro-recall': get_params('recall',[a[5] for a in best_models_list]),
+        'micro-f1': get_params('f1-score',[a[5] for a in best_models_list]),
+        'support': get_params('support',[a[5] for a in best_models_list]),
+        }
+        )
+
+
+    return best_models
+
+
+
+def print_all_training_stats(dataset_version='v1', results_folder='baseline', results_file=None):
+    """
+    read json from disk and print the best model of each model type.
+    print also it's scores obviously
+    """
+
+    filepath = get_filepath(dataset_version, results_folder, results_file)
+    
+    
+    r = json.load(open(filepath,'r'))
+    
+    info_res = [ 
+        (model,score,score_res['cv_score'], 
+         score_res['params'], 
+         score_res['features'], 
+         score_res['weighted avg']) 
+        if 'weighted avg' in score_res.keys() 
+        else  
+        (model,score,score_res['cv_score'], 
+         score_res['params'], 
+         score_res['features'],
+         '')
+        for model,model_res in r.items() 
+            for score,score_res in model_res.items() 
+             ]
+
+    # print all results for all models in a flat table
+    all_models = pd.DataFrame(data={
+        'model': [a[0] for a in info_res],
+        'parameters': params_to_string([a[3] for a in info_res]),
+        'data features': [a[4] for a in info_res],
+        'optimized score': [a[1] for a in info_res],
+        'avg score in cv': [a[2] for a in info_res],
+        'micro-precision': get_params('precision',[a[5] for a in info_res]),
+        'micro-recall': get_params('recall',[a[5] for a in info_res]),
+        'micro-f1': get_params('f1-score',[a[5] for a in info_res]),
+        'support': get_params('support',[a[5] for a in info_res]),
+        }
+        )
+
+   
+    return all_models
+    
 
 
 def balance_maximum_classes(dataset, max_count=-1):
@@ -574,16 +696,19 @@ def filter_features_new(X_train, features):
             list_cols = list(range(3,l))
             cfeats_train.extend(X_train[j,list_cols])
             
-        doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2] ))
+        # print("0",X_train[j,0])
+        # print("2",X_train[j,2])
+        # doc_feats = ''.join(''.join(X_train[j,0] + ' ' + X_train[j,2] ))
 
-        list_cols = list(range(3,l))
-        cfeats_train.extend(X_train[j,list_cols])
+        # list_cols = list(range(3,l))
+        # cfeats_train.extend(X_train[j,list_cols])
         
 
         X_tr.append(cfeats_train)
         X_tr_doc.append(doc_feats)
         
             
+
     X_train_numeric_features  = np.array(X_tr)
     X_train_doc = X_tr_doc 
    
@@ -785,7 +910,7 @@ def filter_features_new_v2(X_train, features):
                 data=X_train_numeric_features,
                 )
 
-    X_train_all['document'] = X_tr_doc
+    X_train_all['document'] = X_train_doc
    
     # transform all back to a dataframe
     # with first columns for the numeric features
@@ -1095,23 +1220,23 @@ def prepare_nn_models():
                 #  'num_epochs': [100,300,],
                 #  },
                  {
-                 'd1': [1],
-                 'd2': [3],
-                 'num_epochs': [2],
+                 'd1': [20,50,100],
+                 'd2': [10,20],
+                 'num_epochs': [150],
                  }
                  
             ]
         },
-        # mlp2.__name__: {
-        #     'model': mlp2,
-        #     'params_set': [
-        #         {
-        #          'd2': [10,50,100,300],
-        #          'd3': [5,50,200],
-        #          'num_epochs': [50,300],
-        #          },                 
-        #     ]
-        # },
+        mlp2.__name__: {
+            'model': mlp2,
+            'params_set': [
+                {
+                 'd2': [50,100,150],
+                 'd3': [5,50,200],
+                 'num_epochs': [100,200],
+                 },                 
+            ]
+        },
 
     }
 
@@ -1228,7 +1353,7 @@ def prepare_models():
 
 
 
-def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, features='', dataset_version='',fileversion='baseline', ):
+def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, features='', dataset_version='',results_folder='baseline', models_folder='models/'):
     """
     for each model type and score, do CV, retrain and testing , then save to results_dict
     """
@@ -1258,6 +1383,7 @@ def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, fea
 
                 
                 results_dict[model_name][score] = classification_report(y_true, y_pred, output_dict=True)
+                
                 results_dict[model_name][score]['params'] = clf.best_params_
                 results_dict[model_name][score]['cv_score'] = clf.best_score_
                 results_dict[model_name][score]['time'] = round(end-start)
@@ -1267,7 +1393,7 @@ def cv_train_models(X_train, y_train, X_test, y_test, models_params, scores, fea
                 print("Error with "+model_name+" and "+score)
                 traceback.print_exc()
 
-        save_results(results_dict, features,dataset_version, fileversion)
+        save_results(results_dict, features,dataset_version, results_folder, models_folder=models_folder)
 
 
     return results_dict
@@ -1342,7 +1468,7 @@ class CustomDataset(Dataset):
 
 
 
-def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, scores, nclasses ):
+def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, scores, nclasses, extra_params=None):
     """
         This function is called for each k-fold cv run.
         So here X_test and y_test correspond to the cv testing fold and X_train and y_train to the num folds for training 
@@ -1370,6 +1496,7 @@ def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, 
     model.train()
 
     loss_history = []
+    cv_avg_f1 = 0
 
     num_epochs = nn_model_params['num_epochs']
     train_data = CustomDataset(
@@ -1388,6 +1515,8 @@ def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, 
 
     for e in range(num_epochs):
         loss_train = 0.0
+
+        cv_avg_f1 = 0
         
         total_num_graphs==0
         for X,y in loader:
@@ -1400,19 +1529,39 @@ def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, 
             out = model(X)
             target = y 
 
-            # out.to('cpu')
-            # target.to('cpu')
-            loss = F.nll_loss(out, target)
-            #print(loss)
-            # out.to('device')
-            # target.to('device')
+
+            #---correct-way----------
+            target = torch.squeeze(y)
             
+            # print(out.shape)
+            # pprint(out)
+            # #print(out)
+            # print(target.shape)
+            # pprint(target)
+            #print(target)
+            #loss = F.nll_loss(nn.LogSoftmax(out), target)
+            m = nn.LogSoftmax(dim=1)
+            loss_func = nn.NLLLoss()
+            #loss = loss_func(m(out), target)
+            loss = loss_func(out, target)
+            #----old-way-------
+            # print(out.shape)
+            # print(target.shape)
+            # loss = F.nll_loss(out, target)
+            
+
             loss_train +=loss
     
             loss.backward()
             optimizer.step()
             total_num_graphs+=X.shape[0]
 
+            cv_avg_f1 += f1_score(
+                        target.flatten().tolist(),
+                        torch.argmax(out, dim=1).flatten().tolist(),
+                        average='micro' )
+
+        cv_avg_f1 = cv_avg_f1 / len(loader)
         loss_train = loss_train /total_num_graphs
         loss_history.append(loss_train)
     
@@ -1433,12 +1582,17 @@ def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, 
     #                    y_test_gpu.flatten().tolist(),
     #                    nclasses)
 
-    error_measures = {
-        'f1_micro':f1_score(
+    # error_measures = {
+    #     'f1_micro':f1_score(
+    #                     y_test_gpu.flatten().tolist(),
+    #                     y_test_pred.flatten().tolist(),
+    #                     average='micro' )
+    #     }
+
+    error_measures = classification_report(
                         y_test_gpu.flatten().tolist(),
                         y_test_pred.flatten().tolist(),
-                        average='micro' )
-        }
+                        output_dict=True)
 
     #test_loss = F.nll_loss(out, y_test_gpu)
     #pprint(test_loss.to('cpu').detach().numpy().item())
@@ -1449,10 +1603,13 @@ def train_nn_model_one_fold (X_train, y_train, X_test, y_test, nn_model_params, 
     
     # since the classes are balanced, we can use macro average
     score = scores[0]
-    results_dict[model_name][score] = {}
-    results_dict[model_name][score]['cv_score'] = error_measures['f1_micro']
+    results_dict[model_name][score] = error_measures
+    results_dict[model_name][score]['cv_score'] = cv_avg_f1
 
+    if extra_params is not None:
+        nn_model_params['model_kwargs'].update(extra_params)
     results_dict[model_name][score]['params'] = nn_model_params['model_kwargs']
+    
     results_dict[model_name][score]['num_epochs'] = num_epochs
 
     results_dict[model_name][score]['time'] = round(end-start)
@@ -1675,7 +1832,7 @@ def unroll_all_possible_model_combos(X_train, nn_models_params, nclasses):
 
 
 
-def nn_train_models(X_train, y_train, X_test, y_test, nn_models_params, scores, nclasses, numfolds=3, features='', dataset_version='', fileversion='baseline' ):
+def nn_train_models(X_train, y_train, X_test, y_test, nn_models_params, scores, nclasses, numfolds=3, features='', dataset_version='', results_folder='baseline', models_folder='models/'):
     """
     This function will take all model parameter sets, and create an iterator over all combinations.
 
@@ -1731,7 +1888,7 @@ def nn_train_models(X_train, y_train, X_test, y_test, nn_models_params, scores, 
     # print("\n After retraining: ")
     # pprint(results_dict)
     
-    save_results(results_dict, features, dataset_version, fileversion=fileversion)
+    save_results(results_dict, features, dataset_version, results_folder=results_folder, models_folder=models_folder)
 
     
     return results_dict
@@ -1739,7 +1896,7 @@ def nn_train_models(X_train, y_train, X_test, y_test, nn_models_params, scores, 
 
 
 
-def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, fileversion='baseline', baseline_models=None, baseline_nn_models=None):
+def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, dataset_version='v1',nclasses=3, results_folder='baseline', baseline_models=None, baseline_nn_models=None, models_folder='models/baseline_models/'):
     
     """
         Filter features following the indication
@@ -1760,7 +1917,8 @@ def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, da
         scores=['f1_micro',],
         features=features,
         dataset_version=dataset_version,
-        fileversion=fileversion)
+        results_folder=results_folder,
+        models_folder=models_folder)
 
 
     if baseline_nn_models is None:
@@ -1776,7 +1934,8 @@ def baseline_training_and_testing(X_train, X_test, y_train, y_test, features, da
         numfolds=3,
         features=features,
         dataset_version=dataset_version,
-        fileversion=fileversion
+        results_folder=results_folder,
+        models_folder=models_folder
         )
     
 
@@ -1799,9 +1958,9 @@ if __name__=='__main__':
 
     nlp_nn_training_and_testing(X_train, X_test, y_train, y_test,'document',dataset_version,nclasses)
 
-    print_training_stats('v1',fileversion='nlp')
+    print_training_stats('v1',results_folder='nlp')
 
-    # baseline_training_and_testing(X_train, X_test, y_train, y_test,'x_topo_feats',dataset_version,nclasses)
+    # baseline_training_and_testing(X_train, X_test, y_train, y_test,'x_topo_feats',dataset_version,nclasses, models_folder='models/baseline_models')
     
     # baseline_training_and_testing(X_train, X_test, y_train, y_test,'code_feats',dataset_version)
     
