@@ -1060,41 +1060,86 @@ def nlp_models_training_and_testing(
 
  
 
+def precompute_tfidf(dataset_folder,features = 'document'):
+    """
+        get folder form where to precompute tfidf bow feature matrix
 
+        Load pickles from disk.
 
-# def print_training_stats(dataset_version='v1'):
-#     """
-#     read json from disk and print the best model of each model type.
-#     print also it's scores obviously
-#     """
+        build, fit & transform tfidf pipeline
+            call with:
+            - features = 'document'
+            - features = 'document simplified'
+            - features = 'list_funcs'- document
+            
+        pickle result to disk 
+
+    """
+    X_train = pickle.load(open(os.path.join(dataset_folder,'X_train.pickle'),'rb'))
+    X_test = pickle.load(open(os.path.join(dataset_folder,'X_test.pickle'),'rb'))
+    y_train = pickle.load(open(os.path.join(dataset_folder,'y_train.pickle'),'rb'))
+    y_test = pickle.load(open(os.path.join(dataset_folder,'y_test.pickle'),'rb'))
+    nclasses = pickle.load(open(os.path.join(dataset_folder,'nclasses.pickle'),'rb'))
+
     
-#     if dataset_version=='v1':
-#         r = json.load(open('nlp_training_results.json','r'))
-#     else:
-#         r = json.load(open('nlp_training_results_v2.json','r'))
+    X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
+    X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
+
+    tfidf_parameters =  {
+         'tfidf__tvec__max_features':500,
+         'tfidf__tvec__ngram_range': (1, 2),
+         'tfidf__tvec__max_df': 0.7,
+         'tfidf__tvec__min_df': 0.2
+        }
+
+    tfidf_transformer = Pipeline([
+            ('preTfIdf', PreTfidf(tfidf_parameters)),
+            ('tvec', TfidfVectorizer()),
+        ])
+    preprocessor = ColumnTransformer(
+            transformers=[
+                ('tfidf', tfidf_transformer, train_nlp_cols)]
+        )
+
+    X_train_tfidf_embedding = preprocessor.fit_transform(X_train_all)
+    X_test_tfidf_embedding = preprocessor.transform(X_test_all)
+
+    pickle.dump(X_train_tfidf_embedding,open(os.path.join(dataset_folder,'X_train_tfidf_'+features.replace(' ','_')+'.pickle'),'wb+'))
+    pickle.dump(X_test_tfidf_embedding,open(os.path.join(dataset_folder,'X_test_tfidf'+features.replace(' ','_')+'.pickle'),'wb+'))
 
 
-#     info_res = [ (model,score,score_res['cv_score'], score_res['params'], score_res['features'],score_res['min_count']) for model,model_res in r.items() 
-#                    for score,score_res in model_res.items() ]
+def precompute_tfidfs():
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_unchanged',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_unchanged',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_unchanged',
+        features = 'document_simplified and list funcs')
 
-#     # for each modell print the best result
-#     models = list(set([ a[0] for a in info_res]))
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_remove_min',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_remove_min',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_remove_min',
+        features = 'document_simplified and list funcs')
 
-#     best_models = []    
-#     for model in models:
 
-#         scores = [ a[2] for a in info_res if a[0]==model]
-#         params = [ a[3] for a in info_res if a[0]==model]
-#         score_names = [ a[1] for a in info_res if a[0]==model]
-#         features = [ a[4] for a in info_res if a[0]==model]
-#         min_counts_for_classes = [ a[5] for a in info_res if a[0]==model]
-#         max_score = max(scores)
-#         max_model = scores.index(max_score)
-#         max_model_params = params[max_model] # later this will be params
-#         score_name = score_names[max_model]
-#         best_models.append((model, score_name, max_score, max_model_params,features[max_model], min_counts_for_classes[max_model]))
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_undersample_max',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_undersample_max',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_3_precomp_split_undersample_max',
+        features = 'document_simplified and list funcs')
 
-#     pprint(best_models)
 
 
 
@@ -1120,8 +1165,8 @@ if __name__=='__main__':
     
 
     X_train = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedX_train.pickle','rb'))
-    X_test = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedX_test.pickle','rb'))
-    y_train = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedy_train.pickle','rb'))
+    X_test = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchanged/X_test.pickle','rb'))
+    y_train = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchanged/y_train.pickle','rb'))
     y_test = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangedy_test.pickle','rb'))
     nclasses = pickle.load(open('tmp/symbols_dataset_3_precomp_split_unchangednclasses.pickle','rb'))
 
