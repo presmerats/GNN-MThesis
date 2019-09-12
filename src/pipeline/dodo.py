@@ -5,8 +5,8 @@ from doit import create_after
 
 def task_create_folders():
     return{
-        'targets': ['trains/','tests/'],
-        'actions': ['mkdir -pv trains','mkdir -pv tests']
+        'targets': ['trains/','done/'],
+        'actions': ['mkdir -pv trains','mkdir -pv done']
 
     }
 
@@ -54,13 +54,11 @@ def template_train_model(task_filename):
         'targets': ['tests/'+task_filename_only],
         'actions': [
             'python pipeline_train_model.py '+task_filename,
-            'rm '+task_filename
+            #'rm '+task_filename
                 ],
     }
 
-def task_test_model():
-    """ reads training results file from disk, model from disk, and txt task form tests/ and then tests it, saving results to results/ folder"""
-    pass
+
 
 def task_parse_results():
     """ Parses results from results folder and generates an html notebook result with a table presenting the results"""

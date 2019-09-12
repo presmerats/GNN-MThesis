@@ -177,8 +177,13 @@ def plotGraphFunction(folder, filename, label=None):
 def read_config_file():
 
     conf = None
-    with open('config.yaml','r') as f:
-        conf = yaml.load(f, Loader=yaml.FullLoader)
+    try:
+        with open(os.path.abspath(os.path.join(os.path.abspath('.'),'config.yaml')),'r') as f:
+            conf = yaml.load(f, Loader=yaml.FullLoader)
+        # with open('config.yaml','r') as f:
+        #     conf = yaml.load(f, Loader=yaml.FullLoader)
+    except:
+        pass 
 
     return conf
         

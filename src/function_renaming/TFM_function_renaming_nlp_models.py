@@ -346,18 +346,10 @@ def cv_train_nlp_models(X_train_numeric, X_train_doc,
 
 
 
-def prepare_pipeline_params(parameters):
+def prepare_pipeline_params(parameters, tf_params):
 
 
-    tf_params = {
-         'preprocessor__tfidf__tvec__max_features':[100, 200,500],
-         #'preprocessor__tfidf__tvec__max_features':[100],
-         'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
-         #'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
-         #'tvec__stop_words': [None, 'english'],
-         'preprocessor__tfidf__tvec__max_df': [0.7,0.8,0.9],
-         'preprocessor__tfidf__tvec__min_df': [0.1,0.2]
-        }
+    
 
     final_parameters = []
     for param_set in parameters:
@@ -388,11 +380,11 @@ class ToNumpyTransformer(TransformerMixin):
 
 class DummyDebug(TransformerMixin):
     def transform(self, X1, *_):
-        print("DummyDebug")
-        print("shape ")
-        print(X1.shape)
+        # print("DummyDebug")
+        # print("shape ")
+        # print(X1.shape)
         #print(X1[0:1])
-        print()
+        # print()
         return X1
 
     def fit(self, X1, *_):
@@ -425,6 +417,119 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
 
     results_dict={}
 
+    # pprint(train_numeric_cols)
+    # pprint(train_nlp_cols)
+    # print()
+    
+    if features.find('tfidf')>-1:
+        tfidf_transformer = Pipeline([
+            ('debug', DummyDebug()),
+        ])
+        tf_params = {
+        }
+    else:
+        tfidf_transformer = Pipeline([
+            ('preTfIdf', PreTfidf()),
+            ('tvec', TfidfVectorizer()),
+            #('debug', DummyDebug()),
+        ])
+        tf_params = {
+         'preprocessor__tfidf__tvec__max_features':[100, 200,500],
+         #'preprocessor__tfidf__tvec__max_features':[100],
+         'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
+         #'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
+         #'tvec__stop_words': [None, 'english'],
+         'preprocessor__tfidf__tvec__max_df': [0.7,0.8,0.9],
+         'preprocessor__tfidf__tvec__min_df': [0.1,0.2]
+        }
+        
+
+    baseline_transformer = Pipeline(steps=[
+         ('tonumpy', ToNumpyTransformer()), # probably it's no needed
+         ('scaler', StandardScaler()),
+         #('debug', DummyDebug()),
+         ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('convfeats', baseline_transformer, train_numeric_cols),
+            ('tfidf', tfidf_transformer, train_nlp_cols)]
+    )
+
+    for model_name in models_params.keys():
+        """
+        for all model and theri possibble params, 
+                    build a Pipeline(tfidf, featureComb, classifier)
+                    run GridSearchCV to optimize tfidf params and classifier params
+
+        Returns best cross-val model retrained and tested
+        """
+
+        print("Training ", model_name)
+        model_dict = models_params[model_name]
+        model = model_dict['model']()
+        parameters = model_dict['params_set']
+        results_dict[model_name]={}
+
+        final_parameters = prepare_pipeline_params(parameters, tf_params)
+        
+        train_pipeline = Pipeline(steps=[
+                        ('preprocessor', preprocessor),
+                        ('clf', model_dict['model']())
+                        ])
+
+
+        for score in scores:
+            try:
+                start = time.time()
+
+                print("GridseachCV for ", score)
+                clf = GridSearchCV(train_pipeline,final_parameters,cv=5, scoring=score, refit=True)
+                clf.fit(X_train_all,y_train )
+
+                end = time.time()
+
+
+                y_true, y_pred = y_test, clf.predict(X_test_all)
+                
+
+                results_dict[model_name][score] = classification_report(y_true, y_pred, output_dict=True)
+                
+                results_dict[model_name][score]['params'] = clf.best_params_
+                results_dict[model_name][score]['cv_score'] = clf.best_score_
+                results_dict[model_name][score]['time'] = round(end-start)
+                results_dict[model_name][score]['model_instance'] = clf
+
+                #results_dict[model_name]['best']=clf 
+            except Exception as err:
+                print("Error with "+model_name+" and "+score)
+                traceback.print_exc()
+
+        print("\n\n\nBefore save results, results_folder=",results_folder,"\n\n\n")
+        
+        pprint(results_dict[model_name])
+        save_results(results_dict, features,dataset_version, results_folder=results_folder,models_folder=models_folder)
+
+    return results_dict
+
+
+def cv_train_nlp_models_v3_precomp_tfidf(X_train_all , train_numeric_cols, train_nlp_cols, 
+            y_train, 
+            X_test_all, test_numeric_cols, test_nlp_cols, 
+            y_test, 
+            models_params, scores,
+            features,
+            dataset_version,
+            results_folder='nlp',
+            models_folder='models/nlp_models/'
+             ): 
+    """
+        Improved generation of the pipeline,
+        flexible enough to use with the training
+    """
+
+    results_dict={}
+
     for model_name in models_params.keys():
         """
         for all model and theri possibble params, 
@@ -441,10 +546,9 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
         results_dict[model_name]={}
 
 
-        final_parameters = prepare_pipeline_params(parameters)
+        final_parameters = parameters
 
         pprint(train_numeric_cols)
-        print()
         pprint(train_nlp_cols)
         print()
         
@@ -455,9 +559,7 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
              ])
 
         tfidf_transformer = Pipeline([
-            ('preTfIdf', PreTfidf()),
-            ('tvec', TfidfVectorizer()),
-            #('debug', DummyDebug()),
+            ('debug', DummyDebug()),
         ])
 
         preprocessor = ColumnTransformer(
@@ -471,16 +573,6 @@ def cv_train_nlp_models_v2(X_train_all , train_numeric_cols, train_nlp_cols,
                         ('clf', model_dict['model']())
                         ])
 
-        # t_pipe = Pipeline([
-        #       ('tvec', TfidfVectorizer()),
-        #       ('features',FeatureCombinator(X_train_numeric,y_train)),
-        #       ('clf', model_dict['model']())
-        #     ])
-
-        # pprint(train_pipeline[0].get_params().keys())
-        # pprint(train_pipeline[1].get_params().keys())
-        # pprint(train_pipeline.get_params().keys())
-        
         for score in scores:
             try:
                 start = time.time()
@@ -776,22 +868,8 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
     pprint(nn_models_params)
 
 
-    # tfidf params
-    tfvec_params = {
-             #'preprocessor__tfidf__tvec__max_features':[100, 2000],
-             'preprocessor__tfidf__tvec__max_features':[100],
-             #'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
-             'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
-             #'preprocessor__tfidf__tvec__stop_words': [None, 'english'],
-             'preprocessor__tfidf__tvec__max_df': [0.8],
-             'preprocessor__tfidf__tvec__min_df': [0.1]
-            }
 
-    # prepare all model candidates
-    # nn_models_params_unrolled = unroll_all_possible_model_combos(X_train_embedding, nn_models_params, nclasses)
-    nn_models_params_unrolled = unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses,tfvec_params)
 
-    pprint(nn_models_params_unrolled)
 
 
     baseline_transformer = Pipeline(steps=[
@@ -800,11 +878,28 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
              #('debug', DummyDebug()),
              ])
 
-    tfidf_transformer = Pipeline([
-        ('preTfIdf', PreTfidf()),
-        ('tvec', TfidfVectorizer()),
-        #('debug', DummyDebug()),
-    ])
+    if features.find('tfidf')>-1:
+        tfidf_transformer = Pipeline([
+            ('debug', DummyDebug()),
+        ])
+        # tfidf params must be empty
+        tfvec_params = {}
+    else:
+        tfidf_transformer = Pipeline([
+            ('preTfIdf', PreTfidf()),
+            ('tvec', TfidfVectorizer()),
+            #('debug', DummyDebug()),
+        ])
+        # tfidf params
+        tfvec_params = {
+         #'preprocessor__tfidf__tvec__max_features':[100, 2000],
+         'preprocessor__tfidf__tvec__max_features':[100],
+         #'preprocessor__tfidf__tvec__ngram_range': [(1, 2), (2, 3), (3, 3)],
+         'preprocessor__tfidf__tvec__ngram_range': [(2, 3)],
+         #'preprocessor__tfidf__tvec__stop_words': [None, 'english'],
+         'preprocessor__tfidf__tvec__max_df': [0.8],
+         'preprocessor__tfidf__tvec__min_df': [0.1]
+        }
 
     preprocessor = ColumnTransformer(
         transformers=[
@@ -815,6 +910,11 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
     tfidf_pipeline = Pipeline(steps=[
                     ('preprocessor', preprocessor),
                     ])
+
+    # prepare all model candidates
+    # nn_models_params_unrolled = unroll_all_possible_model_combos(X_train_embedding, nn_models_params, nclasses)
+    nn_models_params_unrolled = unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses,tfvec_params)
+    pprint(nn_models_params_unrolled)
 
     # CV training for all candidates
     error_scores = []
@@ -883,8 +983,12 @@ def cv_train_nn_nlp_models_v2(X_train_all , train_numeric_cols,
         
         #size of input = num X columns 
         param_set['model_kwargs']['d1'] = X_train_embedding.shape[1]
-        
-        results_dict, model = train_nn_model_one_fold(X_train_embedding.toarray(), y_train, X_test_embedding.toarray(), y_test, param_set, scores, nclasses, extra_params=tf_current_params )
+
+        if not isinstance(X_train_embedding,np.ndarray):
+            X_train_embedding = X_train_embedding.toarray()
+            X_test_embedding = X_test_embedding.toarray()
+
+        results_dict, model = train_nn_model_one_fold(X_train_embedding, y_train, X_test_embedding, y_test, param_set, scores, nclasses, extra_params=tf_current_params )
     except Exception as err:
             print("Error with "+param_set['model']+" and "+scores[0])
             traceback.print_exc()
@@ -999,23 +1103,6 @@ def nlp_models_training_and_testing(
         Filter features following the indication
     """
     
-    # X_train_numeric, X_train_doc = filter_features_new(X_train, features)
-    # X_test_numeric, X_test_doc = filter_features_new(X_test, features)
-
-    # models_and_params = prepare_nlp_models()
-    # results_dict = cv_train_nlp_models(
-    #     X_train_numeric, X_train_doc, y_train, 
-    #     X_test_numeric, X_test_doc, y_test, 
-    #     models_and_params, 
-    #     #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
-    #     scores=['f1_micro'],
-    #     features=features,
-    #     dataset_version=dataset_version,
-    #     results_folder='nlp',
-    #     models_folder=models_folder
-    #     )
-
-
     # Numeric is a np.array, doc is a list of strings
     X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
     X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
@@ -1058,6 +1145,111 @@ def nlp_models_training_and_testing(
         models_folder=models_folder
         )
 
+
+
+def nlp_models_training_and_testing_precomp_tfidf(
+            X_train, X_test,
+            X_train_tfidf, X_test_tfidf, 
+            y_train, y_test, 
+            features, dataset_version='v1',
+            nclasses=3, results_folder='nlp', 
+            nlp_models=None, nn_models = None,
+            models_folder='models/nlp_models/'):
+    
+    """
+        Filter features following the indication
+    """
+    
+    # Numeric is a np.array, doc is a list of strings
+    X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v3(X_train, X_train_tfidf, features)
+    X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v3(X_test, X_test_tfidf, features)
+
+
+    if nn_models is None:
+        nn_models_and_params = prepare_nn_models()
+    else:
+        nn_models_and_params = nn_models
+
+    results_dict = cv_train_nn_nlp_models_v2(
+        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
+        X_test_all, test_numeric_cols, test_nlp_cols, y_test,  
+        nn_models_and_params, 
+        scores=['f1_micro'], nclasses=nclasses, 
+        numfolds=3,
+        features=features,
+        dataset_version=dataset_version,
+        results_folder=results_folder,
+        models_folder=models_folder
+        )
+
+
+
+
+    if nlp_models is None:
+        models_and_params = prepare_nlp_models()
+    else:
+        models_and_params = nlp_models 
+
+    results_dict = cv_train_nlp_models_v2(
+        X_train_all, train_numeric_cols, train_nlp_cols, y_train, 
+        X_test_all, test_numeric_cols, test_nlp_cols, y_test, 
+        models_and_params, 
+        #scores=['recall_macro','recall_micro','precision_macro','precision_micro','f1_macro','f1_micro',],
+        scores=['f1_micro'],
+        features=features,
+        dataset_version=dataset_version,
+        results_folder=results_folder,
+        models_folder=models_folder
+        )
+
+
+def add_tfidf_to_dataset(dataset_folder):
+    """
+    load tfidf form folder
+    then load dataset
+    loop dataset and add the corresponding tfidf row to data.tfidf_vec
+    then dataset.save_changes(idx,data)
+
+    """
+    X_train_tfidf = pickle.load(open(os.path.join(dataset_folder,'X_train_tfidf_document.pickle'),'rb'))
+    X_test_tfidf = pickle.load(open(os.path.join(dataset_folder,'X_test_tfidf_document.pickle'),'rb'))
+    # y_train = pickle.load(open(os.path.join(dataset_folder,'y_train.pickle'),'rb'))
+    # y_test = pickle.load(open(os.path.join(dataset_folder,'y_test.pickle'),'rb'))
+    # nclasses = pickle.load(open(os.path.join(dataset_folder,'nclasses.pickle'),'rb'))
+
+
+    train_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'training_set'))
+
+    for j in range(len(train_dataset)):
+        tf_vec = X_train_tfidf[j,:]
+        data = train_dataset[j]
+        data.tfidf_vec = torch.FloatTensor(tf_vec)
+        train_dataset.save_changes(j,data)
+
+    test_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'test_set'))
+
+    for j in range(len(test_dataset)):
+        tf_vec = X_test_tfidf[j,:]
+        data = test_dataset[j]
+        data.tfidf_vec = torch.FloatTensor(tf_vec)
+        test_dataset.save_changes(j,data)
+
+
+def verify_tfidf_on_dataset(dataset_folder):
+    train_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'training_set'))
+
+    for j in range(len(train_dataset)):
+        data = train_dataset[j]
+        pprint(data.tfidf_vec)
+
+
+
+def run_ggnn_with_tfidf():
+    """
+    run modelSelection for a mxed ggn and tfidf model
+    """
+    pass
+
  
 
 def precompute_tfidf(dataset_folder,features = 'document'):
@@ -1075,12 +1267,14 @@ def precompute_tfidf(dataset_folder,features = 'document'):
         pickle result to disk 
 
     """
+    print("precomputing tfidf for:\n    "+dataset_folder+"\nfeatures:\n    "+features)
     X_train = pickle.load(open(os.path.join(dataset_folder,'X_train.pickle'),'rb'))
     X_test = pickle.load(open(os.path.join(dataset_folder,'X_test.pickle'),'rb'))
     y_train = pickle.load(open(os.path.join(dataset_folder,'y_train.pickle'),'rb'))
     y_test = pickle.load(open(os.path.join(dataset_folder,'y_test.pickle'),'rb'))
     nclasses = pickle.load(open(os.path.join(dataset_folder,'nclasses.pickle'),'rb'))
 
+    print(" ..read pickle files..")
     
     X_train_all, train_numeric_cols, train_nlp_cols = filter_features_new_v2(X_train, features)
     X_test_all, test_numeric_cols, test_nlp_cols = filter_features_new_v2(X_test, features)
@@ -1093,19 +1287,35 @@ def precompute_tfidf(dataset_folder,features = 'document'):
         }
 
     tfidf_transformer = Pipeline([
-            ('preTfIdf', PreTfidf(tfidf_parameters)),
+            ('preTfIdf', PreTfidf()),
             ('tvec', TfidfVectorizer()),
         ])
     preprocessor = ColumnTransformer(
             transformers=[
                 ('tfidf', tfidf_transformer, train_nlp_cols)]
         )
+    preprocessor = preprocessor.set_params(**tfidf_parameters)
+    print(" ..instantiated pipeline with parameters..")
 
     X_train_tfidf_embedding = preprocessor.fit_transform(X_train_all)
+    print(" ..fit_transform on X_train performed..")
     X_test_tfidf_embedding = preprocessor.transform(X_test_all)
+    print(" ..transform on X_test performed..")
 
     pickle.dump(X_train_tfidf_embedding,open(os.path.join(dataset_folder,'X_train_tfidf_'+features.replace(' ','_')+'.pickle'),'wb+'))
-    pickle.dump(X_test_tfidf_embedding,open(os.path.join(dataset_folder,'X_test_tfidf'+features.replace(' ','_')+'.pickle'),'wb+'))
+    pickle.dump(X_test_tfidf_embedding,open(os.path.join(dataset_folder,'X_test_tfidf_'+features.replace(' ','_')+'.pickle'),'wb+'))
+    print(" ..written pickle files..")
+
+    #verification
+    embedding = pickle.load(open(os.path.join(dataset_folder,'X_train_tfidf_'+features.replace(' ','_')+'.pickle'),'rb'))
+    print(embedding.shape)
+    #pprint(embedding)
+    
+    embedding = pickle.load(open(os.path.join(dataset_folder,'X_test_tfidf_'+features.replace(' ','_')+'.pickle'),'rb'))
+    print(embedding.shape)
+    #pprint(embedding)
+    print(" ..verification done..\n\n")
+
 
 
 def precompute_tfidfs():
@@ -1159,6 +1369,11 @@ if __name__=='__main__':
         -  combine BowTfidf with other features??
 
     """
+
+    #-----------------tfidf-precomputation----------------
+
+    precompute_tfidfs()
+    exit()
 
     #-----------------tfidf-params-optimization------------------
 

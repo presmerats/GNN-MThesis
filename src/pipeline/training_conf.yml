@@ -1,0 +1,104 @@
+---
+
+training_types:
+  baseline:
+      models: 
+        - 'LogisticRegression'
+        - 'RandomForestClassifier'
+        - 'XGBClassifier'
+        - 'DecisionTreeClassifier'
+      features:
+          - 'x_topo_feats'
+          - 'code feats'
+          - 'code_feats'
+          - 'topo and code feats'
+      model_module: TFM_function_renaming_baseline_models
+      training_module: TFM_function_renaming_baseline_models
+      training_func: cv_train_models
+  baseline_nn:
+      models:
+        - 'mlp1'
+        - 'mlp2'
+      features:
+          - 'x_topo_feats'
+          - 'code feats'
+          - 'code_feats'
+          - 'topo and code feats'
+      model_module: TFM_function_renaming_baseline_models
+      training_module: TFM_function_renaming_baseline_models
+      training_func: nn_train_models
+  nlp:
+    models: 
+        - 'LogisticRegression'
+        - 'RandomForestClassifier'
+        - 'XGBClassifier'
+        - 'DecisionTreeClassifier'
+    features: 
+        - 'tfidf' 
+        - 'tfidf_simplified'
+        - 'tfidf_simplified and list funcs'
+        - 'tfidf and topo feats'
+        - 'tfidf and code feats'
+        - 'tfidf and topo and code feats'
+        - 'tfidf_simplified and topo feats'
+        - 'tfidf_simplified and code feats'
+        - 'tfidf_simplified and topo and code feats'
+        - 'tfidf_simplified and list funcs and topo feats'
+        - 'tfidf_simplified and list funcs and code feats'
+        - 'tfidf_simplified and list funcs and topo and code feats'
+      
+    model_module: TFM_function_renaming_baseline_models
+    training_module: TFM_function_renaming_nlp_models
+    training_func: cv_train_nlp_models_v2
+  nlp_nn:
+      models: 
+        - 'mlp1'
+        - 'mlp2'
+      
+      features: 
+        - 'tfidf' 
+        - 'tfidf_simplified'
+        - 'tfidf_simplified and list funcs'
+        - 'tfidf and topo feats'
+        - 'tfidf and code feats'
+        - 'tfidf and topo and code feats'
+        - 'tfidf_simplified and topo feats'
+        - 'tfidf_simplified and code feats'
+        - 'tfidf_simplified and topo and code feats'
+        - 'tfidf_simplified and list funcs and topo feats'
+        - 'tfidf_simplified and list funcs and code feats'
+        - 'tfidf_simplified and list funcs and topo and code feats'
+      
+      model_module: TFM_function_renaming_baseline_models
+      training_module: TFM_function_renaming_nlp_models
+      training_func: cv_train_nn_nlp_models_v2
+  ggnn:
+      models: 
+        - 'GGNN1'
+        - 'GGNN2'
+        - 'GGNN3'
+        - 'GGNN4'
+        - 'META1'
+        - 'META2'
+        - 'META3'
+        - 'META4'
+        - 'META5'
+      
+      features: ['']
+      model_module: TFM_graph_classification_models
+      training_module: TFM_graph_classification
+      training_func: modelSelection
+  ggnn_nlp:
+      models: 
+        - 'GGNN1_tfidf'
+        - 'GGNN2_tfidf'
+        - 'META1_tfidf'
+      
+      features: 
+        - 'tfidf' 
+        - 'tfidf_simplified'
+        - 'tfidf_simplified and list funcs'
+      
+      model_module: TFM_graph_classification_models
+      training_module: TFM_graph_classification
+      training_func: modelSelection

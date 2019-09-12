@@ -73,37 +73,59 @@ def save_results(results_dict, features, dataset_version, results_folder='baseli
         if filepath.find('results/')!= 0:
             filepath = 'results/'+filepath
         
-    r = json.load(open(filepath,'r'))
+    try:
+        if not os.path.exists('./results'):
+            os.mkdir('./results')
 
-    # how to merge? , just append? or merge for each model?
-    for model_name in results_dict.keys():
-        if model_name not in r.keys():
-            r[model_name]={}
+        if not os.path.exists(filepath):
+            f = open(filepath,'w+')
+            f.write('{}')
+            f.close()
+        else:
+            f = open(filepath,'r')
+            content = f.read()
+            f.close()
+            if content[0]!='{' or content[-1]!='}':
+                f = open(filepath,'w+')
+                f.write('{}')
+                f.close()
 
-        for score,score_val in results_dict[model_name].items():
-            #print(score)
-            score_val['features'] = features
 
-            datetime_str=datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
-            model_filename = os.path.join(models_folder,model_name+'_'+datetime_str)
-                
-            # remove model_instance and pickle it to disk
-            try:
-                #print(score_val.keys())
-                model_instance = score_val.pop('model_instance')
-                pickle.dump(model_instance,open(model_filename,'wb'))
+        r = json.load(open(filepath,'r'))
 
-            except Exception as err:
-                print("need to implement model_instance saving to disk")
-                traceback.print_exc()
-                
-            score_val['model_instance'] = model_filename
+        # how to merge? , just append? or merge for each model?
+        for model_name in results_dict.keys():
+            if model_name not in r.keys():
+                r[model_name]={}
 
-            r[model_name][score + datetime_str] = score_val 
-    
-    json.dump(r, open(filepath,'w'))
-    #pprint(results_dict)
-    #return results_dict
+            for score,score_val in results_dict[model_name].items():
+                #print(score)
+                score_val['features'] = features
+
+                datetime_str=datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
+                model_filename = os.path.join(models_folder,model_name+'_'+datetime_str)
+                    
+                # remove model_instance and pickle it to disk
+                try:
+                    #print(score_val.keys())
+                    model_instance = score_val.pop('model_instance')
+                    pickle.dump(model_instance,open(model_filename,'wb'))
+
+                except Exception as err:
+                    print("need to implement model_instance saving to disk")
+                    traceback.print_exc()
+                    
+                score_val['model_instance'] = model_filename
+
+                r[model_name][score + datetime_str] = score_val 
+        
+        json.dump(r, open(filepath,'w'))
+        #pprint(results_dict)
+        #return results_dict
+    except Exception as err:
+        print("Error with "+model_name+" and "+score)
+        traceback.print_exc()
+
 
 def param_to_string(params_dict):
     """
@@ -586,7 +608,7 @@ def filter_features_new(X_train, features):
 
         elif features =='document_simplified and list funcs':
             #cfeats =[d['document_simplified'], d['list_funcs']]
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + ' '.join(X_train[j,2]) ))
             
             
 
@@ -614,7 +636,7 @@ def filter_features_new(X_train, features):
             # cfeats =[d['document_simplified'], d['list_funcs']]
             # cfeats.extend(topos)
 
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + ' '.join(X_train[j,2]) ))
 
             list_cols = list(range(10,l))
             cfeats_train.extend(X_train[j,list_cols])
@@ -655,7 +677,7 @@ def filter_features_new(X_train, features):
             #cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             
 
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + ' '.join(X_train[j,2]) ))
 
             list_cols = list(range(3,10))
             cfeats_train.extend(X_train[j,list_cols])
@@ -684,7 +706,7 @@ def filter_features_new(X_train, features):
         elif features =='document_simplified and list_funcs and topo and code feats':
             # cfeats =[d['document_simplified'], d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
             # cfeats.extend(topos)
-            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + X_train[j,2] ))
+            doc_feats = ''.join(''.join(X_train[j,1] + ' ' + ' '.join(X_train[j,2]) ))
 
             list_cols = list(range(3,l))
             cfeats_train.extend(X_train[j,list_cols])
@@ -922,108 +944,42 @@ def filter_features_new_v2(X_train, features):
 
     return  X_train_all,train_numeric_cols,train_nlp_cols
 
+def filter_features_new_v3(X_train,X_tfidf, features):
+    """
+    # IN:purged_list, features, dataset, 
+    # OUT: X, X_doc
+        get selected columns of topological features matrix, code features matrix , document(code bag of words)
+        and return a numpy array/matrix for numeric features , 
+            and another list for documents (only code as one big string possibly concatenated with the list of present func calls)
+
+        this time a dataframe is returned
+
+        transform the columns of the matrix in a dataframe
+    """
+ 
+    X_train_numeric_features, X_train_doc = filter_features_new(X_train, features.replace('tfidf','document'))
+
+    X_train_all = pd.DataFrame(
+                    data=np.concatenate(
+                        (X_train_numeric_features,X_tfidf), 
+                        axis=1
+                    )
+                )
+
     
+    # transform all back to a dataframe
+    # with first columns for the numeric features
+    # last column for the document feature
+    num_numeric_cols = X_train_numeric_features.shape[1]
+    train_numeric_cols = list(range(0,num_numeric_cols))
+    train_nlp_cols = list(range(num_numeric_cols,X_train_all.shape[1]))
 
+    # print("numeric_cols list ",train_numeric_cols)
+    # print("tfidf_cols list ",train_nlp_cols)
 
-# def filter_features(X_train, X_test, features):
-    
-#     X_train_filtered = []
-#     X_test_filtered = []
-#     if features == 'feats_topo_code':
-#         # do nothing
-#         return X_train, X_test
+    return  X_train_all,train_numeric_cols,train_nlp_cols
 
-#             # X = []
-#             # for j in purged_list:
-#             #     d = dataset[j].__getattribute__('code_feats')
-#             #     d.pop('document_simplified') 
-#             #     d.pop('document')  
-#             #     d.pop('list_regs') 
-#             #     d.pop('list_funcs')
-                
-#             #     cfeats = list(d.values())
-#             #     topos = dataset[j].__getattribute__('x_topo_feats')
-#             #     cfeats.extend(topos)
-#             #     X.append(cfeats)
-            
-#     elif features != 'code_feats':
-#         # x_topo_features selected
-#         # code_feats = {
-#         #         'nregs': num_regs,
-#         #         'num_distinct_regs': num_distinct_regs,
-#         #         'ninstrs': num_instrs,
-#         #         'ndispls': num_displs,
-#         #         'nimms': num_imms,
-#         #         'nmaddrs': num_memaddrs,
-#         #         'num_funcs': num_funcs,
-#         #         'document': doc,              -> removed
-#         #         'document_simplified': doc2,  -> removed
-#         #         'list_regs': list_regs,       -> removed
-#         #         'list_funcs': list_funcs      -> removed
-#         #     }
-#         # remove the first 7 columns, 
-#         col_idx = np.array(list(range(7,X_train.shape[1])))
-#         X_train_filtered = np.array(X_train[:, col_idx], copy=True)
-#         X_test_filtered = np.array(X_test[:, col_idx], copy=True)
-        
-#     else:
-#         # code_feats selected
-#         col_idx = np.array(list(range(0,7)))
-#         X_train_filtered = np.array(X_train[:, col_idx], copy=True)
-#         X_test_filtered = np.array(X_test[:, col_idx], copy=True)
-
-#     return X_train_filtered, X_test_filtered
-
-
-# def dataset_split(dataset, features):
-#     """
-#     change it , set all featues topo + code
-#     then if the alg is just for topo then just remove code features
-#     """
-
-#     purged_list = purge_minimum_classes(dataset,0)
-
-#     n = len(purged_list)
-#     y = [dataset[j].y for j in purged_list]
-#     y = np.array(y)
-
-#     if features == 'feats_topo_code':
-#         X = []
-#         for j in purged_list:
-#             d = dataset[j].__getattribute__('code_feats')
-#             d.pop('document_simplified') 
-#             d.pop('document')  
-#             d.pop('list_regs') 
-#             d.pop('list_funcs')
-            
-#             cfeats = list(d.values())
-#             topos = dataset[j].__getattribute__('x_topo_feats')
-#             cfeats.extend(topos)
-#             X.append(cfeats)
-            
-#     elif features != 'code_feats':
-#         X = [dataset[j].__getattribute__(features) 
-#              for j in purged_list]
-#     else:
-#         X = []
-#         for j in purged_list:
-#             d = dataset[j].__getattribute__(features)
-#             d.pop('document_simplified') 
-#             d.pop('document')  
-#             d.pop('list_regs') 
-#             d.pop('list_funcs')
-#             X.append(list(d.values()))
-        
-#     X = np.array(X)
-
-
-#     X_train, X_test, y_train, y_test = train_test_split(
-#         X, 
-#         y,
-#         #stratify=y,
-#         random_state = 7)
-
-#     return X_train, X_test, y_train, y_test
+       
 
 
 def load_dataset_split(folder='tmp/symbols_dataset_3_precomp_split_unchanged'):
@@ -1196,9 +1152,9 @@ def prepare_nn_models_quick():
                 #  'num_epochs': [100,300,],
                 #  },
                  {
-                 'd1': [1],
-                 'd2': [3],
-                 'num_epochs': [2],
+                 'd1': [75],
+                 'd2': [10],
+                 'num_epochs': [100],
                  }
                  
             ]
@@ -1700,6 +1656,32 @@ def train_nn_model_cv(X_train, y_train, X_test, y_test, nn_model_params, scores,
     # print(" cv avg error i ",cv_avg_error_score)
 
     return results_dict
+
+
+def unroll_all_possible_pipeline_model_combos( nn_models_params, nclasses, tfvec_params):
+
+    """
+        1)update each dict with tfvec_params
+        
+        for model_class_key,v in nn_models_params.items():
+                v.update(copy.deepcopy(tfvec_params))
+
+        2) call  ParameterGrid for each model 
+        from sklearn.model_selection import ParameterGrid
+        param_grid = {'a': [1, 2], 'b': [True, False]}
+        list(ParameterGrid(param_grid))
+
+    """
+    all_combos = []
+
+    v = nn_models_params
+   
+    #pprint(v)
+    list_params_sets = ParameterGrid(v)
+    all_combos.extend(list(list_params_sets))
+
+    return all_combos
+
 
 def unroll_all_possible_model_combos_with_tfidf( nn_models_params, nclasses, tfvec_params):
 

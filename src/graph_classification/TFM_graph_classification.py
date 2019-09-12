@@ -825,9 +825,11 @@ def train_model_GGNN(model, loader, optimizer, train_loss_history):
         #print(target.shape)
         #print(target)
         #loss = F.nll_loss(nn.LogSoftmax(out), target)
-        m = nn.LogSoftmax(dim=1)
+        
         loss_func = nn.NLLLoss()
-        loss = loss_func(m(out), target)
+        # m = nn.LogSoftmax(dim=1)
+        # loss = loss_func(m(out), target)
+        loss = loss_func(out, target)
         loss_train +=loss
         loss.backward()
         optimizer.step()
@@ -885,9 +887,10 @@ def train_model_META(model, loader, optimizer, train_loss_history):
         u = u.to(device)
         out = model(data)
         target = torch.squeeze(data.y)
-        m = nn.LogSoftmax(dim=1)
         loss_func = nn.NLLLoss()
-        loss = loss_func(m(out), target)
+        # m = nn.LogSoftmax(dim=1)
+        # loss = loss_func(m(out), target)
+        loss = loss_func(out, target)
         loss_train +=loss
         loss.backward()
         optimizer.step()
@@ -945,9 +948,10 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
         
         out = pred
         target = torch.squeeze(data.y)
-        m = nn.LogSoftmax(dim=1)
         loss_func = nn.NLLLoss()
-        loss = loss_func(m(out), target)
+        # m = nn.LogSoftmax(dim=1)
+        # loss = loss_func(m(out), target)
+        loss = loss_func(out, target)
 
         
         loss_val += loss
@@ -1026,9 +1030,10 @@ def val_loss_model_META(model, loader, optimizer, val_history):
         
         out = pred
         target = torch.squeeze(data.y)
-        m = nn.LogSoftmax(dim=1)
         loss_func = nn.NLLLoss()
-        loss = loss_func(m(out), target)
+        # m = nn.LogSoftmax(dim=1)
+        # loss = loss_func(m(out), target)
+        loss = loss_func(out, target)
 
         loss_val += loss
         total_num_graphs += data.num_graphs
@@ -1338,10 +1343,12 @@ def select_best_model(model_list, train_dataset):
     modelsdict['best_models']['accuracy'] = best_model_acc
     
     best_model_microF1  = final_model_train(best_model_microF1 , train_dataset)
+
     modelsdict['best_models']['microF1'] = best_model_microF1
-    modelsdict['best_models']['microF1']['cv_score']=best_model_microF1['cv_score']
+    # modelsdict['best_models']['microF1']['cv_score']=best_model_microF1['cv_score']
 
     best_model_macroF1  = final_model_train(best_model_macroF1 , train_dataset)
+
     modelsdict['best_models']['macroF1'] = best_model_macroF1
 
     modelsdict['tests']={}
@@ -1405,7 +1412,7 @@ def hpsearch(model_list, hyperparameters_dict):
 
     return model_list
 
-def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False, debug_training=True):   
+def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=None, unbalanced_split=False, debug_training=True,tfidf_indices=None):   
     """
     given a list of models and their parameters (in a dictionary format), 
                 perform cross-validation to select the best model based on accuracy, microF1 and macroF1
@@ -1439,6 +1446,8 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
         epochs = modeldict['epochs']
         modelclass = modeldict['model']
         kwargs = modeldict['kwargs']
+        if tfidf_indices is not None:
+            kwargs.update({'tfidf_indices':tfidf_indices})
 
 
         start2 = time.time()
@@ -1484,8 +1493,8 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             modeldict['cv_val_macroF1']=modeldict['cv_val_macroF1']/len(kfolds)
 
             # unified results format
-            modeldict['cv_score']=modeldict['cv_val_microF1']
-            modeldict['score']='f1_micro'
+            modeldict['cv_score']=modeldict['cv_val_macroF1']
+            modeldict['score']='f1_macro'
             modeldict['model_instance'] = model.to('cpu')
 
         except:
@@ -1567,24 +1576,26 @@ def reportModelSelectionResult(modeldict, resultsdict):
     
 
     #resultsdict['models'].append(modeldict['best_models'])
-    resultsdict['best_models_list'].append(modeldict['best_models']['loss'])
-    resultsdict['best_models_list'].append(modeldict['best_models']['accuracy'])
-    resultsdict['best_models_list'].append(modeldict['best_models']['microF1'])
+    # resultsdict['best_models_list'].append(modeldict['best_models']['loss'])
+    # resultsdict['best_models_list'].append(modeldict['best_models']['accuracy'])
+    # resultsdict['best_models_list'].append(modeldict['best_models']['microF1'])
+    modeldict['best_models']['macroF1']['cv_score']=modeldict['best_models']['macroF1']['cv_val_macroF1']
+    modeldict['best_models']['macroF1']['score']='macroF1'
     resultsdict['best_models_list'].append(modeldict['best_models']['macroF1'])
-    resultsdict['best_models_list'].sort(key=lambda x: x['cv_val_accuracy'])
+    resultsdict['best_models_list'].sort(key=lambda x: x['cv_val_macroF1'])
 
     # save model to disk + save file path    
     # or save model in the dict.. (could take too much memory)
-    save_models(modeldict)
+    # save_models(modeldict)
     
     # report with Pandas table
     res = pd.DataFrame({
-        'best_model_loss': best_model_loss, 
-        'best_model_acc' : best_model_acc, 
-        'best_model_microF1' : best_model_microF1, 
+        # 'best_model_loss': best_model_loss, 
+        # 'best_model_acc' : best_model_acc, 
+        # 'best_model_microF1' : best_model_microF1, 
         'best_model_macroF1': best_model_macroF1})
 
-    return res['best_model_microF1']
+    return res['best_model_macroF1']
 
 def reportTest(batch, pred, measures, test_dataset):
     """
@@ -1665,7 +1676,7 @@ def report_all_test(results_dict):
 
     display(res)
         
-def save_results_gnn(modelsdict, models_folder='models/gnn/'):
+def save_results_gnn(modelsdict, results_file=None, models_folder='models/gnn/'):
     """
         not saving model instances
         only  names and parameters
@@ -1715,10 +1726,11 @@ def save_results_gnn(modelsdict, models_folder='models/gnn/'):
             
     
     
-    d = datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
-    if not os.path.exists('./results'):
-        os.mkdir('./results')
-    results_file = './results/training_GNN_'+d+'.json'
+    if results_file is None:
+        d = datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+        if not os.path.exists('./results'):
+            os.mkdir('./results')
+        results_file = './results/training_GNN_'+d+'.json'
     
     with open(results_file, 'w') as outfile:
         json.dump(savedict['best_models'], outfile)
@@ -1738,7 +1750,7 @@ def test_saving_model():
     testSavingLoadingModel(train_dataset, test_dataset)
 
 
-def test_multiple_models(resultsdict, test_dataset ):  
+def test_multiple_models(resultsdict, test_dataset, results_file=None, models_folder='models/gnn/' ):  
     """
      tests all the best models in best_models_list, and saves the result 
     """  
@@ -1774,12 +1786,12 @@ def test_multiple_models(resultsdict, test_dataset ):
 
         
         print(resdict['score']+'_'+datetime_str)
-        print(model['filename'])
+        #print(model['filename'])
         pprint(resultsdict['tests'][model['name']].keys())
         print("\n\n")
 
         
-    results_file= save_results_gnn(resultsdict)
+    results_file= save_results_gnn(resultsdict, results_file, models_folder)
     return results_file
 
 if __name__=='__main__':
