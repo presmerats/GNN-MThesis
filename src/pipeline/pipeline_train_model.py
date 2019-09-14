@@ -511,9 +511,9 @@ def training_dispatcher(jobdict):
         results_dict2 = training_func(**kwargs)
 
         results_dict = {'best_models_list':[], 'models':{} , 'best_models':{}, 'autoincrement': 0 }
-        pprint(results_dict2,open('../pipeline/'+log_file,'a'))
+        #pprint(results_dict2,open('../pipeline/'+log_file,'a'))
         reportModelSelectionResult(results_dict2,results_dict)
-        pprint(results_dict,open('../pipeline/'+log_file,'a'))
+        #pprint(results_dict,open('../pipeline/'+log_file,'a'))
         logger.debug("test_multiple_models")
         logger.debug(" saving model to models/gnn")
         test_multiple_models(

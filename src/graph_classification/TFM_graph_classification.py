@@ -113,14 +113,23 @@ class GatedGraphConv(MessagePassing):
 # compute PRE, REC and F1
 def PRE(measuresdict):
     m = measuresdict
-    measuresdict['PRE'] = float(m['TP'])/float(m['TP']+m['FP'])
-    
+    try:
+        measuresdict['PRE'] = float(m['TP'])/float(m['TP']+m['FP'])
+    except:
+        measuresdict['PRE'] = 0.0
+        
 def REC(m):
-    m['REC'] = float(m['TP'])/float(m['FN']+m['TP'])
+    try: 
+        m['REC'] = float(m['TP'])/float(m['FN']+m['TP'])
+    except:
+        m['REC'] = 0.0
 
 def F1(m):
-    m['F1']=2.0*(m['PRE']*m['REC'])/(m['PRE']+m['REC'])
-    
+    try:
+        m['F1']=2.0*(m['PRE']*m['REC'])/(m['PRE']+m['REC'])
+    except:
+        m['F1']=0.0
+
 def macro_micro_scores(m):
     # average all precisions
     # average all recalls
@@ -154,14 +163,20 @@ def macro_micro_scores(m):
         
     macroPRE = macroPRE/float(num_classes)
     macroREC = macroREC/float(num_classes)
-    macroF1 = 2.0*(macroPRE*macroREC)/(macroPRE+macroREC)
+    try:
+        macroF1 = 2.0*(macroPRE*macroREC)/(macroPRE+macroREC)
+    except:
+        macroF1 = 0.0
     m['macroPRE'] = macroPRE
     m['macroREC'] = macroREC
     m['macroF1'] = macroF1
     
     microPRE = microPREnumerator/microPREdenominator
     microREC = microRECnumerator/microRECdenominator
-    microF1 = 2.0*(microPRE*microREC)/(microPRE+microREC)
+    try:
+        microF1 = 2.0*(microPRE*microREC)/(microPRE+microREC)
+    except:
+        microF1 = 0.0
     m['microPRE'] = microPRE
     m['microREC'] = microREC
     m['microF1'] = microF1
@@ -199,14 +214,20 @@ def F1Score(pred, target, nclasses = None):
     #print(targetset)
     if nclasses:
         num_classes = nclasses
-    elif len(predset)<=len(targetset) and \
-       max(predset)<=max(targetset):
-        num_classes = max(len(predset),len(targetset))
-        
     else:
-        # very strange case
-        num_classes = max(max(predset),max(targetset)) + 1
+        num_classes = max(
+            max(max(predset),max(targetset)),
+            max(len(predset),len(targetset))
+            ) + 1
+    # elif len(predset)<=len(targetset) and \
+    #    max(predset)<=max(targetset):
+    #     num_classes = max(len(predset),len(targetset))
+        
+    # else:
+    #     # very strange case
+    #     num_classes = max(max(predset),max(targetset)) + 1
     #print("num_classes",num_classes)
+
 
     # for each class save pred_indices, and target_indices
     preddict = { i:[] for i in range(num_classes) }
@@ -216,7 +237,11 @@ def F1Score(pred, target, nclasses = None):
     for i in range(len(pred)):
         #print("pred[i]",pred[i])
         #print("preddict[pred[i]]",preddict[pred[i]])
+        if pred[i] not in preddict.keys():
+            preddict[pred[i]]=[]
         preddict[pred[i]].append(i)
+        if target[i] not in targetdict.keys():
+            tragetdict[target[i]]=[]
         targetdict[target[i]].append(i)
 
     #print("preddict", preddict)
@@ -976,6 +1001,7 @@ def val_loss_model_GGNN(model, loader, optimizer, val_history):
     
     #print("total_acc",total_acc)
     #print("total_gt",total_gt)
+    # num_classes should be added!
     measures = F1Score(total_acc, total_gt)
     val_history['microF1'].append(measures['microF1'])
     val_history['macroF1'].append(measures['macroF1'])
