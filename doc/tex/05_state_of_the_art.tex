@@ -1,3 +1,130 @@
 \section{State of the art}
 
-SOTA...
+% Reading list:
+% 	- Pitfalls
+% 	- Wu
+% 	- Powerful
+% 	- Hamilton repr learn
+% 	- Hamilton graphSage
+% 	- GGNN
+
+
+% Graph Neural Network quick definition (Hamilton, Wu, GGNN, Hamilton, Powerful, PItfalls)
+
+The idea behind graph neural networks is to learn a mapping that embeds nodes, or entire subgraphs, as points in a low-dimensional vetor space $$R^d$$. The goal is to optimize this mapping so that geometric relationships in the embedding space reflect the structure of the original graph. Previous approaches to learn on graphs used this approach as a preprocessing step, with fixed and/or hand engineered parameters. The graph neural networks treat this representation learning tas as a machine learning task itself, using a data-driven approach to learn the embeddings that encode the desired graph structure.
+
+
+% 	Graph definition (Wu)
+Definition of a Graph: A graph is $$G = (V,E,A)$$ where V is the set of nodes, E is the set of edges and A is the adjacency matrix. In a graph, let $$ v_{i} \in V $$ denote a node and $$ e_{i,j} = (vi, vj) \in E $$ denote an edge. The adjacency matrix A is a N x N matrix with A_{i,j} = w_{i,j} > 0 if e_{i,j} \in E and $$ A_{i,j}=0$$ if $$e_{i,j} \notin E$$. The degree of a node is the number of edges connected to it, formally defined as $$ degree(v_i) = \sum A_{i,:}$$
+
+A graph can be associated with node attributes X, where $$X \in R^{N \times D}$$ is a feature matrix with $$X_i \in R^{D}$$ representing the feature vector of node $$v_i$$. In the case of $$D = 1$$, we replace $$x \in R^N$$ with X to denote the feature vector of the graph.
+
+Definition of a directed graph: A directed graph is a graph with all edges pointing from one node to another. For a directed graph, $$A_{i,j} \notequal A_{j,i}$$. An undirected graph is a graph with all edges undirectional. For an undirected graph, $$A_{i,j} = A_{j,i}$$.
+
+
+% 	Graph/Subgraph/Node representation idea -> low dimensional embedding (Hamilton)
+
+% 	Euclidean space definition (Wu, Powerful,pitfalls)
+
+% 	Non-Euclidean space definition (powerful, pitfalls)
+
+
+
+%First Papers, 2005 and 2009, small summary (Wu, Pitfalls)
+%	convergence methods
+%		- propagation of neighbor information
+
+The idea of a graph neural network was first developed by Gori et al.(2005)[] and then by Scarselli et al. (2009) []
+
+In these publications about graph neural networks, they implement models for learning a node's representation by propagating neighbor information in an iterative manner until convergence in all nodes is reached. This process is computationally intensive, modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.
+
+% Spectral graph theory approaches (Wu)
+
+% Spatial based methods (Wu)
+
+
+% Transductive vs inductive approaches (GraphSage)
+
+
+
+% GNN types overview: (Wu, Hamilton, Kipf )
+% 	GCN (Hamilton, Kipf)
+% 	GraphSage (Hamilton )
+% 		Weisfeiler-Legman isomorphism
+% 		Neighborhood definition
+% 		aggregator architectures(aggr, lstm, pooling)
+% 	MPNN
+% 	GGNN (GGNN)
+
+
+% 	Most prominent matrix factorization methods ?
+% 	Most prominent distance methods (and combinations) ?
+
+
+% Theoretic alternatives to GNN (Hamilton, GGNN)
+% 	- summary graph statistics
+% 	- kernel functions (Hamilton)
+% 	- random walks , and matrix factorization
+% 		- factorizaion -based embeding (Hamilton)
+
+
+% Observations on current research
+% 	- subsequent research papers using the same datasets and training/val/test splits -> they overfit to the dataset and defeat the purpose of generalization.
+
+
+% Other types (Wu)
+% 	- Graph attention networks
+% 	- Graph autoencoders
+% 	- Graph generative networks
+% 	- graph Spatial-temporal networks
+
+
+
+
+
+
+% Most prominent applications of GNN (Wu)
+% 	- node classification
+% 	- node representation learning
+% 	- graph classification
+% 	- graph generation
+% 	- spatial-temporal forecastting
+
+% 	- visualization
+% 	- node clustering
+% 	- link prediction
+% 	- graph partition
+
+
+
+% 	- Computer vision
+
+% 	- recommender systems (GNN Hamilton repr learning,)
+
+% 	- traffic
+
+% 	- Chemistry
+
+% 	- program verification (GGNN, hamilton repr-learning, )
+
+% 	- inductive logic (GGNN)
+
+
+
+% Girvan-Newmann algorithm
+% 	definition
+
+% 	history
+
+% 	usage
+
+
+
+% Code analysis with machine learning
+% 	recent research in papers
+
+% 	code2vec paper -> renaming 
+
+
+
+
