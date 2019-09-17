@@ -1351,6 +1351,73 @@ def precompute_tfidfs():
         features = 'document_simplified and list funcs')
 
 
+def precompute_tfidfs_v1():
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_unchanged',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_unchanged',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_unchanged',
+        features = 'document_simplified and list funcs')
+
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_remove_min',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_remove_min',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_remove_min',
+        features = 'document_simplified and list funcs')
+
+
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_undersample_max',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_undersample_max',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_1_precomp_split_undersample_max',
+        features = 'document_simplified and list funcs')
+
+
+
+
+def precompute_tfidfs_v2():
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_unchanged',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_unchanged',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_unchanged',
+        features = 'document_simplified and list funcs')
+
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_remove_min',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_remove_min',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_remove_min',
+        features = 'document_simplified and list funcs')
+
+
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_undersample_max',
+        features = 'document')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_undersample_max',
+        features = 'document_simplified')
+    precompute_tfidf(
+        dataset_folder='tmp/symbols_dataset_2_precomp_split_undersample_max',
+        features = 'document_simplified and list funcs')
+
 
 
 if __name__=='__main__':

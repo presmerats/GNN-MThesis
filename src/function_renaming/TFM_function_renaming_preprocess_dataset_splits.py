@@ -23,6 +23,104 @@ from TFM_function_renaming_baseline_models import *
 
 
 
+def slice_precomputed_dataset_split(dataset_folder, destination_folder, slice_size):
+
+    # load pickles 
+    X_train = pickle.load(open(os.path.join(dataset_folder,'X_train.pickle'),'rb'))
+    X_test = pickle.load(open(os.path.join(dataset_folder,'X_test.pickle'),'rb'))
+    y_train = pickle.load(open(os.path.join(dataset_folder,'y_train.pickle'),'rb'))
+    y_test = pickle.load(open(os.path.join(dataset_folder,'y_test.pickle'),'rb'))
+    nclasses = pickle.load(open(os.path.join(dataset_folder,'nclasses.pickle'),'rb'))
+    X_train_tfidf = pickle.load(open(os.path.join(dataset_folder,'X_train_tfidf_document.pickle'),'rb'))
+    X_test_tfidf = pickle.load(open(os.path.join(dataset_folder,'X_test_tfidf_document.pickle'),'rb'))
+    X_train_tfidf2 = pickle.load(open(os.path.join(dataset_folder,'X_train_tfidf_document_simplified.pickle'),'rb'))
+    X_test_tfidf2 = pickle.load(open(os.path.join(dataset_folder,'X_test_tfidf_document_simplified.pickle'),'rb'))
+    X_train_tfidf3 = pickle.load(open(os.path.join(dataset_folder,'X_train_tfidf_document_simplified_and_list_funcs.pickle'),'rb'))
+    X_test_tfidf3 = pickle.load(open(os.path.join(dataset_folder,'X_test_tfidf_document_simplified_and_list_funcs.pickle'),'rb'))
+
+
+    train_dataset = FunctionsDataset(
+        root=os.path.join(
+            dataset_folder,
+            'training_set')
+        )
+    test_dataset = FunctionsDataset(
+        root=os.path.join(
+            dataset_folder,
+            'test_set')
+        )
+    # print(len(train_dataset))
+    # print(train_dataset.num_classes)
+    # print(train_dataset.num_features)
+
+    # verify length
+    if X_train.shape[0] != len(y_train) or \
+       X_train.shape[0] != X_train_tfidf.shape[0] or \
+       X_train.shape[0] != X_train_tfidf2.shape[0] or \
+       X_train.shape[0] != X_train_tfidf3.shape[0] or \
+       X_train.shape[0] != len(train_dataset) or \
+       X_test.shape[0] != len(y_test) or \
+       X_test.shape[0] != len(test_dataset) or \
+       X_test.shape[0] != X_test_tfidf.shape[0] or \
+       X_test.shape[0] != X_test_tfidf2.shape[0] or \
+       X_test.shape[0] != X_test_tfidf3.shape[0]:
+       print("Sizes are not consistent")
+       return
+
+    # slice with slice_size
+    X_train_size = int(X_train.shape[0])
+    X_test_size = int(X_test.shape[0])
+    X_train_size_new = int(X_train_size*slice_size) # 0.5 or 0.3
+    X_test_size_new = int(X_test_size*slice_size) # 0.5 or 0.3
+
+    # slice!
+    X_train = X_train[:X_train_size_new,]
+    y_train = y_train[:X_train_size_new]
+    X_train_tfidf = X_train_tfidf[:X_train_size_new,]
+    X_train_tfidf2 = X_train_tfidf2[:X_train_size_new,]
+    X_train_tfidf3 = X_train_tfidf3[:X_train_size_new,]
+    
+    X_test = X_test[:X_test_size_new,]
+    y_test = y_test[:X_test_size_new]
+    X_test_tfidf = X_test_tfidf[:X_test_size_new,]
+    X_test_tfidf2 = X_test_tfidf2[:X_test_size_new,] 
+    X_test_tfidf3 = X_test_tfidf3[:X_test_size_new,]
+
+    train_dataset = train_dataset[torch.LongTensor(list(range(X_train_size_new)))]
+    test_dataset = test_dataset[torch.LongTensor(list(range(X_test_size_new)))]
+
+    # write to new destination
+    pickle.dump(X_train,open(
+        os.path.join(destination_folder,'X_train.pickle'),'wb+'))
+    pickle.dump(X_test,open(
+        os.path.join(destination_folder,'X_test.pickle'),'wb+'))
+    pickle.dump(y_train,open(
+        os.path.join(destination_folder,'y_train.pickle'),'wb+'))
+    pickle.dump(y_test,open(
+        os.path.join(destination_folder,'y_test.pickle'),'wb+'))
+    pickle.dump(nclasses,open(
+        os.path.join(destination_folder,'nclasses.pickle'),'wb+'))
+    pickle.dump(X_train_tfidf,open(
+        os.path.join(destination_folder,'X_train_tfidf_document.pickle'),'wb+'))
+    pickle.dump(X_test_tfidf,open(
+        os.path.join(destination_folder,'X_test_tfidf_document.pickle'),'wb+'))
+    pickle.dump(X_train_tfidf2,open(
+        os.path.join(destination_folder,'X_train_tfidf_document_simplified.pickle'),'wb+'))
+    pickle.dump(X_test_tfidf2,open(
+        os.path.join(destination_folder,'X_test_tfidf_document_simplified.pickle'),'wb+'))
+    pickle.dump(X_train_tfidf3,open(
+        os.path.join(destination_folder,'X_train_tfidf_document_simplified_and_list_funcs.pickle'),'wb+'))
+    pickle.dump(X_test_tfidf3,open(
+        os.path.join(destination_folder,'X_test_tfidf_document_simplified_and_list_funcs.pickle'),'wb+'))
+
+    save_partial_dataset_symlinks(
+        train_dataset, 
+        new_name=os.path.join(destination_folder,'training_set'))
+
+    save_partial_dataset_symlinks(
+        test_dataset, 
+        new_name=os.path.join(destination_folder,'test_set'))
+
 
 
 

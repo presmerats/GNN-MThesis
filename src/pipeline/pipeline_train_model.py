@@ -39,6 +39,18 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 
+def add_dataset_file(results_file, dataset_folder,thetime):
+    with open(results_file,'r+') as resf:
+        resdict = json.load(resf)
+        for k,v in resdict.items():
+            for k2,v2 in v.items():
+                v2['dataset']=dataset_folder
+                v2['time']=thetime
+        resf.seek(0)
+        json.dump(resdict, resf)
+        resf.truncate()
+
+
 
 def training_dispatcher(jobdict):
     """
@@ -166,6 +178,9 @@ def training_dispatcher(jobdict):
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)
 
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
+
+
     elif model_class in conf['training_types']['baseline_nn']['models'] \
        and features in conf['training_types']['baseline_nn']['features']:
 
@@ -246,6 +261,9 @@ def training_dispatcher(jobdict):
         end= time.time()
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)
+
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
+
 
     elif model_class in conf['training_types']['nlp']['models'] \
        and features in conf['training_types']['nlp']['features']:
@@ -335,6 +353,9 @@ def training_dispatcher(jobdict):
         end= time.time()
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)
+
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
+
 
     elif model_class in conf['training_types']['nlp_nn']['models'] \
        and features in conf['training_types']['nlp_nn']['features']:
@@ -426,9 +447,11 @@ def training_dispatcher(jobdict):
         #pprint(kwargs,open(log_file,'a'))
         results_dict = training_func(**kwargs)
 
+        
         end= time.time()
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
 
 
     elif model_class in conf['training_types']['ggnn']['models'] \
@@ -524,6 +547,8 @@ def training_dispatcher(jobdict):
         end= time.time()
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)
+
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
 
     elif model_class in conf['training_types']['ggnn_nlp']['models'] \
        and features in conf['training_types']['ggnn_nlp']['features']:
@@ -621,6 +646,9 @@ def training_dispatcher(jobdict):
         end= time.time()
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)
+
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
+
 
     # return 
     os.chdir('../pipeline')

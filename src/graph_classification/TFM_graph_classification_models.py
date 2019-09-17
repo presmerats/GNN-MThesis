@@ -207,6 +207,67 @@ class GGNN4(torch.nn.Module):
         #x = torch.argmax(x, dim=1)  # we output softmax to use the nll_loss
         
         return x
+
+
+class GGNN5(torch.nn.Module):
+    def __init__(self, d1=50,d2=20, d3=10, d4=10,num_classes=6, num_layers=2, aggr_type='mean'):
+        super(GGNN5, self).__init__()
+        self.ggnn = GatedGraphConv(out_channels=d1, num_layers=num_layers,aggr=aggr_type, bias=True)
+        self.fc1 = nn.Linear(d1, d2)
+        self.dense1_bn = nn.BatchNorm1d(d2)
+        self.fc2 = nn.Linear(d2, d3)
+        self.dense2_bn = nn.BatchNorm1d(d3)
+        self.fc3 = nn.Linear(d3, d4)
+        self.fc4 = nn.Linear(d4, num_classes)
+        self.global_pool = global_mean_pool
+        
+    def forward(self, data):
+        x, edge_index, batch_vector = data.x, data.edge_index, data.batch
+
+        x = self.ggnn(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, training=self.training) # until here the output is for each node
+        
+        x = self.global_pool(x, batch_vector) # this makes the output to be graph level?
+        x = F.relu(self.dense1_bn(self.fc1(x)))
+        x = F.relu(self.dense2_bn(self.fc2(x)))
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
+        x = F.log_softmax(x, dim=1)
+        return x
+
+
+class GGNN6(torch.nn.Module):
+    def __init__(self, d1=50,d2=20, d3=10, d4=10,d5=5,num_classes=6, num_layers=2, aggr_type='mean'):
+        super(GGNN6, self).__init__()
+        self.ggnn = GatedGraphConv(out_channels=d1, num_layers=num_layers,aggr=aggr_type, bias=True)
+        self.fc1 = nn.Linear(d1, d2)
+        self.dense1_bn = nn.BatchNorm1d(d2)
+        self.fc2 = nn.Linear(d2, d3)
+        self.dense2_bn = nn.BatchNorm1d(d3)
+        self.fc3 = nn.Linear(d3, d4)
+        self.fc4 = nn.Linear(d4,d5)
+        self.fc5 = nn.Linear(d5, num_classes)
+        self.global_pool = global_mean_pool
+        
+    def forward(self, data):
+        x, edge_index, batch_vector = data.x, data.edge_index, data.batch
+
+        x = self.ggnn(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, training=self.training) # until here the output is for each node
+        
+        x = self.global_pool(x, batch_vector) # this makes the output to be graph level?
+        x = F.relu(self.dense1_bn(self.fc1(x)))
+        x = F.relu(self.dense2_bn(self.fc2(x)))
+        x = F.relu(self.dense2_bn(self.fc3(x)))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
+        x = F.log_softmax(x, dim=1)
+        return x
+
+
+
     
 class META1(torch.nn.Module):
     def __init__(self, d1=3, d2=50, d3=15, d4 =15,d5=10,num_classes=6):

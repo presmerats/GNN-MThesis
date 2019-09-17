@@ -1141,6 +1141,50 @@ class mlp2(torch.nn.Module):
         
         return x
 
+
+class mlp3(torch.nn.Module):
+    def __init__(self, d1=10,d2=20,d3=30,d4=20,num_classes=3):
+        super(mlp3, self).__init__()
+        self.fc1 = nn.Linear(d1, d2)
+        self.fc2 = nn.Linear(d2,d3)
+        self.fc3 = nn.Linear(d3, d4)
+        self.fc4 = nn.Linear(d4, num_classes)
+        
+    def forward(self, data):
+        x = data
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
+        x = F.log_softmax(x, dim=1)
+        
+        return x
+
+
+
+class mlp4(torch.nn.Module):
+    def __init__(self, d1=10,d2=20,d3=30,d4=20,d5=24,num_classes=3):
+        super(mlp4, self).__init__()
+        self.fc1 = nn.Linear(d1, d2)
+        self.fc2 = nn.Linear(d2,d3)
+        self.fc3 = nn.Linear(d3, d4)
+        self.fc4 = nn.Linear(d4, d5)
+        self.fc5 = nn.Linear(d5, num_classes)
+        
+    def forward(self, data):
+        x = data
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
+        x = F.log_softmax(x, dim=1)
+        
+        return x
+
+
+
+
 def prepare_nn_models_quick():
     models_params = {
 

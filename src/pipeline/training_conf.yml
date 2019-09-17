@@ -54,6 +54,10 @@ training_types:
       models: 
         - 'mlp1'
         - 'mlp2'
+        - 'mlp3'
+        - 'mlp4'
+        - 'mlp5'
+        - 'mlp6'
       
       features: 
         - 'tfidf' 
@@ -78,6 +82,8 @@ training_types:
         - 'GGNN2'
         - 'GGNN3'
         - 'GGNN4'
+        - 'GGNN5'
+        - 'GGNN6'
         - 'META1'
         - 'META2'
         - 'META3'

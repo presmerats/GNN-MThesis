@@ -312,7 +312,9 @@ def printDatasetBalance(dataset):
         #print(class_counts)
         j =0
         for graph in dataset:
-            
+            key_y = int(graph.y.item())
+            if key_y not in class_counts.keys():
+                class_counts[key_y]=[]
             class_counts[int(graph.y.item())]+=1
             j+=1
         print(class_counts)
@@ -367,6 +369,9 @@ def group_examples_by_class(dataset):
     for i in range(n):
         graph = dataset[i]
         #print(i,dataset.myprocessed_filenames[i],int(graph.y.item()),end=" ")
+        key_y = int(graph.y.item())
+        if key_y not in datasets_byclass.keys():
+            datasets_byclass[key_y]=[]
         datasets_byclass[int(graph.y.item())].append(i)
         #print(datasets_byclass)
         # datasets_byclass saves indices of the list myprocessed_filenames
@@ -596,10 +601,15 @@ def balancedDatasetKfoldSplit_slice(dataset,k):
     # list of items for each class
     train_list = []
     test_list = []
-    datasets_byclass = {i:[] for i in range(num_classes)}
+    list_classes = list(set([g.y for g in dataset]))
+    datasets_byclass = {i:[] for i in list_classes}
     for i in range(n):
         graph = dataset[i]
-        datasets_byclass[int(graph.y.item())].append(i)
+        key_y = int(graph.y.item())
+        if key_y not in datasets_byclass.keys():
+            datasets_byclass[key_y]=[]
+
+        datasets_byclass[key_y].append(i)
 
 
     #max_num_items_in_any_class = max([len(v) for k,v in datasets_byclass.items()])
@@ -643,8 +653,14 @@ def unbalancedDatasetKfoldSplit_slice(dataset,k):
     for i in range(n):
         graph = dataset[i]
         if isinstance(graph.y,int):
+            key_y = graph.y
+            if key_y not in datasets_byclass.keys():
+                datasets_byclass[key_y]=[]
             datasets_byclass[graph.y].append(i)
         else:
+            key_y = int(graph.y.item())
+            if key_y not in datasets_byclass.keys():
+                datasets_byclass[key_y]=[]
             datasets_byclass[int(graph.y.item())].append(i)
 
 
