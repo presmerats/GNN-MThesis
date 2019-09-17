@@ -1,3 +1,22 @@
 \section{Methodology}
 
 Methodology...
+
+Building the dataset:
+	
+Preprocessing of the data:
+	- no outliers/missing/errors done, just feature selection
+
+
+Baseline models
+	- simpler models
+
+Cross-validation training
+	- cv, folds then retraining
+	- class-imbalance handled with
+		- balanced training dataset splits
+		- useing f1-macro as we want to optimize for overall prec-rec on all classes
+
+Model selection
+	using the cv-score (f1-macro)
+	then showing the generalization capability of the model on the test set (understand if cv score increases also makes the test score do it)

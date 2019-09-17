@@ -8,42 +8,83 @@
 % 	- Hamilton graphSage
 % 	- GGNN
 
+% ML in graphs intro 
+
+Many data can be represented as a graph, a data structure employed often in computer science and related fields, in fields like biochemistry, social networks, recommender systems and even computer program analysis. Many machine learning applications are created to make predictions using graph-structured data. The way to incorporate the information from graph-structured data as an input to a machine learning model is not straightforward. The fact that graph-structure data is high-dimensional and non-Euclidean are the main barriers for creating a unified and general way to use it as an input to a model. Graph data is irregular, with variable size and variable number of neighbors. Many approaches to transform graph data into usable features for machine learning models exist by using summary graph statistics, kernel functions, or hand-engineered features. Those approaches lack the flexibility to adapt during the learning process.
+
 
 % Graph Neural Network quick definition (Hamilton, Wu, GGNN, Hamilton, Powerful, PItfalls)
-
-The idea behind graph neural networks is to learn a mapping that embeds nodes, or entire subgraphs, as points in a low-dimensional vetor space $$R^d$$. The goal is to optimize this mapping so that geometric relationships in the embedding space reflect the structure of the original graph. Previous approaches to learn on graphs used this approach as a preprocessing step, with fixed and/or hand engineered parameters. The graph neural networks treat this representation learning tas as a machine learning task itself, using a data-driven approach to learn the embeddings that encode the desired graph structure.
-
-
-% 	Graph definition (Wu)
-Definition of a Graph: A graph is $$G = (V,E,A)$$ where V is the set of nodes, E is the set of edges and A is the adjacency matrix. In a graph, let $$ v_{i} \in V $$ denote a node and $$ e_{i,j} = (vi, vj) \in E $$ denote an edge. The adjacency matrix A is a N x N matrix with A_{i,j} = w_{i,j} > 0 if e_{i,j} \in E and $$ A_{i,j}=0$$ if $$e_{i,j} \notin E$$. The degree of a node is the number of edges connected to it, formally defined as $$ degree(v_i) = \sum A_{i,:}$$
-
-A graph can be associated with node attributes X, where $$X \in R^{N \times D}$$ is a feature matrix with $$X_i \in R^{D}$$ representing the feature vector of node $$v_i$$. In the case of $$D = 1$$, we replace $$x \in R^N$$ with X to denote the feature vector of the graph.
-
-Definition of a directed graph: A directed graph is a graph with all edges pointing from one node to another. For a directed graph, $$A_{i,j} \notequal A_{j,i}$$. An undirected graph is a graph with all edges undirectional. For an undirected graph, $$A_{i,j} = A_{j,i}$$.
-
-
 % 	Graph/Subgraph/Node representation idea -> low dimensional embedding (Hamilton)
 
+The idea behind graph neural networks is to learn a mapping that embeds nodes, or entire subgraphs, as points in a low-dimensional vector space $R^d$. The goal is to optimize this mapping so that geometric relationships in the embedding space reflect the structure of the original graph. Previous approaches to learn on graphs used this approach as a preprocessing step, with fixed and/or hand engineered parameters. The graph neural networks treat this representation learning task as a machine learning task itself, using a data-driven approach to learn the embeddings that encode the desired graph structure.
+
+This section will present the main advances in graph neural networks, showing the techniques for representing nodes and entire subgraphs.
+
+\subsection{Notation}
+
+% 	Graph definition (Wu)
+\textbf{Definition of a Graph:} A graph is defined as $G = (V,E,A)$ where $V$ is the set of nodes, $E$ is the set of edges and $A$ is the adjacency matrix. In a graph, let $ v_{i} \in V $ denote a node and $ e_{i,j} = (vi, vj) \in E $ denote an edge. The adjacency matrix A is a N x N matrix with $A_{i,j} = w_{i,j} > 0$ if $e_{i,j} \in E$ and $A_{i,j}=0$ if $e_{i,j} \notin E$. The degree of a node is the number of edges connected to it, formally defined as $ degree(v_i) = \sum A_{i,:}$
+
+A graph can be associated with node attributes X, where $X \in R^{N \times D}$ is a feature matrix with $X_i \in R^{D}$ representing the feature vector of node $v_i$. %In the case of $D = 1$, we replace $x \in R^N$ with X to denote the feature vector of the graph.
+
+\textbf{Definition of a directed graph:} A directed graph is a graph with all edges pointing from one node to another. For a directed graph, $A_{i,j} \notequal A_{j,i}$. An undirected graph is a graph with all edges undirectional. For an undirected graph, $A_{i,j} = A_{j,i}$.
+
+
 % 	Euclidean space definition (Wu, Powerful,pitfalls)
+\textbf{Euclidean space:}  a space in any finite number of dimensions, in which points are designated by coordinates (one for each dimension) and the distance between two points is given by a distance formula.  A distance $d$ is defined as a function, let $x,y \in \mathbb{R}^p$:
+$$d:\mathbb{R}^{2p} \to \mathbb{R}_{+} \begin{cases}
+
+d(x,y)>0 & \forall x \neq y \\
+d(x,y)=0 & iff \quad x=y \\
+d(x,y) \leq d(x,z)+d(z,y) & \forall x,y,z
+
+\end{cases}$$
+
+An Euclidean distance $d$ between two points x and y is defined as $d^2(x,y)=(x-y)^T\matchcal{A}(x -y)$ where $\mathcal{A}$ is a positive definite matrix, called a metric.
 
 % 	Non-Euclidean space definition (powerful, pitfalls)
+Graph-structured data is considered to be non Euclidean for many reasons. First, there's not a clear definition of the norm of a vector, and so the distance between two nodes has to be defined on some other criteria. Usually the distance between two nodes is computed as the number of nodes that exist in the shorted path following edges between the node at the origin and the node at the destination. 
+Second, the distance between nodes, when computed that way, does not fulfill the triangle inequality (3rd condition in the previous definition). Finally, the similarity between nodes, as computed based on the node's attributes, does not need to comply with node distances (as defined by previous sentence ).
 
 
+\subsection{Early model}
 
 %First Papers, 2005 and 2009, small summary (Wu, Pitfalls)
 %	convergence methods
 %		- propagation of neighbor information
 
-The idea of a graph neural network was first developed by Gori et al.(2005)[] and then by Scarselli et al. (2009) []
+The idea of a graph neural network was first developed by Gori et al.(2005) \cite{gori} and then by Scarselli et al. (2009) \cite{scarcelli}. Good and generic definitions of the process of training a Graph Neural Network are explained at \cite{hamilton} and \cite{powerful}. They are summarized in the following paragraphs. 
 
-In these publications about graph neural networks, they implement models for learning a node's representation by propagating neighbor information in an iterative manner until convergence in all nodes is reached. This process is computationally intensive, modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.
+% generalised definition (Powerful)
+\textbf{Graph Neural Networks:} GNNs use the graph structure and node features $X_v$ for $v \in V$ to learn a representation vector of a node, $h_v$, or the entire graph $h_{G}$. Modern GNNs follow a neighborhood aggregation strategy, where they iteratively update the representation of a node by aggregating representations of its neighbors. After $k$ iterations of aggregation, a node's representation captures the structural information within it's $k$-hop network neighborhood. Formally, the $k$-th layer of a GNN is:
+$$ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(u) \}) , h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)}),$$
 
-% Spectral graph theory approaches (Wu)
+where $h_v(k)$ is the feature vector of node $v$ at the $k$-th iteration/layer. The initialization consists in $h_v^{(0)} = X_v$, and $N(v)$ is a set of nodes adjacent to $v$. 
+The iterative aggregation process is computationally intensive. modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.
 
-% Spatial based methods (Wu)
+% 2 tasks
+There are two types of tasks, where GNNs are used: node classification/regression and graph classification/regression.  Node classification or regression is when each node $v \in V$ has an associated label or target value $y_v$ and the goal is to learn a representation vector $h_v$ of $v$ such that $v$'s label or target values can be predicted as $y_v=f(h_v)$. Graph classification or regression is when given a set of graphs $\{ G1, ..., G_N\}$ and their labels or target values $\{y_1,...,y_N\}$ the goal is to learn a representation vector $h_G$ that helps to predict the label or target value of the entire graph $y_G=g(h_G)$.
+
+For node classification/regression, the node representation $h_v^{(K)}$ of the final iteration is used for prediction. For graph classification/regression, the READOUT function aggregates node features from the final iteration to obtain the entire graph's representation $h_G$:
+$$h_G = READOUT(\{h_v^{(K)} | v \in G\})$$
+The READOUT function can be a simple permutation invariant function such as a summation or a more sophisticated graph-level pooling function.
+
+The choice of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$ is crucial. In the next subsection the main evolutions of this model is explained. The main idea is what choices of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$  have been used for those state-of-the-art models. 
 
 
-% Transductive vs inductive approaches (GraphSage)
+
+
+% comment (review and remove redundancy) FOR INTRO
+
+% It follows a recursive neighborhood aggregation framework (also called message passing), where the representation vector of a node is computed by recursively aggregating and transforming feature vectors of its neighboring nodes. After k iterations, a node is represented by its transformed feature vector, which captures the structural information within the node's k-hop network neighborhood. This approach works when the learning task requires to represent each node of the graph, for example for node attribute regression or node classification. When the learning task requires to compute representations at the graph or subgraph level, pooling mechanisms like addition or other aggregations of all the nodes of the (sub)graph are used. 
+
+
+% In these publications about graph neural networks, they implement models for learning a node's representation by propagating neighbor information in an iterative manner until convergence in all nodes is reached. This process is computationally intensive, modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.
+
+
+
+
+\subsection{Advanced models} 
 
 
 
@@ -56,11 +97,35 @@ In these publications about graph neural networks, they implement models for lea
 % 	MPNN
 % 	GGNN (GGNN)
 
+% Powerful paper definition of the aggreation and combine
+In Graph Convolutional Networks (GCN) \cite{gcn}, the AGGREGATE is formulated as:
+$$a_v^{(k)} = MEAN(\{ ReLU(W \cdot h_u^{(k-1)}), \forall u \in N(u) \}) $$
+Where W is a learnable matrix. In GCN, the COMBINE step is omitted and the model simply aggregates node $v$ with its neighbors as $h_v^{(k)} = AGGREGATE(\{ h_v^{(k-1)}, h_u^{(k-1)}: u \in N(v) \})$.
+
+In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is replaced by an element-wise max-pooling. The COMBINE step could be a concatenation followed by a linear mapping $W \cdot [h_v^{(k-1)} | a_v^{(k)}]$ as in GraphSAGE.
+
+% Spectral graph theory approaches (Wu)%(Tkipf)
+
+% Spatial based methods (Wu)
+
+% Transductive vs inductive approaches (GraphSage)
+
+
+
+
 
 % 	Most prominent matrix factorization methods ?
 % 	Most prominent distance methods (and combinations) ?
 
+% Other types (Wu)
+% 	- Graph attention networks
+% 	- Graph autoencoders
+% 	- Graph generative networks
+% 	- graph Spatial-temporal networks
 
+
+
+\subsection{Alternatives to Graph Neural Networks}
 % Theoretic alternatives to GNN (Hamilton, GGNN)
 % 	- summary graph statistics
 % 	- kernel functions (Hamilton)
@@ -72,16 +137,11 @@ In these publications about graph neural networks, they implement models for lea
 % 	- subsequent research papers using the same datasets and training/val/test splits -> they overfit to the dataset and defeat the purpose of generalization.
 
 
-% Other types (Wu)
-% 	- Graph attention networks
-% 	- Graph autoencoders
-% 	- Graph generative networks
-% 	- graph Spatial-temporal networks
 
 
 
 
-
+\subsection{Applications of Graph neural Networks}
 
 % Most prominent applications of GNN (Wu)
 % 	- node classification
