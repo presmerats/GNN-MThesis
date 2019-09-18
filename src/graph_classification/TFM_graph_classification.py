@@ -1821,6 +1821,8 @@ def test_multiple_models(resultsdict, test_dataset, results_file=None, models_fo
         resdict['params'] = model['kwargs']
         resdict['params']['batch_size']=model['batch_size']
         resdict['params']['learning_rate']=model['learning_rate']
+        resdict['params']['weight_decay']=model['weight_decay']
+        resdict['params']['epochs']=model['epochs']
         resdict['features']='graph'
 
         datetime_str=datetime.now().strftime("%Y-%m-%d_%H_%M_%S")

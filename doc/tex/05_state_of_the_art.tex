@@ -72,6 +72,8 @@ The READOUT function can be a simple permutation invariant function such as a su
 The choice of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$ is crucial. In the next subsection the main evolutions of this model is explained. The main idea is what choices of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$  have been used for those state-of-the-art models. 
 
 
+% slidesCambdribe kipf visual plot of the GNN
+\includegraphics[scale=0.5]{./img/GNN-schema.png}\\[2cm] 
 
 
 % comment (review and remove redundancy) FOR INTRO
@@ -88,25 +90,84 @@ The choice of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$ is crucial. In t
 
 
 
-% GNN types overview: (Wu, Hamilton, Kipf )
+
+
+% spatial versus spectral methods----------------(Wu)
+Early models try to learn a node's representation by propagating neighbor information in an iterative manner until convergence in all nodes is reached. This process is computationally intensive and so recently there has been several publications that try to make this process less costly. A large number of methods apply the characteristics of convolutional networks in the computer vision domain to graph data. They are called Graph Convolutional Networks (GCN).
+
+\textbf{Graph Convolutional network:}
+
+
+% Spectral graph theory approaches (Wu)%(Tkipf)
+% Spatial based methods (Wu)
+
+The first GCN model is presented in Bruna et al.(2013) \cite{bruna} which develops a variant of graph convolution based on spectral graph theory. There have been several other publications on spectral-based graph convolutional networks \cite{deferrard}. Spectral methods usually handle the whole graph simultaneously and are difficult to parallelize or scale to large graphs. 
+
+There is another kind of convolutional approach for graphs, called spatial-based graph convolutional networks, see \cite{graphsage} and \cite{geometricdl}. These methods directly perform the convolution in the graph domain by aggregating the neighbor nodes' information. Together with sampling strategies, the computation can be performed in a batch of nodes instead of the whole graph, which improves efficiency.
+
+% GNN definitoni form kipf web -----------------------
+% Kipf web page: Weisfeiler Lehman  and GCN comparison
+
+
+The previous subsection showed that the updating of a node state, that is the current value of its attributes, can be formalized as a function of the node states and the aggregation of the neighbor nodes states:
+
+ $$ h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)})$$,
+
+where $a_v^{(k)}$ is the aggregation of the neighborhood. This same concept can be expressed in matrix notation with the adjacency matrix and matrix of weights in the following equation:
+
+
+$$H^{(k)} = f(H^{(k-1)},A) =  \sigma(AH^{(k-1)}W^{(k-1)}),$$
+
+where $W^{(k)}$ is a weight matrix for the l-th neural network layer and $\sigma(·)$ is a non-linear activation function like ReLU. Some additional constraints must be imposed on the adjacency matrix A. First, it must be added to the identity I, in order to create self-loops and allow the node attributes to be counted in the updating. Second, A must be normalized.
+
+This can then follow the Weisfeiler-Lehman algorithm on graphs, which is used to detect isomorphisms. It assigns a unique set of features for each node that uniquely describes its role in the graph. It works as follows:
+
+For all nodes $v_i \in G$:
+* Get features $\{ h_v_j \}$ of neighboring nodes $\{ v_j \}$
+* Update node feature $h_{v_i}$ = $hash(\sum_j h_v_j)$, where $hash(\cdot)$ is an injective hash function.
+Repeat for k steps until convergence.
+
+Variations of this idea will conform the foundations for the mode advanced Graph Neural Network models.
+
+%GCN definition (kipf web, slides-cambridge)
+
+The Graph Convolutional network model uses filter parameters $W^{(k)}$ that are shared over all locations in the graph:
+
+$$ h^{(k)}_{v_i} = \sigma(\sum_j \frac{1}{c_{ij}}h^{(k-1)}_{v_j}W^{(k-1)})$$
+
+where j indexes the neighboring nodes of $v_i$, and $c_{ij}$ is a normalization constant for the edge $(v_i,v_j)$. This version is a differentiable and parameterized variant of the hash function used in the original Weisfeiler-Legman algorithm. With proper initialization (Glorot) this update rule is stable.
+
+
+
+% Powerful paper definition of the aggreation and combine
+% In Graph Convolutional Networks (GCN) \cite{gcn}, the AGGREGATE is formulated as:
+% $$a_v^{(k)} = MEAN(\{ ReLU(W \cdot h_u^{(k-1)}), \forall u \in N(u) \}) $$
+% Where W is a learnable matrix. In GCN, the COMBINE step is omitted and the model simply aggregates node $v$ with its neighbors as $h_v^{(k)} = AGGREGATE(\{ h_v^{(k-1)}, h_u^{(k-1)}: u \in N(v) \})$.
+
+
+
+
+
+% GNN types overview: (-> Wu taxonomy of GNNs p4)
+%   adapt it to what has already been written 
+
+%   GNN (recurrent spatial gcns)
+% 		-> adapt
+
 % 	GCN (Hamilton, Kipf)
+%	 	-> adapt
+
+%   GGNN (recurrent spatial gcns)
+%   MPNN (composition based spatial gcns)
+%   graphSage (composition based spatial gcns)
 % 	GraphSage (Hamilton )
 % 		Weisfeiler-Legman isomorphism
 % 		Neighborhood definition
 % 		aggregator architectures(aggr, lstm, pooling)
-% 	MPNN
-% 	GGNN (GGNN)
 
-% Powerful paper definition of the aggreation and combine
-In Graph Convolutional Networks (GCN) \cite{gcn}, the AGGREGATE is formulated as:
-$$a_v^{(k)} = MEAN(\{ ReLU(W \cdot h_u^{(k-1)}), \forall u \in N(u) \}) $$
-Where W is a learnable matrix. In GCN, the COMBINE step is omitted and the model simply aggregates node $v$ with its neighbors as $h_v^{(k)} = AGGREGATE(\{ h_v^{(k-1)}, h_u^{(k-1)}: u \in N(v) \})$.
 
 In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is replaced by an element-wise max-pooling. The COMBINE step could be a concatenation followed by a linear mapping $W \cdot [h_v^{(k-1)} | a_v^{(k)}]$ as in GraphSAGE.
 
-% Spectral graph theory approaches (Wu)%(Tkipf)
-
-% Spatial based methods (Wu)
 
 % Transductive vs inductive approaches (GraphSage)
 
@@ -114,10 +175,7 @@ In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is repl
 
 
 
-% 	Most prominent matrix factorization methods ?
-% 	Most prominent distance methods (and combinations) ?
-
-% Other types (Wu)
+% Other types (Wu) -> quickly summarize them
 % 	- Graph attention networks
 % 	- Graph autoencoders
 % 	- Graph generative networks
@@ -126,15 +184,35 @@ In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is repl
 
 
 \subsection{Alternatives to Graph Neural Networks}
+
+
 % Theoretic alternatives to GNN (Hamilton, GGNN)
 % 	- summary graph statistics
 % 	- kernel functions (Hamilton)
 % 	- random walks , and matrix factorization
 % 		- factorizaion -based embeding (Hamilton)
+Alternatives to Graph Neural Networks existed long before their first appearance. Three types of alternatives exist:
+
+\begin{itemize}
+\item summary graph statistics
+\item kernel functions
+\item matrix factorization and random walk embeddings
+\begin{itemize}
+
+
+% Wu survey p2 network embeddings description
+ 
+Network embeddings aim to represent network vertices into a low-dimensional vector space, by preserving both network topology structure and node content information. This embedding can used in any downstream shallow machine learning algorithm, such as classification, regression, or clustering. Many network embedding algorithms are typically unsupervised algorithms and they can be broadly classified into three groups: matrix factorization \cite{38}, random walks \cite{40}, and deep learning approaches.
+
+
+% 	Most prominent matrix factorization methods ?
+% 	Most prominent distance methods (and combinations) ?
+
 
 
 % Observations on current research
 % 	- subsequent research papers using the same datasets and training/val/test splits -> they overfit to the dataset and defeat the purpose of generalization.
+
 
 
 
