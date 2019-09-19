@@ -5,7 +5,7 @@
 % 	- Wu
 % 	- Powerful
 % 	- Hamilton repr learn
-% 	- Hamilton graphSage
+% 	- Hamilton  and 
 % 	- GGNN
 
 % ML in graphs intro 
@@ -47,7 +47,7 @@ Graph-structured data is considered to be non Euclidean for many reasons. First,
 Second, the distance between nodes, when computed that way, does not fulfill the triangle inequality (3rd condition in the previous definition). Finally, the similarity between nodes, as computed based on the node's attributes, does not need to comply with node distances (as defined by previous sentence ).
 
 
-\subsection{Early model}
+\subsection{Original model}
 
 %First Papers, 2005 and 2009, small summary (Wu, Pitfalls)
 %	convergence methods
@@ -60,7 +60,7 @@ The idea of a graph neural network was first developed by Gori et al.(2005) \cit
 $$ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(u) \}) , h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)}),$$
 
 where $h_v(k)$ is the feature vector of node $v$ at the $k$-th iteration/layer. The initialization consists in $h_v^{(0)} = X_v$, and $N(v)$ is a set of nodes adjacent to $v$. 
-The iterative aggregation process is computationally intensive. modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.
+The iterative aggregation process is computationally intensive. modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.  To ensure convergence, the recurrent function (the composition of $COMBINE$ and $AGGREGATE$) must be a contraction mapping. A contraction map shrinks the distance between two points after mapping. GNN use the Almeida-Pineda algorithm \cite{AlmeidaPineda} to train the model. The core idea is to run the propagation process to reach a convergence point and then perform the backward procedure given the converged solution.
 
 % 2 tasks
 There are two types of tasks, where GNNs are used: node classification/regression and graph classification/regression.  Node classification or regression is when each node $v \in V$ has an associated label or target value $y_v$ and the goal is to learn a representation vector $h_v$ of $v$ such that $v$'s label or target values can be predicted as $y_v=f(h_v)$. Graph classification or regression is when given a set of graphs $\{ G1, ..., G_N\}$ and their labels or target values $\{y_1,...,y_N\}$ the goal is to learn a representation vector $h_G$ that helps to predict the label or target value of the entire graph $y_G=g(h_G)$.
@@ -100,16 +100,39 @@ Early models try to learn a node's representation by propagating neighbor inform
 
 % Spectral graph theory approaches (Wu)%(Tkipf)
 % Spatial based methods (Wu)
+% GNN types overview: (-> Wu taxonomy of GNNs p4)
+%   adapt it to what has already been written 
 
-The first GCN model is presented in Bruna et al.(2013) \cite{bruna} which develops a variant of graph convolution based on spectral graph theory. There have been several other publications on spectral-based graph convolutional networks \cite{deferrard}. Spectral methods usually handle the whole graph simultaneously and are difficult to parallelize or scale to large graphs. 
+%   GNN (recurrent spatial gcns)
+% 		-> adapt
 
-There is another kind of convolutional approach for graphs, called spatial-based graph convolutional networks, see \cite{graphsage} and \cite{geometricdl}. These methods directly perform the convolution in the graph domain by aggregating the neighbor nodes' information. Together with sampling strategies, the computation can be performed in a batch of nodes instead of the whole graph, which improves efficiency.
-
-% GNN definitoni form kipf web -----------------------
-% Kipf web page: Weisfeiler Lehman  and GCN comparison
+% 	GCN (Hamilton, Kipf)
+%	 	-> adapt
 
 
-The previous subsection showed that the updating of a node state, that is the current value of its attributes, can be formalized as a function of the node states and the aggregation of the neighbor nodes states:
+%  spectral based--------
+The first GCN model is presented in Bruna et al.(2013) \cite{bruna} which develops a variant of graph convolution based on spectral graph theory. There have been several other publications on spectral-based graph convolutional networks \cite{deferrard}.  Spectral methods define graph convolutions by introducing filters from the perspective of graph signal processing, where the graph convolution operation is interpreted as removing noise from graph signals. They rely on the eigen-decomposition of the Laplacian matrix. This has the drawback that any perturbation  of a graph results in a change of eigen basis, and the learned filters are domain dependent so tehy can't be applied to a graph with a different structure. 
+
+
+% spatial based-------------
+There is another kind of convolutional approach for graphs, called spatial-based graph convolutional networks, see \cite{graphsage} and \cite{geometricdl}. They define graph convolution based on a node's spatial relations. These methods directly perform the convolution in the graph domain by aggregating the neighbor nodes  information. The spatial-based graph convolution takes the aggregation of the central node representation and its neighbors representation to get a new representation for this node. A common practice is to stack multiple graph convolution layers together.
+
+
+% comparison spatial vs spectral -------------(Wu)
+In terms of scalablity and parallelization, the spectral methods  cost increments exponentially with the size of the graph but it needs the whole graph in memory. So these methods are not suitable for large scale data or parallelized architectures. However, spatial perform the convolution in the graph domain via aggregating the neighbor so they can handle large graphs. The computation can be performed on batches of nodes instead of the whole graph. Sampling techniques can also be used when the number of neighbors becomes prohibitive
+
+In terms of generalization of the models, the spectral-based models assume a fixed graph and are not good at generalizing to unseen graphs. Spatial-methods don't have this constraint as their convolution is performed locally and the weights used in the convolution can be shared across different locations.
+
+Finally, spectral methods are limited to work on undirected graphs whereas spatial methods can deal with multi-source inputs and directed graphs by modifying the aggregation function. Spatial-base models are attracting more attention on the scientific comunity than spectral-based models.
+
+
+
+% Spatial GCN definiton -----------------------
+% (Kipf web page: Weisfeiler Lehman  and GCN comparison)
+
+Let's see how the spatial-based graph convolutional network implements the algorithm that will iteratively generate a representation of the nodes. This algorithm depends on weights, also called coefficients, that will be later updated with stochastic gradient descent or equivalent algorithms. These updating mechanism allows for training an end to end model that containts the representation of the graph generation(the embedding) as well as the subsequent layers that will use the embedding as an input for their classification or regression task.
+
+The previous subsection showed that the updating of a node state (value of its attributes), can be formalized as a function of the node states and the aggregation of the neighbor nodes states:
 
  $$ h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)})$$,
 
@@ -120,18 +143,18 @@ $$H^{(k)} = f(H^{(k-1)},A) =  \sigma(AH^{(k-1)}W^{(k-1)}),$$
 
 where $W^{(k)}$ is a weight matrix for the l-th neural network layer and $\sigma(·)$ is a non-linear activation function like ReLU. Some additional constraints must be imposed on the adjacency matrix A. First, it must be added to the identity I, in order to create self-loops and allow the node attributes to be counted in the updating. Second, A must be normalized.
 
-This can then follow the Weisfeiler-Lehman algorithm on graphs, which is used to detect isomorphisms. It assigns a unique set of features for each node that uniquely describes its role in the graph. It works as follows:
+This functions is implementing the Weisfeiler-Lehman algorithm on graphs, which is used to detect isomorphisms. It assigns a unique set of features for each node that uniquely describes its role in the graph. It works as follows:
 
 For all nodes $v_i \in G$:
 * Get features $\{ h_v_j \}$ of neighboring nodes $\{ v_j \}$
 * Update node feature $h_{v_i}$ = $hash(\sum_j h_v_j)$, where $hash(\cdot)$ is an injective hash function.
 Repeat for k steps until convergence.
 
-Variations of this idea will conform the foundations for the mode advanced Graph Neural Network models.
+Variations of this idea conform the foundations of the more advanced Graph Neural Network models seen in this subsection, the Graph Convolutional Network and its variants (GraphSage).
 
-%GCN definition (kipf web, slides-cambridge)
+%GCN definition (kipf web, slides-cambridge)------------
 
-The Graph Convolutional network model uses filter parameters $W^{(k)}$ that are shared over all locations in the graph:
+The Graph Convolutional Network model uses filter parameters $W^{(k)}$ that are shared over all locations in the graph:
 
 $$ h^{(k)}_{v_i} = \sigma(\sum_j \frac{1}{c_{ij}}h^{(k-1)}_{v_j}W^{(k-1)})$$
 
@@ -145,42 +168,57 @@ where j indexes the neighboring nodes of $v_i$, and $c_{ij}$ is a normalization 
 % Where W is a learnable matrix. In GCN, the COMBINE step is omitted and the model simply aggregates node $v$ with its neighbors as $h_v^{(k)} = AGGREGATE(\{ h_v^{(k-1)}, h_u^{(k-1)}: u \in N(v) \})$.
 
 
+% Graph pooling modules-------------------
+
+When the model is trained to perform classification on the whole graph or a subgraph, a graph pooling module must be used. GCNs that use pooling modules are as powerful as the Weisfeiler-Legman test in distinguishing graph structures. Similar with the pooling layer of CNNs, graph pooling module could easily reduce the variance and computation complexity by down-sampling in between convolutional layers. Mean, max and sum pooling are the most common way to implement them.
 
 
+The remaining part of the subsection will present evolutions of the GCN model that most commonly known.
 
-% GNN types overview: (-> Wu taxonomy of GNNs p4)
-%   adapt it to what has already been written 
-
-%   GNN (recurrent spatial gcns)
-% 		-> adapt
-
-% 	GCN (Hamilton, Kipf)
-%	 	-> adapt
-
-%   GGNN (recurrent spatial gcns)
 %   MPNN (composition based spatial gcns)
-%   graphSage (composition based spatial gcns)
-% 	GraphSage (Hamilton )
-% 		Weisfeiler-Legman isomorphism
-% 		Neighborhood definition
-% 		aggregator architectures(aggr, lstm, pooling)
+\textbf{Message Passing Neural Networks (MPNN):} The MPNN model generalizes several existing graph convolution networks into a unified framework named Message Passing Neural Network. It consists of two phases, the message passing pahse and the readout phase. The message passing phase actually runs T-step spatial-based graph convolutions. The graph convolution operation is defined through a message function $M_t(\cdot)$ and an updating function $U_t(\cdot)$ according to 
+
+$$ h_v^t = U_t(h_v^{(t-1)}, \sum_{w \in N(v)} M_t(h_v^{t-1}, h_w^{t-1}, e_{vw}))$$
+
+The readout phase is actually a pooling operation which produces a representation of the entire graph based on hidden representations of each individual node. It is defined as 
+
+$$ y' = R(h_v^T|v \in G) $$
+
+Through the output function $R(\cdot)$, the final representation $y'$ is used to perform graph-level prediction tasks. The authors \cite{mpnn} present that several other graph convolution networks fall into their framework by assuming different forms of $U_t(\cdot)$ and $M_t(·)$.
+
+% GraphSage----------------(Hamilton )
+
+\textbf{GraphSage:} It introduces in \cite{graphsage} the notion of the aggregation function to define the graph convolution. The aggregation function essentially assembles a node's neighborhood information. It must be invariant to permutations of node orderings such as mean, sum and max. The graph convolution operation is defined as, 
+
+$$ h_v^t = \sigma(W^t \cdot aggregate_k(h_v^{t-1}, \{h_u^{k-1}, \forall u \in N(v)\}))$$
+
+Instead of updating states over all nodes, GraphSave proposed a batch-training algorithm, which improves scalability for large graphs. The learning process of GraphSage consists of three steps. First, it samples a node's local k-hop neighborhood with fixed-size. Second, it derives the central node's final state by aggregating its neighbors feature information. Finally, it uses the central node's final state to make predictions and backpropagate errors. Assuming the number of neighbors to be sampled at t^{th} hop is s_t, the time complexity of GraphSage in one batch is $O(\prod_{t=1}^{T}s_t)$. Therefore the computation cost increases exponentially with the increase of $t$. This prevents GraphSage from having a deep architecture. However, in practice, the authors find that with t=2 GraphSage already achieves high performance.
+
+% In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is replaced by an element-wise max-pooling. The COMBINE step could be a concatenation followed by a linear mapping $W \cdot [h_v^{(k-1)} | a_v^{(k)}]$ as in GraphSAGE.
+% % Transductive vs inductive approaches (GraphSage)
 
 
-In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is replaced by an element-wise max-pooling. The COMBINE step could be a concatenation followed by a linear mapping $W \cdot [h_v^{(k-1)} | a_v^{(k)}]$ as in GraphSAGE.
 
+%  GGNN
+\textbf{Gated Graph Neural Networks (GGNN):} also known as GGNN, this kind of GNN employ the gated recurrent units (GRU) \cite{GRU} as the recurrent function, reducing the recurrence to a fixed number of steps. The spatial graph convolution of GGNNs is defined as 
 
-% Transductive vs inductive approaches (GraphSage)
+$$ h_v^t = GRU(h_v^{(t-1)}, \sum_{u \in N(v)} Wh_u^t) $$
 
-
-
+For updating of the weights, the GGNNs use back-propagation through time (BPTT) to learn the parameters. The advantage is that it no longer needs to constrain parameters to ensure convergence. However, the downside of training by BPTT is that it sacrifices efficiency both in time and memory. This  is especially problematic for large graphs, as GGNNs need to run the recurrent function multiple times over all nodes, requiring intermediate states of all nodes to be stored in memory.
 
 
 % Other types (Wu) -> quickly summarize them
-% 	- Graph attention networks
-% 	- Graph autoencoders
-% 	- Graph generative networks
-% 	- graph Spatial-temporal networks
 
+Other types of GGNs are the Graph attention Networks, Graph Auto-encoders, Graph Generative Networks and Graph Spatio-temporal Networks.
+
+\textbf{Graph Attention Networks} are similar to GCNs and seek an aggregation function to fuse the neighboring nodes, random walks, and candidate models in graphs to learn a new representation. The key difference is that graph attention networks employ attention mechanisms which assign larger weights to the more important nodes, walks, or models. The attention weight is learned together with neural network parameters within an end-to-end framework.
+
+\textbf{Graph Auto-encoders} are unsupervised learning frameworks which aim to learn a low dimensional node vectors via an encoder, and then reconstruct the graph data via a decoder. Graph autoencoders are a popular approach to learn the graph embedding, for both plain graphs without attributed information as well as attributed graphs. For plain graphs, many algorithms directly preprossess the adjacency matrix, by either constructing a new matrix (i.e., pointwise mutual information matrix) with rich information, or feeding the adjacency matrix to an autoencoder model and capturing both first order and second order information. For attributed graphs, graph autoencoder models tend to employ GCN as a building
+block for the encoder and reconstruct the structure information via a link prediction decoder.
+
+\textbf{Graph Generative Networks} aim to generate plausible structures from data. Generating graphs given a graph empirical distribution is fundamentally challenging, mainly because graphs are complex data structures. To address this problem, researchers have explored to factor the generation process as forming nodes and edges alternatively, to employ generative adversarial training. One promising application domain of graph generative networks is chemical compound synthesis. In a chemical graph, atoms are treated as nodes and chemical bonds are treated as edges. The task is to discover new synthesizable molecules which possess certain chemical and physical properties. 
+
+\textbf{Graph Spatial-temporal Networks} aim to learn unseen patterns from spatial-temporal graphs, which are increasingly important in many applications such as traffic forecasting and human activity prediction. For instance, the underlying road traffic network is a natural graph where each key location is a node whose traffic data is continuously monitored. By developing effective graph spatial temporal network models, we can accurately predict the traffic status over the whole traffic system. The key idea of graph spatial-temporal networks is to consider spatial dependency and temporal dependency at the same time. Many current approaches apply GCNs to capture the dependency together with some RNN or CNN to model the temporal dependency.
 
 
 \subsection{Alternatives to Graph Neural Networks}
@@ -191,18 +229,16 @@ In the pooling variant of GraphSAGE \cite{graphsage}, the mean operation is repl
 % 	- kernel functions (Hamilton)
 % 	- random walks , and matrix factorization
 % 		- factorizaion -based embeding (Hamilton)
-Alternatives to Graph Neural Networks existed long before their first appearance. Three types of alternatives exist:
+Alternatives to Graph Neural Networks existed long before their first appearance: summary graph statistics, kernel functions, network embeddings( matrix factorization and random walks).
 
-\begin{itemize}
-\item summary graph statistics
-\item kernel functions
-\item matrix factorization and random walk embeddings
-\begin{itemize}
+Summary statistics aim to capture very specific features of the whole graph , hoping that they will allow the model to discriminate or predict values. The most common ones are the average node degree, the clustering coefficient as well as the assortativity. They usually lack a lot of representation flexibility and fail to correctly capture aspects of the graph structure that are not reflected by those summary statistics
 
+
+Kernel functions allow to capture much more signal from the graph structure, and then can be used to build powerful classification or regression algortihms. They are also used in unsupervised learning approaches. The drawback from kernels is that they are not suitable for large scale graphs, as they need to have the whole graph in memory.
 
 % Wu survey p2 network embeddings description
  
-Network embeddings aim to represent network vertices into a low-dimensional vector space, by preserving both network topology structure and node content information. This embedding can used in any downstream shallow machine learning algorithm, such as classification, regression, or clustering. Many network embedding algorithms are typically unsupervised algorithms and they can be broadly classified into three groups: matrix factorization \cite{38}, random walks \cite{40}, and deep learning approaches.
+Network embeddings aim to represent network vertices into a low-dimensional vector space, by preserving both network topology structure and node content information. This embedding can be used in any downstream shallow machine learning algorithm, such as classification, regression, or clustering, in the same way that the output of a GGN is. Many network embedding algorithms are typically unsupervised algorithms and they can be broadly classified into three groups: matrix factorization \cite{38}, random walks \cite{40}, and deep learning approaches.\\
 
 
 % 	Most prominent matrix factorization methods ?
@@ -218,34 +254,45 @@ Network embeddings aim to represent network vertices into a low-dimensional vect
 
 
 
-
+\\
 \subsection{Applications of Graph neural Networks}
 
-% Most prominent applications of GNN (Wu)
-% 	- node classification
-% 	- node representation learning
-% 	- graph classification
-% 	- graph generation
-% 	- spatial-temporal forecastting
 
-% 	- visualization
-% 	- node clustering
-% 	- link prediction
-% 	- graph partition
-
+%--ML--tasks
+Finally, this section presents the most important applications of Graph Neural Networks and its variants. The applications in several specific domains all fall under the following list of machine learning tasks to which GNNs are showing good results:
+\begin{itemize}
+	\item node classification
+	\item graph classification
+	\item graph generation
+	\item graph visualization
+	\item node clustering
+	\item link prediction
+	\item graph partition
+\end{itemize}
 
 
 % 	- Computer vision
+\textbf{Computer Vision:} in this domain, research has been done to perform scene graph generation, point cloud classification and segmentation, and action recognition. In scene graph generation, semantic relationships between objects facilitate the understanding of the semantic meaning behind a visual scene. Given an image, scene graph generation models detect and recognize objects and predict semantic relationships between pairs of objects \cite{121}. In point clouds classification and segmentation, \cite{125}, the task is to identify the objects depicted by point clouds, by using graph convolution networks to explore the topological structure. In action recognition, persons recognized in an image(or video) have their joints detected and their connections form a graph that can be analysed with spatial-temporal neural networks to classify human actions.
 
 % 	- recommender systems (GNN Hamilton repr learning,)
+\textbf{Recommender Systems:} graph based recommender systems take items and users as nodes. By leveraging the relations between items and items, users and users, users and items, as well as content information, graph-based recommender systems are able to produce high-quatlity recommendations. The key to a recommender system is to score the importance of an item to an user. AS a result, it can be cast as a link prediction problem. The goal is to predict the missing links between users and items(\cite{9},\cite{10},\cite{11}).
+
+% 	- Chemistry
+\textbf{Biochemistry:} graph neural networks are used to classify the molecules structure. Nodes represent atoms and edges represent chemical bonds. Node classification, graph classification and graph generation are the three main tasks. Examples include learning molecular fingerprints \cite{52}, predict molecular properties \cite{mpnn} and to synthesize chemical compounds \cite{65}
+
+
+\textbf{Program verification:} is another fruitful \cite{ggnn}, \cite{139} and \cite{code2vec}) domain where Graph Neural Networks are showing their potential. Instructions follow a sequence of execution with loops, branches and calls to other instructions. This kind of modeling of the code allows for verification of correct variable usage (avoid usage after free a memory buffer), variable name guessing and function renaming for correct understanding of code functionality. 
+% 	- program verification (GGNN, hamilton repr-learning, )
+% 		- Code analysis with machine learning
+% 		- recent research in papers
+% 		- code2vec paper -> renaming 
+% 		- Microsoft succesfull paper using GGNN
 
 % 	- traffic
 
-% 	- Chemistry
-
-% 	- program verification (GGNN, hamilton repr-learning, )
-
 % 	- inductive logic (GGNN)
+
+
 
 
 
@@ -258,10 +305,6 @@ Network embeddings aim to represent network vertices into a low-dimensional vect
 
 
 
-% Code analysis with machine learning
-% 	recent research in papers
-
-% 	code2vec paper -> renaming 
 
 
 
