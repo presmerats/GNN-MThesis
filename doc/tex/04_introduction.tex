@@ -1,27 +1,46 @@
 
 \section{Introduction}
 
-Introduction...
-%Introduction (extend abstract)
-Quick sumarial definition of graph neural networks (Reference papers).
-	what: embedding of the nodes or the graph
-	how: 2 basic methods matrix factorization and distance methods
-	why: used in node and graph regression/classification. Promiment applications are semi-supervised node classification in big size graphs and graph classification for proteins
 
-Prominent application areas
-	social network analysis
-	recommender systems
-	combinatorial optimization
-	biochemistry, molecules/proteins classification
-	geometric deep learning: 3d object meshes
+% context of appearance of Graph Neural Networks
+Data structured as graphs exists in many domains like biology, chemistry, image processing, recommender systems and social networks analysis to name a few. Using this data in a machine learning model has proven to be difficult due to the high dimensionality and non-Euclidean property of graph data. Over the years, several approaches to train machine learning models on graph structured data by summarizing or representing the information in a simplified way have been used. However, those approaches are used as a preprocessing step, not being part of the training process. Graph Neural Networks, a recent novel technique, allows to create an end to end machine learning model that is simultaneously trained to learn a representation of graph structured data and to fit a predictive model on it. 
 
 
-% Motivation
-	Fact: attention in the scientific comunity <- increase of papers in this area.
-	conclusions
+% quick Graph Neural Network definitioni
+% what: embedding of the nodes or the graph
+% how: 2 basic methods matrix factorization and distance methods
+% why: used in node and graph regression/classification. Promiment applications are semi-supervised node classification in big size graphs and graph classification for proteins
+Graph Neural Networks \cite{gori} learn a representation of the graph in a way that it creates an embedding of the nodes of graph in a low dimensional space. The end to end training allows this representation to be learned with the purpose of reflect the structural properties of the graph that are of interest for the problem at hand. The representation of nodes as an embedding is created in an iterative way by aggregating information from the neighbors of each node. This process is computationally costly, so modern implementations improve the speed by limiting the number of iterations or by using sampling techniques. 
+% regress classif
+% node level
+% graph level
+This node embedding representation can be used by a downstream machine learning that can also be trained at the same time as the embedding. When the task requires to classify or to do a regression at the node level, the representation of each node in the embedding is directly used. When the task requires to classify or predict values at the graph or subgraph level, then pooling techniques can be used to obtain a graph or subgraph level representation.
+
+% 2 families of Graph neural Networks : spatial and spectral based
+The most prominent improved versions of Graph Neural Networks apply the ideas of Convolutional Neural Networks to graphs, therefore known as Graph Convolutional Networks. They can be categorized in two main families, the spectral based methods and the spatial based methods. Spectral-based methods rely on the eigen-decomposition of the adjacency matrix of the graph, and this makes them less suitable for processing large data or for generalizing to unseen data. On the other hand, spatial-based methods rely on the aggreagtion of information from the neighborhood of each node, which allow the algorithm to process the graph in batches and so to be able to process large graphs.
+
+
+% what problems it solves with state-of-the-art performance
+% attiring attention in the scientific community
+
+State-of-the-art performance has been attained for semi-supervised learning on large graphs, where a small proportion of nodes have a label or target value and the rest are unlabelled. The task consists in assigning labels to the rest of nodes that are unlabelled (\cite{gcn}, \cite{graphsage}). There has been also a breakthrough in the task of graph classification in protein analysis \cite{q9}. That is one of the reasons that the scientific community is getting more interest in that area, with a significant increase of publications since 2016.
+
+% what are their main application areas
+In those recent years, publications showing the application of Graph Neural Networks have appeared in the domains of biochemistry, computer vision, recommender systems, combinatorial optimization, traffic optimization, inductive logic and program verification. The main tasks that Graph Neural Networks solve can be summarized as node(graph) classification, node(graph) regression, link prediction,  node clustering, graph partition and graph visualization.
+
+	
 
 % Goals
-	test gnn modeling techniques to known and novel problems. chosen novel problems: Girvan_newmann approximation and compiled code function classification
+% Understand those types of models
+% Apply them to solve problems in a novel way
+The goal of this master's thesis is to apply Graph Neural Network models to different problems to create a novel solution. The idea is to get to know how Graph Neural Networks are used in each situation. Two problems are explored: Girvan-Newmann algorithm approximation and compiled code function classification. They correspond to the two main tasks that Graph Neural Network perform with success, semi-supervised learning of nodes on a graph and supervised graph classification. 
+
+
+% Motivation of the project
+Graph Neural Networks seem to be a promising way of solving graph-related problems, with applications in many domains. The time seems right to jump into learning about the most recent models since they have attained state-of-the-art performance on some of the tasks they have solved.
+
+
 
 % organisation of the thesis
-	SOTA, methodology, implementation, evaluation, conclusion
+%	SOTA, methodology, implementation, evaluation, conclusion
+The thesis is organized in the following way: the next section will explain the state-of-the-art in Graph Neural Network models by presenting the may models, their internals and the problems they have solved. Then, in section three, the methodology followed in the experiments is presented. After that, section four will go through an overview of the implementation of the experiments, whereas in section five the results of the experiments are summarized. Finally, in section six the conclusion of the thesis is presented.

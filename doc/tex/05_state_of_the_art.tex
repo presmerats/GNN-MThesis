@@ -69,7 +69,7 @@ For node classification/regression, the node representation $h_v^{(K)}$ of the f
 $$h_G = READOUT(\{h_v^{(K)} | v \in G\})$$
 The READOUT function can be a simple permutation invariant function such as a summation or a more sophisticated graph-level pooling function.
 
-The choice of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$ is crucial. In the next subsection the main evolutions of this model is explained. The main idea is what choices of $AGGREGATE^{(k)}(\dot)$ and $COMBINE^{(k)}(\dot)$  have been used for those state-of-the-art models. 
+The choice of $AGGREGATE^{(k)}(\cdot)$ and $COMBINE^{(k)}(\cdot)$ is crucial. In the next subsection the main evolutions of this model is explained. The main idea is what choices of $AGGREGATE^{(k)}(\cdot)$ and $COMBINE^{(k)}(\cdot)$  have been used for those state-of-the-art models. 
 
 
 % slidesCambdribe kipf visual plot of the GNN
@@ -115,7 +115,7 @@ The first GCN model is presented in Bruna et al.(2013) \cite{bruna} which develo
 
 
 % spatial based-------------
-There is another kind of convolutional approach for graphs, called spatial-based graph convolutional networks, see \cite{graphsage} and \cite{geometricdl}. They define graph convolution based on a node's spatial relations. These methods directly perform the convolution in the graph domain by aggregating the neighbor nodes  information. The spatial-based graph convolution takes the aggregation of the central node representation and its neighbors representation to get a new representation for this node. A common practice is to stack multiple graph convolution layers together.
+There is another kind of convolutional approach for graphs, called spatial-based graph convolutional networks, see \cite{graphsage} and \cite{geometricdl}. They define graph convolution based on a node's spatial relations. These methods directly perform the convolution in the graph domain by aggregating the neighbor nodes  information. The spatial-based graph convolution takes the aggregation of a node its neighbors to get a new representation for it. A common practice is to stack multiple graph convolution layers together.
 
 
 % comparison spatial vs spectral -------------(Wu)
