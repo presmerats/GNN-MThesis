@@ -77,13 +77,21 @@ Since Graph Neural Network models available are only prepared to learn represent
 %  GCN training
 %  graphSage training
 
-The experiments consist in training several types of models on the task of predicting the node betweenness of a derived graph from the original dataset, using the previous listed  datasets. The types of models are variations of GCN and GraphSAGE implemented in PyTorch Geometric python library.
+The experiments consist in training several types of models on the task of predicting the node betweenness of a derived graph from the original dataset, using the previous listed  datasets. The types of models are variations of GCN and GraphSAGE implemented in PyTorch Geometric python library:
+\begin{itemize}
+	\item GCN, GraphSage or Gated Graph Neural Networks
+	\item some fully connected layers at the end
+\end{itemize}
+Based on this architecture, different adjustments on the number of layers, the number of units of layers, and other hyper parameters will be modified during hyper-parameter search.
 
 \textbf{Evaluation procedure}
 %  inspecting the distribution of results
 To evaluate the results, the performance metric used is the Normalized Root Mean Squared Error (NRMSE). 
 
-As a complement to understand how performant a model is, the distribution of predicted values versus their true target values is compared in a scatter plot. The cloud of points is plotted in the 2D, to be able to see if if deviates from the 45º line (y=x line). 
+As a complement to understand how performant a model is, the distribution of predicted values versus their true target values is compared in a scatter plot. The cloud of points is plotted in the 2D, to be able to see if if deviates from the 45º line (y=x line). \\
+\\
+
+
 
 
 \subsection{Compiled code function classification}
@@ -119,19 +127,56 @@ Finally, with the dataset correctly labeled and with all its features in place, 
 \textbf{Data preparation}
 % 3.2) data gathering process
 
+Let's first review the complex data preparation process. There's no open source dataset with the properties needed for the experiment so it will be created from scratch.
+
+
+
 \textbf{Data sources}
 % sources of compiled code: malware samples(why not?  unlabeled and on top of it obfuscated)
 %                           well-known softare: webservers, cryptographic libraries, disk utilis,  copyright protection software
+Since the main audience could be malicious software analysts, one possibility of getting data from would be to collect analyzed malicious code. It turns out that there's not many sources of analyzed malicious code, and also, malicious code is plenty of obfuscation techniques, which would be an entire different experiment to deal with. 
+
+Instead, the preferred strategy is to use well-known software that contains the functionality according to the predefined classes. A decision was need to be made on the set of labels that the dataset will contain. A set of main functionalities related to general purpose applications would be:
+\begin{itemize}
+	\item network
+	\item cryptography
+	\item disk access
+	\item memory manipulation
+\end{itemize}
+According to that list, several open source tools and libraries are collected, in order to have at least several binaries in each of the previous categories. To that end, open source binaries from web servers, email clients, ftp servers and clients, cryptographic libraries, disk utilities and C library are collected.
+
+
+
+
 
 \textbf{Data transformation}
 % data transformation: plugin to extract assembly code as a graph. 
-%                      abstract idea - each instruction/register/memaddr... is a node
-%                                     in which instruction it is used is a vertex
+For generating the dataset, a plugin in Python programming language has been developed to be used inside a disassembler program, namely the free version of IDA, a popular professional disassembler program.
+
+
+% abstract idea - each instruction/register/memaddr... is a node
+% in which instruction it is used is a vertex
 % 									  order of executions of instructions form vertex between then + branchs/calls/loops...
-%									NetworkX format from txt files
+%									NetworkX format from txt files 
+This plugin visits all the functions detected in a binary and extracts the information of instructions, operands and cross-references to generate a graph of the relationship between them. Every instruction, operand, memory address or constant is a node of the graph. Every relationship between them is a vertex of that graph. There's worth mentioning that instructions are executed one after another and so usually an instruction will be linked to its previous and next instruction in the execution flow. However, sometimes loops, conditional branches and function calls modify this sequential execution flow.
+
+The graph is saved in a format suitable for the Python library NetworkX to read it and import it. The format consists of 2 text files, one with the list of nodes and their attributes, the other with the list of edges and their attributes.
+
 
 % data transformation for baseline models: summary statistics of graphs, and other topological features
 % data transformation for nlp models: Bag of words with TF-IDF
+Besides from the graph representation of each function of a binary file, the attributes that will be used by baseline models are also generated. There are topological features from the graphs and features extracted directly from the code itself, like the Bag of Words embedding (fined tuned by TF-IDF).
+
+
+
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=0.55\linewidth]{img/Features_and_models_diagram.png}
+    \caption{Features exracted from the dataset samples and their relationship with the models trained}\label{fig:Features_diagram}
+\end{figure}
+
+All of these features and graph representation will be transformed into a Dataset module from Pytorch Geometric library. This will allow the training of Graph Neural Network models to use the complete ecosystem of PyTorch Geometric for loading graphs, training models and test their performance.
 
 
 
@@ -144,32 +189,64 @@ Finally, with the dataset correctly labeled and with all its features in place, 
 		%            final sets of labels v1,v2,v3
 
 
+In the first approach, it was decided that all functions of a binary will be labelled with the main purpose of the binary. For example, all functions of a web server would be labelled network. This approach is too coarse grained and therefore may lead to useless classification models.
+ 
+A second approach would consist in obtaining the open source software sources and then compiling it with debugging information. This type of compilation maintains the original function names that developers assigned to functions. Then after obtaining the assembler code of each functions and its original name, some simple rule where created to derive a label from the function name. Basically the appearance of keyword would drive this process. Additionally,human supervision has been applied to improve the labeling assignments. 
+
+Four different versions of the dataset have been generated:
+\begin{itemize}
+	\item v0: each binary and all its functions have the same label. A coarse grained and noisy approach
+	\item v1: 10 different labels have been chosen, and function labels has been assigned by keyword appearance in the debugging information (original function name)
+	\item v2: a list of topic and tasks has been compiled and combined to generate 120 different labels. Keyword appearance rules and human supervision have been used to assign labels
+	\item v3: a reduced list of topic and tasks has been compiled and combined to generate 24 different labels. Keyword appearance rules and human supervision have been used to assign labels
+\end{itemize}
+The idea was to find the correct granularity of the dataset. Trained models tend to perform better in the smaller sets of labels (v0 and v1), but there is the risk that the model does not capture any of the information of interest. 
+
+
+
+\textbf{Model trainings}
 % 3.4) Experiments list (each attempt with different datasets, baselines, nlp and ggnn)
 
+The experiments performed in this second tasks are first, a reproduction of some of the results in graph classification tasks by Graph Neural Networks to make sure that we are able to attain a similar performance with the tools at hand (Pytorch implementation of Graph Neural Network components). Second, the baseline and graph neural network models will be trained on the datasets v0 to v3. 
+
+\textbf{Graph classification benchmark}
 % graph classification experiment reproduciblity
 The graph classification tasks on the datasets Enzymes, Proteins, IMDB binary and QM9 are reproduced with different model architectures than the ones on the benchmarks of Pytorch Geometric library. The results are based on the f1-macro average score.
 
 
 
 
-\begin{figure}[H]
-    \centering
-        \includegraphics[width=0.65\linewidth]{img/Features_and_models_diagram.png}
-    \caption{Features exracted from the dataset samples and their relationship with the models trained}\label{fig:Features_diagram}
-\end{figure}
-
-
-
+\textbf{Compiled code classification models}
 % function renaming experiments
 
 % baseline models training (noisy,v1,v2,v3)
 % nlp models training      (noisy,v1,v2,v3)
 % gnn models training      (noisy,v1,v2,v3)
 
+A set trainings will be performed on baseline models, Bag-of-word models and GNNs.
+
+The set of baseline models used are:
+\begin{itemize}
+	\item Logistic Regression
+	\item Decition trees
+	\item Random Forest
+	\item XGBoost
+	\item MLP (Multi-layer perceptron)
+\end{itemize}
+
+The set of Bag-of-words models consists of the baseline models of the previous list, but using the bag-of-word tfidf embedding as an input. There will also be mixed features from topological features or code features, concatenated with the embeddinf from tfidf.
+
+The set of Graph Neural Networks used consists of combinations of:
+\begin{itemize}
+	\item pooling layers to reduce dimensionality
+	\item GCN, GraphSage or Gated Graph Neural Networks
+	\item global pooling to extrat a graph level set of attributes
+	\item some fully connected layers at the end
+\end{itemize}
+
+Based on this architecture, different adjustments on the number of layers, the number of units of layers, and other hyper parameters will be modified during hyper-parameter search.
 
 
 
-Building the dataset:
-	- not any available dataset, -> selection of binaries + compilation with symbols 
-	 + manual labelling
-	labelling problem, choosing the correct granularity of the label (each binary a label= a lot of noise since all binaries have almost all functionalities implemented, topics=10 classes, topics-task but summarized=24 classes, fine grained topic-task=170 clases)
+\textbf{Evaluation}
+To evaluate model performance, the f1-score with a macro average will be used. F1-score allows to measure precision and recall at the same time (it's the harmonic mean). Macro averages in an imbalanced context allow for the performance to be measure as if all classes should be equally performant. Macro averages protect the training of the model from the possibility that it learns to classify only the majority class.
