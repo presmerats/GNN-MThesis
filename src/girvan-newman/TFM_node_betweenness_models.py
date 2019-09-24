@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
-from torch_geometric.nn import SAGEConv
+from torch_geometric.nn import SAGEConv, ChebConv
 import torch.nn as nn
 import traceback
 import matplotlib.pyplot as plt
@@ -189,9 +189,12 @@ class Net6(torch.nn.Module, MyNet):
         self.convs = torch.nn.ModuleList()
         for i in range(num_layers - 1):
             self.convs.append(GCNConv(d1, d1 ))
+        self.bn1 = nn.BatchNorm1d(d1)
         self.fc1 = nn.Linear(d1, d2)
+        self.bn2 = nn.BatchNorm1d(d2)
         self.fc2 = nn.Linear(d2, d3)
-        self.fc3 = nn.Linear(d3, num_features)
+        self.bn3 = nn.BatchNorm1d(d3)
+        self.fc3 = nn.Linear(d3, 1) # one output for regression
         self.num_layers = num_layers
         self.d1 = d1
         self.d2 = d2
@@ -204,12 +207,184 @@ class Net6(torch.nn.Module, MyNet):
         x = F.relu(self.conv1(x, edge_index))
         for conv in self.convs:
             x = F.relu(conv(x, edge_index))
+            x = self.bn1(x)
             x = F.dropout(x, training=self.training)
+        
+
         # 3 fc layers
-        x = F.relu(self.fc1(x))
+        x = F.relu(self.bn2(self.fc1(x)))
         x = F.dropout(x, training=self.training)
-        x = F.relu(self.fc2(x))
+        x = F.relu(self.bn3(self.fc2(x)))
         x = self.fc3(x)
+
+        # output as regression target
+        return x
+
+
+    
+class Net7(torch.nn.Module, MyNet):
+    def __init__(self, d1=90,d2=80,d3=50,num_features=1, num_classes=1, num_layers=4,dK=10, **kwargs):
+        super(Net7, self).__init__()
+        self.conv1 = ChebConv(num_features, d1,K=dK,bias=False)
+        self.convs = torch.nn.ModuleList()
+        for i in range(num_layers - 1):
+            self.convs.append(ChebConv(d1, d1,K=dK ))
+        self.bn1 = nn.BatchNorm1d(d1)
+        self.fc1 = nn.Linear(d1, d2)
+        self.bn2 = nn.BatchNorm1d(d2)
+        self.fc2 = nn.Linear(d2, d3)
+        self.bn3 = nn.BatchNorm1d(d3)
+        self.fc3 = nn.Linear(d3, 1) # one output for regression
+        self.bn4 = nn.BatchNorm1d(1)
+        self.num_layers = num_layers
+        self.d1 = d1
+        self.d2 = d2
+        self.d3 = d3
+        self.dK = dK
+
+        
+    def forward(self, data):
+        """
+            things to try:
+             - GCNConv, ChebConv, GraphSage
+             - K: hops
+                ChebConv:
+                K=1 -> 4 layers, 100 epochs better
+                K=10 -> layer 4, 100 epochs better,
+                k=20 -> layer 4, epochs 50 better and spread
+                bias=False is not good. additive bias ok
+             - relu -> remove for regression?
+                relu everyvwhere -> k=20,l4,e50 spread but bad
+                no relu  -> k=20,l4,e50 saturated and
+
+                relu in each gcn layer
+                +
+                bn-relu-dropout in each fc layer
+                = more spread, tendency up, but very bad..
+             - batchnorm
+             - dropout
+
+
+            best chebconvs
+             K  layers   epochs  rmse
+             20 100     80       0.937
+             2  100     20       0.836
+            20  4       20       0.955
+
+
+            progressive increase of epochs in 2-100-20 what is the rmse? down,min,up= would be ok
+                      random would be bad
+
+                      -> instability one epoch <1 the next >7...strange
+
+        """
+        x, edge_index = data.x, data.edge_index
+
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        for conv in self.convs:
+            x = conv(x, edge_index)
+            x = F.relu(x)
+            x = self.bn1(x)
+            #x = F.dropout(x, training=self.training)
+        
+
+        # 3 fc layers
+        x = self.fc1(x)
+        x = self.bn2(x)
+        x = F.relu(x)
+        #x = F.dropout(x, training=self.training)
+        
+        x = self.fc2(x)
+        x = self.bn3(x)
+        #x = F.relu(x)
+
+        x = self.fc3(x)
+        #x = self.bn4(x)
+
+        # output as regression target
+        return x
+
+class Net8(torch.nn.Module, MyNet):
+    def __init__(self, d1=90,d2=80,d3=50,num_features=1, num_classes=1, num_layers=4,dK=10, **kwargs):
+        super(Net8, self).__init__()
+        self.conv1 = ChebConv(num_features, d1,K=dK,bias=False)
+        self.convs = torch.nn.ModuleList()
+        for i in range(num_layers - 1):
+            self.convs.append(ChebConv(d1, d1,K=dK ))
+        self.bn1 = nn.BatchNorm1d(d1)
+        self.fc1 = nn.Linear(d1, d2)
+        self.bn2 = nn.BatchNorm1d(d2)
+        self.fc2 = nn.Linear(d2, d3)
+        self.bn3 = nn.BatchNorm1d(d3)
+        self.fc3 = nn.Linear(d3, 2) # one output for regression
+        self.bn4 = nn.BatchNorm1d(2)
+        self.fc4 = nn.Linear(2,1)
+        self.num_layers = num_layers
+        self.d1 = d1
+        self.d2 = d2
+        self.d3 = d3
+        self.dK = dK
+
+        
+    def forward(self, data):
+        """
+            things to try:
+             - GCNConv, ChebConv, GraphSage
+             - K: hops
+                ChebConv:
+                K=1 -> 4 layers, 100 epochs better
+                K=10 -> layer 4, 100 epochs better,
+                k=20 -> layer 4, epochs 50 better and spread
+                bias=False is not good. additive bias ok
+             - relu -> remove for regression?
+                relu everyvwhere -> k=20,l4,e50 spread but bad
+                no relu  -> k=20,l4,e50 saturated and
+
+                relu in each gcn layer
+                +
+                bn-relu-dropout in each fc layer
+                = more spread, tendency up, but very bad..
+             - batchnorm
+             - dropout
+
+
+            best chebconvs
+             K  layers   epochs  rmse
+             20 100     80       0.937
+             2  100     20       0.836
+            20  4       20       0.955
+
+
+            progressive increase of epochs in 2-100-20 what is the rmse? down,min,up= would be ok
+                      random would be bad
+
+                      -> instability one epoch <1 the next >7...strange
+
+        """
+        x, edge_index = data.x, data.edge_index
+
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        for conv in self.convs:
+            x = conv(x, edge_index)
+            x = F.relu(x)
+            x = self.bn1(x)
+            #x = F.dropout(x, training=self.training)
+        
+
+        # 3 fc layers
+        x = self.fc1(x)
+        x = self.bn2(x)
+        x = F.relu(x)
+        #x = F.dropout(x, training=self.training)
+        
+        x = self.fc2(x)
+        x = self.bn3(x)
+        #x = F.relu(x)
+
+        x = self.fc3(x)
+        x = self.fc4(x)
 
         # output as regression target
         return x

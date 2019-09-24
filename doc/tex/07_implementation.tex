@@ -8,7 +8,7 @@
 % organization: the tasks selected are G-N approximation and  
 The goal of this master's thesis is to apply Graph Neural Network models to different problems to create a novel solution. The idea is to get to know how Graph Neural Networks are used in each situation. Two problems are explored: Girvan-Newman algorithm approximation and compiled code function classification. They correspond to the two main tasks that Graph Neural Network perform with success, semi-supervised learning of nodes on a graph and supervised graph classification. 
 
-This section will present the configuration of the experiments performed in the thesis. First, the Girvan-Newman approximation experiment is explained. Then the compiled code function classification experiment is described last. In each case, context, goals and motivation are described first. Then the process of data preparation is explained and finally how the part of training a model is executed is summarized.
+This section will present the configuration of the experiments performed in the thesis. First, the Girvan-Newman approximation experiment is explained. Then the compiled code function classification experiment is described last. In each case, context, goals and motivation are described first. Then a preliminary test is performed on well-known benchmark datasets to verify the in use works correctly in the computer without any problem. Then the process of data preparation is explained and finally how the part of training a model is executed is summarized.
 
 % 2) Girvan-Newman approximation
 \subsection{Girvan-Newman algorithm approximation}
@@ -42,6 +42,11 @@ The first one, using supervised learning for doing node attribute value regressi
 %               1) approxima edge_betweenness of all the nodes in each iteration of GN
 % 				2) in each iteration, compute edge -betweenns of some nodes, then use GCN in a transductive setting to expand to the rest of nodes(hopefully faster)
 In the second approach, by using semi-supervised learning, one can compute the edge betweenness of several nodes and then train the model to predict the value for the rest of edges of the graph. In that case, the Girvan-Newman algorithm would, in each iteration, first compute the edge betweenness of some edges in the normal way, then use the model to approximate the edge betweenness of the rest of the edges of the graph. By the nature of the Graph Neural Networks that have attained state-of-the-art performance on semi-supervised learning, the second approach seems the most realistic one.
+
+
+\textbf{Preliminary test}
+
+As a way to verify that available code from published research works correctly on computer on which the experiments will be performed, a published experiment is reproduced. A task of semi-supervised classification is reproduced locally, training a set of GCN, ChebNet, GAT , SG and APPNP models. The Cora dataset is used for this task.  The Cora dataset consists of 2708 scientific publications classified into one of seven classes. The goal is to verify that the computer that will support the experiments can train those models without memory problems or other types of problems. Also it is a way to check that some configurations of hyper-parameters yield good results for later comparison with the real experiments. 
 
 
 % 2.2) data gathering process
@@ -79,10 +84,14 @@ Since Graph Neural Network models available are only prepared to learn represent
 
 The experiments consist in training several types of models on the task of predicting the node betweenness of a derived graph from the original dataset, using the previous listed  datasets. The types of models are variations of GCN and GraphSAGE implemented in PyTorch Geometric python library:
 \begin{itemize}
-	\item GCN, GraphSage or Gated Graph Neural Networks
+	\item GCN, GraphSage, ChebNet or Gated Graph Neural Networks
 	\item some fully connected layers at the end
 \end{itemize}
 Based on this architecture, different adjustments on the number of layers, the number of units of layers, and other hyper parameters will be modified during hyper-parameter search.
+
+If this experiment does not attain an acceptable performance, it will be modified into aproximate other graph measures like node betweenness centrality or PageRank.
+
+Another variation of this experiment, could be to transform the regression nature to a classification setup, where the graph measure of interest is divided in ranges and the model is trained to classify each node or edge feature into one of the available ranges
 
 \textbf{Evaluation procedure}
 %  inspecting the distribution of results

@@ -48,6 +48,7 @@ def writeAdjacencyMatrixToDisk(G, filename='temp_adjacency_matrix.txt'):
     theline = []
     careturn = ""
     for ei in range(G.edge_index.size()[1]):
+        print(ei)
         if int(G.edge_index[0,ei].item()) != _ni:
             newline=True
             _ni=int(G.edge_index[0,ei].item())
@@ -272,7 +273,62 @@ def shuffleTrainTestMasks(data, trainpct = 0.7):
     
     data.train_mask = transformMask(data.train_mask)
     data.test_mask = transformMask(data.test_mask)
-  
+    
+    #print(data.train_mask)
+    #print(data.test_mask)
+
+    # print min,mean, median, max, sd of each split
+    ytrains = data.y[data.train_mask].cpu()
+    ytests =  data.y[data.test_mask].cpu()
+
+
+
+def shuffleTrainTestMasks_analysis(data, trainpct = 0.5):
+    ysize = list(data.y.size())[0]
+    data.train_mask = torch.zeros(ysize,1, dtype=torch.long)
+    data.train_mask[int(ysize*trainpct):] = 1
+    data.train_mask = data.train_mask[torch.randperm(ysize)]
+    data.test_mask = torch.ones(ysize,1, dtype=torch.long) - data.train_mask
+    
+    data.train_mask = transformMask(data.train_mask)
+    data.test_mask = transformMask(data.test_mask)
+    
+    #print(data.train_mask)
+    #print(data.test_mask)
+
+    # print min,mean, median, max, sd of each split
+    ytrains = data.y[data.train_mask].cpu()
+    ytests =  data.y[data.test_mask].cpu()
+
+    # print(ytrains.shape)
+    # print(ytests.shape)
+
+    ytr_min = torch.min(ytrains).item()
+    ytr_max = torch.max(ytrains).item()
+    ytr_mean = torch.mean(ytrains).item()
+    ytr_median = torch.median(ytrains).item()
+
+    yt_min = torch.min(ytests).item()
+    yt_max = torch.max(ytests).item()
+    yt_mean = torch.mean(ytests).item()
+    yt_median = torch.median(ytests).item()
+
+    # print("train split: ",ytr_min,ytr_mean,ytr_median,ytr_max)
+    # print("test split: ",yt_min,yt_mean,yt_median,yt_max)
+
+    #plt.boxplot([ytrains.tolist(),ytests.tolist()])
+    #plt.show()
+
+    # sort then 
+    ytrains,_ = torch.sort(ytrains)
+    ytests,_ = torch.sort(ytests)
+
+    nrmse = torch.sum((ytrains - ytests) ** 2)/len(data.test_mask)
+    nrmse = nrmse.sqrt()
+    #print("rmse: ",nrmse.item())
+
+    return nrmse
+
 
 def shuffleTrainTestValMasks(data, trainpct = 0.7, valpct = 0.2):
 
@@ -301,6 +357,18 @@ def shuffleTrainTestValMasks(data, trainpct = 0.7, valpct = 0.2):
     #print(data.test_mask)
     
     
+def seedAnalysis(Net,dataset, epochs=1, batch_size=32, res_dict={}, seed=None):
+    
+    
+
+    if seed is not None:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
+
+    loader = DataLoader(dataset,  shuffle=False)
+    G = dataset.data
+    rmse =shuffleTrainTestMasks_analysis(G)
+    return seed, rmse
 
 def trainTestEval(dataset, epochs=1, batch_size=32, res_dict={}, seed=None):
     global Net
@@ -332,7 +400,7 @@ def trainTestEval(dataset, epochs=1, batch_size=32, res_dict={}, seed=None):
         # 2.  create a train_mask, and a test_mask (val_mask for further experiments)
         #shuffleTrainTestMasks(data)
         #shuffleTrainTestValMasks(data)
-        shuffleTrainTestMasks(data)
+        shuffleTrainTestMasks_analysis(data)
 
         # 3. train some epochs
         for epoch in range(epochs):
@@ -470,6 +538,10 @@ def trainTestEval2(Net,dataset, epochs=1, batch_size=32, res_dict={}, seed=None)
     if seed is not None:
         torch.manual_seed(seed)
         if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        np.random.seed(seed)
+        
 
     loader = DataLoader(dataset,  shuffle=False)
     i = 0
@@ -494,7 +566,7 @@ def trainTestEval2(Net,dataset, epochs=1, batch_size=32, res_dict={}, seed=None)
         # 2.  create a train_mask, and a test_mask (val_mask for further experiments)
         #shuffleTrainTestMasks(data)
         #shuffleTrainTestValMasks(data)
-        shuffleTrainTestMasks(data)
+        shuffleTrainTestMasks_analysis(data)
 
         # 3. train some epochs
         for epoch in range(epochs):
@@ -633,6 +705,179 @@ def trainTestEval2(Net,dataset, epochs=1, batch_size=32, res_dict={}, seed=None)
         torch.cuda.empty_cache()
 
 
+def trainTestEval3(Net,dataset, epochs=1, batch_size=32, res_dict={}, seed=None):
+    
+
+    if seed is not None:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
+
+    loader = DataLoader(dataset,  shuffle=False)
+    i = 0
+    #print(loader)
+    #print(dir(loader))
+    
+    G = dataset.data
+    try:
+    
+        #print(G)
+        start = time.time()
+
+
+        # 1.  prepare model
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        #print("using ",device)
+        model = Net.to(device)  
+        data = G.to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+        model.train()
+
+        # 2.  create a train_mask, and a test_mask (val_mask for further experiments)
+        #shuffleTrainTestMasks(data)
+        #shuffleTrainTestValMasks(data)
+        shuffleTrainTestMasks(data)
+
+        # 3. train some epochs
+        for epoch in range(epochs):
+            optimizer.zero_grad()
+            out = model(data)
+            out = out.view(out.shape[0])
+            loss = F.mse_loss(out[data.train_mask], data.y[data.train_mask])
+            loss.backward()
+            optimizer.step()
+            #if epoch % 25 == 0 :
+            #    print("epoch-loss: ",epoch, loss)
+
+        # 4. Model evaluation
+        model.eval()
+        #  classification in a multiclass setting
+        #_, pred = model(data).max(dim=1)
+        #correct = pred[data.test_mask].eq(data.y[data.test_mask]).sum().item()
+        #acc = correct / data.test_mask.sum().item()
+        #print('Accuracy: {:.4f}'.format(acc))
+
+
+        # regression 
+        pred = model(data)
+        #print("target: ",data.y[data.test_mask])
+        #print("prediction: ",pred[data.test_mask])
+        #print(pred[data.test_mask].type())
+        #print(data.y[data.test_mask].type())
+
+        # prepare the normalized mean root squared error
+        t = data.y[data.test_mask]
+        y = pred[data.test_mask]
+        negatives = False
+        if 0 > (sum(y<0)):
+            negatives = True
+        nrmse = torch.sum((t - y) ** 2)/len(data.test_mask)
+        nrmse = nrmse.sqrt()
+        #print("RMSE: ",nrmse)
+
+        m = torch.mean(t).item()
+        m2 = torch.mean(y).item()
+        med = torch.median(t).item()
+        med2 = torch.median(y).item()
+        #print("mean",m)
+        tmax = torch.max(t).item()
+        tmax2 = torch.max(y).item()
+        tmin = torch.min(t).item()
+        tmin2 = torch.min(y).item()
+        sd = tmax-tmin
+        sd = sd
+        sd2 = tmax2-tmin2
+        sd2 = sd2
+        #print("sd",sd)
+        #nrmse = (nrmse - m)/sd
+        #print("NRMSE:",nrmse)
+
+
+        endtime = time.time()
+        #print("Total train-test time: "+str(endtime-start))
+
+        # repeat 3 tiems and get the average?
+        # or fix the split
+
+
+        # getting model hyper params
+        hyperparams = ""
+        
+        model_ds = [elem+"="+str(getattr(Net, elem)) for elem in dir(Net) if elem.startswith("epochs") or elem.startswith("num_layers") or (elem.startswith("d") and len(elem)==2)]
+        hyperparams = "_".join(model_ds)
+        theepochs = "epochs="+str(epochs)
+        hyperparams = hyperparams+"_"+theepochs
+        # previously used str(model)
+        #model_name = str(model)
+        model_name = model.__class__.__name__+"-"+hyperparams
+        #dataset name
+        thedataset = dataset.filename
+        # basename
+        thedataset = os.path.basename(thedataset)
+        # extension
+        thedataset = os.path.splitext(thedataset)[0]
+
+        # result = str(model)+" " \
+        #         +hyperparams+" " \
+        #         +theepochs+" " \
+        #         +str(thedataset)+" " \
+        #         +"nrmse="+str(round_half_up(nrmse.item(),3))+" " \
+        #         +"time="+str(round_half_up(endtime-start,3) )  \
+        #         +" negatives?"+str(negatives) \
+        #         +"\n"
+                
+        
+        res_dict['tables'][model_name]={
+                                #"model": str(model),
+                                 "hyperparams": hyperparams,
+                                 "dataset": str(thedataset),
+                                 "epochs": epochs,
+                                 "batch_size": batch_size,
+                                 "seed": seed,
+                                 "nrmse":round_half_up(nrmse.item(),3),
+                                 "time":round_half_up(endtime-start,3),
+                                #"neg vals": negatives,
+                                "GTavg": m,
+                                "PREDavg": m2,
+                                #"GTmed": med,
+                                #"PREDmed": med2,
+                                "GTmin": tmin,
+                                "PREDmin": tmin2,
+                                "GTmax": tmax,
+                                "PREDmax": tmax2,
+                                #"GTsd": sd,
+                                #"PREDsd": sd2,
+
+                                }
+        res_dict['scatterplots'][model_name]={
+            'predictions': y.to('cpu').detach().numpy(),
+            'targets': t.to('cpu').detach().numpy(),
+        }
+
+
+        datetime_str =  datetime.today().strftime('%Y-%m-%d_%H-%M-%S') 
+
+        with open("results/"+Net.__class__.__name__+"_"+datetime_str+".json","w") as f:
+            json.dump(res_dict['tables'],f)
+
+        model.to('cpu')  
+        data.to('cpu')
+        del data
+        del model
+        torch.cuda.empty_cache()
+
+
+        #i+=1
+        #if i==1:
+        #    break
+    except Exception as err:
+        traceback.print_exc()
+        model.to('cpu')  
+        G.to('cpu')
+        del G
+        del model
+        torch.cuda.empty_cache()
+
+
 def reporting_simple(d):
     df_original = pd.DataFrame(d['tables'])
     df = df_original.T
@@ -646,6 +891,16 @@ def reporting_simple(d):
 def reporting(res_dict):
     df_original = pd.DataFrame(res_dict['tables'])
     df = df_original.T
+
+    plt.plot(
+        df['epochs'],
+        df['nrmse'],
+        )
+    plt.xlabel('epochs')
+    plt.ylabel('rmse')
+    plt.title('validation performance by epoch')
+    plt.show()
+
     #df.style.set_table_styles([ dict(selector='th', props=[('text-align', 'left')] ) ])
     # Assuming that dataframes df1 and df2 are already defined:
     display(df)
@@ -674,6 +929,8 @@ def reporting(res_dict):
     gs = gridspec.GridSpec(1, 2) # scatter and 2 boxplots
     fig=plt.figure(figsize=(16, 8), dpi= 60, facecolor='w', edgecolor='k')
     n = 0
+
+
 
     for name,trainres in sp.items():
         
@@ -745,6 +1002,46 @@ def basic_training(training_dict, res_dict ,visualize=False):
     #Net=Net6(d1=15,d2=50,d3=20,num_features=dataset.num_features, num_classes=dataset.num_classes)
     Net=model_class(**kwargs)
     trainTestEval2(Net, dataset,  epochs=epochs, batch_size=batch_size, res_dict=res_dict, seed=seed)
+    
+    del Net
+    del dataset
+    torch.cuda.empty_cache()
+
+
+def basic_analysis(training_dict, res_dict ,visualize=False):
+    """ 
+        Put all params inside a dict
+        so it's easier to do HP search
+        and easier to save characteristics of models on disk
+
+
+
+    """
+
+    # epochs = training_dict['epochs']
+    # batch_size = training_dict['batch_size']
+    # seed = training_dict['seed']
+    # dataset_name = training_dict['dataset_name']
+    epochs = training_dict.pop('epochs')
+    batch_size = training_dict.pop('batch_size')
+    seed = training_dict.pop('seed')
+    dataset_name = training_dict.pop('dataset_name')
+
+
+    dataset = loadDataset(
+        collection='MyOwnDataset2', 
+        name=dataset_name)
+    if visualize: 
+        inspectGraphDataset(dataset, 'vis_'+dataset_name)
+    model_class=training_dict.pop('class')
+    kwargs = training_dict
+    kwargs.update({'num_features': dataset.num_features,
+                   'num_classes': dataset.num_classes,
+                   })
+    #Net=Net6(d1=15,d2=50,d3=20,num_features=dataset.num_features, num_classes=dataset.num_classes)
+    Net=model_class(**kwargs)
+    s,e = seedAnalysis(Net, dataset,  epochs=epochs, batch_size=batch_size, res_dict=res_dict, seed=seed)
+    res_dict['tables'][s]=e.item()
     del Net
     del dataset
     torch.cuda.empty_cache()

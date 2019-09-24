@@ -1,2 +1,64 @@
-\section{Evaluation}
+\newpage
+\section{Results}
 
+This section presents the results and their respective conclusion on all the experiments and their preliminary tests.
+
+\subsection{Girvan-Newman aproximation}
+
+
+\textbf{Preliminary test}
+
+The results of the semi-supervised classification task on the CORA dataset are show on the following table:
+
+
+
+\begin{tabular}{llrlr}
+\toprule
+    Model &           params &   Val Loss &   Test Accuracy &   Duration \\\\
+\midrule
+   SGConv &   100\_epochs=200 &     1.7587 &   0.790 ± 0.018 &      0.585 \\
+ ChebConv &   100\_epochs=200 &     0.8133 &   0.769 ± 0.027 &      5.049 \\
+    APPNP &   100\_epochs=200 &     0.8894 &   0.808 ± 0.017 &      0.984 \\
+  GATConv &   100\_epochs=200 &     0.8111 &   0.803 ± 0.016 &      1.967 \\
+  GCNConv &   100\_epochs=200 &     0.8864 &   0.789 ± 0.018 &      1.091 \\
+\bottomrule
+
+\end{tabular}
+
+
+
+
+\textbf{Main experiment}
+
+As detailed in the experiments section, the main experiment is to train a model to approximate the edge betweenness of part of the edges of a graph, in a semi-supervised manner. The results, measured with the Normalised Root Mean Square Error (nrmse) are shown in the folling table:
+
+
+
+A complementary test on the node betweenness is shown in the next table:
+
+
+
+A complementary test on the PageRank aproximation is shon in the table \ref{}
+
+
+
+\texbf{Conclusion}
+% conclusion on results
+
+A model with a good performance has not been found. All the models exhibit underfit or a bias that makes them poor aproximations.
+Spatial based graph convolutional networks have the problem of losing site of long range interactions. However, the shortest path is long range by nature.
+Spectral based methods are not affected by this limitation, but the aproximated spectral method from ChebNets is, eve thought we tried to minimze it.
+
+
+
+% 2) Function Renaming:
+% results table: noisy dataset:   models | cv score | test score macro avg
+% results table: v1 dataset:   models | cv score | test score macro avg
+% results table: v2 dataset:   models | cv score | test score macro avg
+% results table: v3 dataset:   models | cv score | test score macro avg
+
+% conclusion on results
+
+
+
+% idea: polyorphism on code, hacking the art of exploitation chap5, even with xor or sub, a code can be rewritten => STRUCTURE IS NOT KEY TO FUNCTIONALITY ON CODE (but still I was hoping on some similar structure coming from similar compilers/programing languages/SO interfaces..)
