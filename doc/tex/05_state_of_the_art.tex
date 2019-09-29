@@ -10,6 +10,15 @@
 % 	- GGNN
 
 % ML in graphs intro 
+This section is a compilation of several sources that survey the most recent Graph Neural Network advances as well as giving detailed information on their internals. Parts of the text are extracted from the research papers and surveys that follow:
+\begin{itemize}
+	\item Hamilton et al., Representation Learning on Graphs: Methods and Applications \cite{hamilton} %Hamilton
+	\item Xu et al., How Powerful are Graph Neural Networks? \cite{powerful}%strengths
+	\item Wu et al., A comprehensive Survey on Graph Neural Networks \cite{wu}%Wu 
+	\item Kipf et al., Semi-supervised classification with Graph Convolutional Networks \cite{gcn} %Tkipf
+	\item Li et al., Gated graph sequence neural networks \cite{ggnn} %gated graph neural network
+\end{itemize}
+
 
 Many data can be represented as a graph, a data structure employed often in fields like biochemistry, social networks, recommender systems and even computer program analysis. Many machine learning applications are created to make predictions using graph-structured data. The way to incorporate the information from graph-structured data as an input to a machine learning model is not straightforward. The fact that graph-structure data is high-dimensional and non-Euclidean are the main barriers for creating a unified and general way to use it as an input to a model. Graph data is irregular, with variable size and variable number of neighbors. Many approaches to transform graph data into usable features for machine learning models exist by using summary graph statistics, kernel functions, or hand-engineered features. Those approaches lack the flexibility to adapt during the learning process.
 
@@ -74,9 +83,14 @@ The choice of $AGGREGATE^{(k)}(\cdot)$ and $COMBINE^{(k)}(\cdot)$ is crucial. In
 
 
 % slidesCambdribe kipf visual plot of the GNN
-\includegraphics[scale=0.5]{./img/GNN-schema.png}\\[2cm] 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.45]{./img/kipf-2.png}\\[2cm] 
+\caption{Graph Neural Network architecure (from  Thomas Kipf et al. 2016 \cite{gcn}) }\label{fig:GNN_schema}
+\end{figure}
 
-
+The figure \ref{fig:GNN_schema} shows an example of a 2 layer Graph Neural Network embedding. In each "Hidden layer" of the figure, the model is performing the aggregation and the combination (with readout if needed) phase before producing its output.
+ 
 % comment (review and remove redundancy) FOR INTRO
 
 % It follows a recursive neighborhood aggregation framework (also called message passing), where the representation vector of a node is computed by recursively aggregating and transforming feature vectors of its neighboring nodes. After k iterations, a node is represented by its transformed feature vector, which captures the structural information within the node's k-hop network neighborhood. This approach works when the learning task requires to represent each node of the graph, for example for node attribute regression or node classification. When the learning task requires to compute representations at the graph or subgraph level, pooling mechanisms like addition or other aggregations of all the nodes of the (sub)graph are used. 
@@ -174,7 +188,7 @@ where j indexes the neighboring nodes of $v_i$, and $c_{ij}$ is a normalization 
 When the model is trained to perform classification on the whole graph or a subgraph, a graph pooling module must be used. GCNs that use pooling modules are as powerful as the Weisfeiler-Legman test in distinguishing graph structures. Similar with the pooling layer of CNNs, graph pooling module could easily reduce the variance and computation complexity by down-sampling in between convolutional layers. Mean, max and sum pooling are the most common way to implement them.
 
 
-The remaining part of the subsection will present evolutions of the GCN model that most commonly known.
+The remaining part of the subsection will present evolutions of the GCN model that are most commonly known.
 
 %   MPNN (composition based spatial gcns)
 \textbf{Message Passing Neural Networks (MPNN):} The MPNN model generalizes several existing graph convolution networks into a unified framework named Message Passing Neural Network. It consists of two phases, the message passing pahse and the readout phase. The message passing phase actually runs T-step spatial-based graph convolutions. The graph convolution operation is defined through a message function $M_t(\cdot)$ and an updating function $U_t(\cdot)$ according to 
@@ -282,7 +296,11 @@ Finally, this section presents the most important applications of Graph Neural N
 \textbf{Biochemistry:} graph neural networks are used to classify the molecules structure. Nodes represent atoms and edges represent chemical bonds. Node classification, graph classification and graph generation are the three main tasks. Examples include learning molecular fingerprints \cite{52}, predict molecular properties \cite{mpnn} and to synthesize chemical compounds \cite{65}
 
 
+\textbf{Comminucations Network modelling:} Communication networks rely on routing and path optimization to ensure good level of service. Nowadays network operators lack efficient network models able to make accurate predictions of relevant end-to-end Key Performance Indicators (KPI) such as delay or jitter at limited cost. Analytic models and packet-level simulations have been used to produce KPI's but at a high cost. A graph neural network model, RouteNet \cite{rusek2019unveiling}, has been proposed as an efficient solution to produce estimations of delay and jitter with similar accuracy as packet-level network simulators.
+
+
 \textbf{Program verification:} is another fruitful \cite{ggnn}, \cite{139} and \cite{code2vec}) domain where Graph Neural Networks are showing their potential. Instructions follow a sequence of execution with loops, branches and calls to other instructions. This kind of modeling of the code allows for verification of correct variable usage (avoid usage after free a memory buffer), variable name guessing and function renaming for correct understanding of code functionality. Gated Graph Sequence Neural Network \cite{ggnn}, known as GGNN, are Graph Neural Networks that make use of gated recurrent units and modern optimization techniques that can output sequences. They poses a favorable inductive bias relative to purely sequence-based models like LSTMs, when the problem is graph-structured. They achieve state-of-the-art performance on program verification applied to memory safety, to map the state of the memory as a set of input graphs into a logical description of the data structures. For example this can be used to verify that there are no null pointer dereferences in a program. In \cite{139}, the authors use graphs to represent both the syntactic and semantic structure of code and use graph-based deep learning methods to learn to reason over program structures.The apply an modified version of GGNN to the task of VarNaming (predicting the name of a variable given its usage) and VarMisuse (reason about selecting the correct variable in a given program location). Finally, an approach to predicting names for entire functions or subroutines is shown in \cite{code2vec}, where no Graph Neural Network approach has been used, instead an embedding is generated from Abstract syntax trees. It is used for snippets of code to predict semantic properties. We believe that Graph Neural Networks have great potential to achieve state of the art performance.
+
 
 
 

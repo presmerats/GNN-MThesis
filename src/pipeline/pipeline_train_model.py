@@ -454,101 +454,6 @@ def training_dispatcher(jobdict):
         add_dataset_file(results_file, dataset_folder, str(round(end-start)))
 
 
-    elif model_class in conf['training_types']['ggnn']['models'] \
-       and features in conf['training_types']['ggnn']['features']:
-
-        logger.debug("ggnn training")
-        # preapre load model 
-        model_module = conf['training_types']['ggnn']['model_module']
-        model_module = import_module(model_module)
-        themodel_class = getattr(model_module, model_class)
-        
-
-        # prepare load training func 
-        training_module = conf['training_types']['ggnn']['training_module']
-        training_module = import_module(training_module)
-
-        training_func = conf['training_types']['ggnn']['training_func']
-        
-
-        # load dataset
-        train_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'training_set'))
-        train_dataset.gnn_mode_on()
-        num_classes = train_dataset.num_classes
-        test_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'test_set'))
-        test_dataset.gnn_mode_on()
-
-
-
-        # prepare training params dict (jobdict + model )
-        params_dict = copy.deepcopy(jobdict)
-        params_dict.pop('features')
-        params_dict.pop('dataset')
-        params_dict.pop('model')
-        
-        params_dict['num_classes']=num_classes
-        epochs = params_dict.pop('epochs')
-        learning_rate = params_dict.pop('learning_rate')
-        weight_decay = params_dict.pop('weight_decay')
-        batch_size = params_dict.pop('batch_size')
-        model_kwargs = params_dict
-        params_dict2 = {
-            'kwargs': model_kwargs,
-            'epochs': epochs,
-            'learning_rate': learning_rate,
-            'batch_size': batch_size,
-            'model': themodel_class,
-            'weight_decay': float(weight_decay)
-        }
-
-        training_params = [params_dict2]
-
-
-        # prepare training func kwargs
-        results_file = 'ggnn_'+features.replace(' ','_')+'.json'
-        datetime_str=datetime.now().strftime("%Y%m%d_%H%M%S_")
-        results_file = 'results/'+datetime_str+results_file
-        logger.debug(" saving results to "+results_file)
-
-
-        kwargs = {
-            'model_list': training_params, 
-            'k': 3,
-            'train_dataset': train_dataset , 
-            'balanced': True, 
-            'force_numclasses': None, 
-            'unbalanced_split': False, 
-            'debug_training': True,
-            'tfidf_indices': None
-            #'results_folder': results_file, #folder and file
-            #'models_folder': 'models/gnn/'
-        }
-
-
-        # performing training(and testing)
-        start = time.time()
-        training_func = getattr(training_module, training_func)
-        logger.debug(" calling "+training_func.__name__)
-        #logger.debug(kwargs)
-        #pprint(kwargs,open(log_file,'a'))
-        results_dict2 = training_func(**kwargs)
-
-        results_dict = {'best_models_list':[], 'models':{} , 'best_models':{}, 'autoincrement': 0 }
-        #pprint(results_dict2,open('../pipeline/'+log_file,'a'))
-        reportModelSelectionResult(results_dict2,results_dict)
-        #pprint(results_dict,open('../pipeline/'+log_file,'a'))
-        logger.debug("test_multiple_models")
-        logger.debug(" saving model to models/gnn")
-        test_multiple_models(
-            results_dict,
-            test_dataset,
-            results_file=results_file,
-            models_folder='models/gnn/')
-        end= time.time()
-        logger.debug("training time: "+str(round(end-start))+"s")
-        logger.debug("saving to "+results_file)
-
-        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
 
     elif model_class in conf['training_types']['ggnn_nlp']['models'] \
        and features in conf['training_types']['ggnn_nlp']['features']:
@@ -643,6 +548,104 @@ def training_dispatcher(jobdict):
             test_dataset,
             results_file=results_file,
             models_folder='models/gnn_nlp/')
+        end= time.time()
+        logger.debug("training time: "+str(round(end-start))+"s")
+        logger.debug("saving to "+results_file)
+
+        add_dataset_file(results_file, dataset_folder, str(round(end-start)))
+
+    #elif model_class in conf['training_types']['ggnn']['models'] \
+    #   and features in conf['training_types']['ggnn']['features']:
+    else:
+        logger.debug("ggnn training")
+        # preapre load model 
+        model_module = conf['training_types']['ggnn']['model_module']
+        model_module = import_module(model_module)
+        themodel_class = getattr(model_module, model_class)
+        
+
+        # prepare load training func 
+        training_module = conf['training_types']['ggnn']['training_module']
+        training_module = import_module(training_module)
+
+        training_func = conf['training_types']['ggnn']['training_func']
+        
+
+        # load dataset
+        train_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'training_set'))
+        #train_dataset = add_node_degree_v2(os.path.join(dataset_folder,'training_set'))
+        train_dataset.gnn_mode_on()
+        num_classes = train_dataset.num_classes
+        test_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'test_set'))
+        #test_dataset = add_node_degree_v2(os.path.join(dataset_folder,'test_set'))
+        test_dataset.gnn_mode_on()
+
+
+
+        # prepare training params dict (jobdict + model )
+        params_dict = copy.deepcopy(jobdict)
+        params_dict.pop('features')
+        params_dict.pop('dataset')
+        params_dict.pop('model')
+        
+        params_dict['num_classes']=num_classes
+        epochs = params_dict.pop('epochs')
+        learning_rate = params_dict.pop('learning_rate')
+        weight_decay = params_dict.pop('weight_decay')
+        batch_size = params_dict.pop('batch_size')
+        model_kwargs = params_dict
+        params_dict2 = {
+            'kwargs': model_kwargs,
+            'epochs': epochs,
+            'learning_rate': learning_rate,
+            'batch_size': batch_size,
+            'model': themodel_class,
+            'weight_decay': float(weight_decay)
+        }
+
+        training_params = [params_dict2]
+
+
+        # prepare training func kwargs
+        results_file = 'ggnn_'+features.replace(' ','_')+'.json'
+        datetime_str=datetime.now().strftime("%Y%m%d_%H%M%S_")
+        results_file = 'results/'+datetime_str+results_file
+        logger.debug(" saving results to "+results_file)
+
+
+        kwargs = {
+            'model_list': training_params, 
+            'k': 3,
+            'train_dataset': train_dataset , 
+            'balanced': True, 
+            'force_numclasses': None, 
+            'unbalanced_split': False, 
+            'debug_training': True,
+            'tfidf_indices': None
+            #'results_folder': results_file, #folder and file
+            #'models_folder': 'models/gnn/'
+        }
+
+
+        # performing training(and testing)
+        start = time.time()
+        training_func = getattr(training_module, training_func)
+        logger.debug(" calling "+training_func.__name__)
+        #logger.debug(kwargs)
+        #pprint(kwargs,open(log_file,'a'))
+        results_dict2 = training_func(**kwargs)
+
+        results_dict = {'best_models_list':[], 'models':{} , 'best_models':{}, 'autoincrement': 0 }
+        #pprint(results_dict2,open('../pipeline/'+log_file,'a'))
+        reportModelSelectionResult(results_dict2,results_dict)
+        #pprint(results_dict,open('../pipeline/'+log_file,'a'))
+        logger.debug("test_multiple_models")
+        logger.debug(" saving model to models/gnn")
+        test_multiple_models(
+            results_dict,
+            test_dataset,
+            results_file=results_file,
+            models_folder='models/gnn/')
         end= time.time()
         logger.debug("training time: "+str(round(end-start))+"s")
         logger.debug("saving to "+results_file)

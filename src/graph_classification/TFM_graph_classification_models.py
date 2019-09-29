@@ -2,8 +2,13 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
 from torch_geometric.nn import MessagePassing
+from torch_geometric.nn import SAGEConv, DenseSAGEConv
+from torch_geometric.nn import GINConv, DenseGINConv
+from torch_geometric.nn import GCNConv, DenseGCNConv
+
+
 #from torch_geometric.nn.conv.gated_graph_conv import GatedGraphConv
-from torch_geometric.nn.glob.glob import global_mean_pool, global_add_pool
+from torch_geometric.nn import global_mean_pool, global_add_pool, global_sort_pool
 import torch.nn as nn
 from torch.nn import Sequential as Seq, Linear as Lin, ReLU
 from torch_scatter import scatter_mean
@@ -266,6 +271,128 @@ class GGNN6(torch.nn.Module):
         x = F.log_softmax(x, dim=1)
         return x
 
+
+
+class SortPool(torch.nn.Module):
+    def __init__(self, dataset,  num_layers, hidden, num_classes):
+        super(SortPool, self).__init__()
+        self.k = 10
+        self.conv1 = SAGEConv(dataset.num_features, hidden)
+        self.convs = torch.nn.ModuleList()
+        for i in range(num_layers - 1):
+            self.convs.append(SAGEConv(hidden, hidden))
+        self.lin1 = nn.Linear(self.k * hidden, hidden)
+        self.lin2 = nn.Linear(hidden, num_classes)
+
+    def reset_parameters(self):
+        self.conv1.reset_parameters()
+        for conv in self.convs:
+            conv.reset_parameters()
+        self.lin1.reset_parameters()
+        self.lin2.reset_parameters()
+
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        x = F.relu(self.conv1(x, edge_index))
+        for conv in self.convs:
+            x = F.relu(conv(x, edge_index))
+        x = global_sort_pool(x, batch, self.k)
+        x = F.relu(self.lin1(x))
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.lin2(x)
+        return F.log_softmax(x, dim=-1)
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+
+
+class SAGE01_sort01(torch.nn.Module):
+    def __init__(self, k1=5,d0=20,d1=50,d2=20,k2=10, num_classes=6, num_layers=2, aggr_type='mean'):
+        super(SAGE01_sort01, self).__init__()
+        self.k1 = k1
+        self.ggnn = SAGEConv(in_channels=d0, out_channels=d1,normalize=True, bias=True)
+        #self.ggnn = GCNConv(in_channels=d0, out_channels=d1)
+        #self.ggnn = GatedGraphConv(out_channels=d1, num_layers=num_layers,aggr=aggr_type, bias=True)
+        self.fc1 = nn.Linear(d1, d2)
+        self.dense1_bn = nn.BatchNorm1d(d2)
+        self.fc2 = nn.Linear(d2,num_classes)
+        self.global_pool = global_sort_pool
+        self.k2 = k2
+        
+    def forward(self, data):
+        x, edge_index, batch_vector = data.x, data.edge_index, data.batch
+
+        # can be used as clustering in pooling modules
+        print("batch vector", batch_vector)
+        # when global pooling is done, this information is lost
+        print("Edge index", edge_index)
+        
+
+        # dim. reduction of the graph
+        orig_shape = x.shape 
+        x = self.global_pool(x, batch_vector,k=self.k1)
+        # global pool destroys edge_index?
+        print("global_pool",x.shape)
+
+        # undo the concat of values
+        x = x.view(self.k1, -1)
+        # filter out the feature columns except first one
+        x = x[:,0]
+        print("sort_pool + view",x.shape)
+        pprint(x)
+
+        print()
+
+        x = self.ggnn(x, edge_index)
+        print("ggnn",x.shape)
+        #pprint(x)
+        print()
+        #x = self.ggnn(x, edge_index)
+        #x = self.global_pool(x, batch_vector,k=self.k2) # this makes the output to be graph level?
+        #x = F.relu(x)
+        # #x = F.dropout(x, training=self.training) # until here the output is for each node
+        x = self.fc1(x)
+        print("fc1",x.shape)
+        #pprint(x)
+        #print()
+
+        #x = F.relu(self.dense1_bn(x))
+        x = F.relu(x)
+        x = self.fc2(x)
+        #x = x.view(10,-1)
+        print("fc2",x.shape)
+        #pprint(x)
+        x = F.log_softmax(x, dim=0)
+        print("log_softmax",x.shape)
+        
+
+        return x
+
+
+class GIN01_sort01(torch.nn.Module):
+    def __init__(self, d1=50,d2=20, d3=10,k=10, num_classes=6, num_layers=2, aggr_type='mean'):
+        super(GIN01_sort01, self).__init__()
+        self.sage1 = SAGEConv(out_channels=d1, num_layers=num_layers,normalize=True, bias=True)
+        self.fc1 = nn.Linear(d1, d2)
+        self.dense1_bn = nn.BatchNorm1d(d2)
+        self.fc2 = nn.Linear(d2, d3)
+        self.dense2_bn = nn.BatchNorm1d(d3)
+        self.fc3 = nn.Linear(d3, num_classes)
+        self.global_pool = global_sort_pool
+        
+    def forward(self, data):
+        x, edge_index, batch_vector = data.x, data.edge_index, data.batch
+
+        x = self.sage1(x, edge_index)
+        x = self.global_pool(x, batch_vector,k=self.k) # this makes the output to be graph level?
+        #x = F.relu(x)
+        #x = F.dropout(x, training=self.training) # until here the output is for each node
+        x = F.relu(self.dense1_bn(self.fc1(x)))
+        x = F.relu(self.dense2_bn(self.fc2(x)))
+        x = self.fc3(x)
+        x = F.log_softmax(x, dim=1)
+        return x
 
 
     
