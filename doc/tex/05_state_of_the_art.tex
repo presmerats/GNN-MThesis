@@ -126,7 +126,7 @@ Early models try to learn a node's representation by propagating neighbor inform
 
 
 %  spectral based--------
-The first GCN model is presented in Bruna et al.(2013) \cite{bruna} which develops a variant of graph convolution based on spectral graph theory. There have been several other publications on spectral-based graph convolutional networks \cite{deferrard}.  Spectral methods define graph convolutions by introducing filters from the perspective of graph signal processing, where the graph convolution operation is interpreted as removing noise from graph signals. They rely on the eigen-decomposition of the Laplacian matrix. This has the drawback that any perturbation  of a graph results in a change of eigen basis, and the learned filters are domain dependent so tehy can't be applied to a graph with a different structure. 
+The first GCN model is presented in Bruna et al.(2013) \cite{bruna} which develops a variant of graph convolution based on spectral graph theory. There have been several other publications on spectral-based graph convolutional networks \cite{defferrard2016convolutional}.  Spectral methods define graph convolutions by introducing filters from the perspective of graph signal processing, where the graph convolution operation is interpreted as removing noise from graph signals. They rely on the eigen-decomposition of the Laplacian matrix. This has the drawback that any perturbation  of a graph results in a change of eigen basis, and the learned filters are domain dependent so tehy can't be applied to a graph with a different structure. 
 
 
 % spatial based-------------
@@ -145,7 +145,7 @@ Finally, spectral methods are limited to work on undirected graphs whereas spati
 % Spatial GCN definiton -----------------------
 % (Kipf web page: Weisfeiler Lehman  and GCN comparison)
 
-Let's see how the spatial-based graph convolutional network implements the algorithm that will iteratively generate a representation of the nodes. This algorithm depends on weights, also called coefficients, that will be later updated with stochastic gradient descent or equivalent algorithms. These updating mechanism allows for training an end to end model that containts the representation of the graph generation(the embedding) as well as the subsequent layers that will use the embedding as an input for their classification or regression task.
+Let's see how the spatial-based graph convolutional network implements the algorithm that will iteratively generate a representation of the nodes. This algorithm depends on weights, also called coefficients, that will be later updated with stochastic gradient descent or equivalent algorithms. These updating mechanism allows for training an end to end model that contains the representation of the graph generation(the embedding) as well as the subsequent layers that will use the embedding as an input for their classification or regression task.
 
 The previous subsection showed that the updating of a node state (value of its attributes), can be formalized as a function of the node states and the aggregation of the neighbor nodes states:
 
@@ -254,7 +254,7 @@ Kernel functions allow to capture much more signal from the graph structure, and
 % Wu survey p2 network embeddings description
  
 Network embeddings aim to represent network vertices into a low-dimensional vector space, by preserving both network topology structure and node content information. This embedding can be used in any downstream shallow machine learning algorithm, such as classification, regression, or clustering, in the same way that the output of a GGN is. Many network embedding algorithms are typically unsupervised algorithms and they can be broadly classified into three groups: matrix factorization \cite{38}, random walks \cite{40}, and deep learning approaches.\\
-
+\\
 
 % 	Most prominent matrix factorization methods ?
 % 	Most prominent distance methods (and combinations) ?
@@ -269,7 +269,7 @@ Network embeddings aim to represent network vertices into a low-dimensional vect
 
 
 
-\\
+
 \subsection{Applications of Graph neural Networks}
 
 
@@ -311,7 +311,9 @@ Finally, this section presents the most important applications of Graph Neural N
 % 	history
 
 % 	usage
-\textbf{Social Network analysis:} With the rapid expansion of the web, the last years have witnessed large adoption of social networks as one of the main ways to interact with people. Graph Neural Networks have many direct applications in social network analysis as friend or link prediction \cite{liben2007link}, community detection \cite{gcn} and many more as can be seen in \cite{hamilton} and \cite{@article{fey2019fast}. One of the main tasks in social network analysis is the process of discovering communities, known as community detection. The Girvan-Newman algorithm \cite{girvan2002community} is a clustering based approach to perform community detection, and is considered one of the most powerful algorithms. It proposed a divisive algorithm based on edge-betweenness for a graph with undirected and unweighted edges. The algorithm focused on edges that are most "between" the communities and communities are constructed progressively by removing these edges from the original graph.The worst-case for time complexity of the edge-betweenness algorithm is $O(m^2n)$ and is $O(n^3)$ for sparse graphs, with $m$ being the number of edges and $n$ the number of vertices. Its downside is that it is very time consuming which makes it not suitable for applying it to modern social networks. As surveyed by \cite{Bedi} Many authors have worked to improve it, reduce the computational complexity or extract useful concepts from it (see \cite{Radicchi} and \cite{Rattigan}, \cite{Chen}, \cite{Newman2}). 
+\textbf{Social Network analysis:} With the rapid expansion of the web, the last years have witnessed large adoption of social networks as one of the main ways to interact with people. Graph Neural Networks have many direct applications in social network analysis as friend or link prediction \cite{liben2007link}, community detection \cite{gcn} and many more as can be seen in \cite{hamilton} and \cite{@article{fey2019fast}. One of the main tasks in social network analysis is the process of discovering communities, known as community detection. The Girvan-Newman algorithm \cite{girvan2002community} is a clustering based approach to perform community detection, and is considered one of the most powerful algorithms. It proposed a divisive algorithm based on edge-betweenness for a graph with undirected and unweighted edges. The algorithm focused on edges that are most "between" the communities and communities are constructed progressively by removing these edges from the original graph.The worst-case for time complexity of the edge-betweenness algorithm is $O(m^2n)$ and is $O(n^3)$ for sparse graphs, with $m$ being the number of edges and $n$ the number of vertices. Its downside is that it is very time consuming which makes it not suitable for applying it to modern social networks. As surveyed by \cite{Bedi} Many authors have worked to improve it, reduce the computational complexity or extract useful concepts from it (see \cite{Radicchi} and \cite{Rattigan}, \cite{Chen}, \cite{Newman2} ). 
+
+
 
 %21, 29,  22,  33
 

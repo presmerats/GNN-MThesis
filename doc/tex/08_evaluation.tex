@@ -126,12 +126,47 @@ Also, it would be important to test its performance on several heterogeneous gra
 
 
 %higher values for the Girvan Newman
-To improve the usability for the Girvan-Newman approximation, the precision in high values should be increased. One naïve solution would be to give the samples in the bucket their maximum value, because the problem is to find the real maximum and not to increase the overall values of a bucket. In one hand, to have the model to predict higher values, a smaller range with the most higher values of the training set could be created. But, since this would introduce a great deal of class imbalance, the performance of the model would decrease. This trade-off should be tested thoroughly. A good approach to solve the class imbalance would be to used a weighted loss function during the training of the Graph Neural Network. This loss would have a weight associated with the inverse of the number of samples a bucket contains. Another thing to keep in mind, is that the loss function and the error function(metric score) should be changed to something more beneficial for finding the maximal values. One different approach to this problem would be to recompute the real edge betweenness of edge predicted to belong to the highest bucket. Depending on the size of the higher bucket, this process could harm the speed of the algorithm.
+To improve the usability for the Girvan-Newman approximation, the precision in high values should be increased. One naïve solution would be to give the samples in the bucket their maximum value, because the problem is to find the real maximum and not to increase the overall values of a bucket. In one hand, to have the model to predict higher values, a smaller range with the most higher values of the training set could be created. But, since this would introduce a great deal of class imbalance, the performance of the model would decrease. This trade-off should be tested thoroughly. A good approach to solve the class imbalance would be to use a weighted loss function during the training of the Graph Neural Network. This loss would have a weight associated with the inverse of the number of samples a bucket contains. Another thing to keep in mind, is that the loss function and the error function(metric score) should be changed to something more beneficial for finding the maximal values. One different approach to this problem would be to recompute the real edge betweenness of edges predicted to belong to the highest bucket. Depending on the size of the higher bucket, this process could harm the speed of the approximation of the Girvan-Newman algorithm.
 
 Finally, for the Girvan-Newman algorithm, an inductive setup of the graph neural network algorithm should be tested.  The current transductive setup (semi-supervised learning where a few edge betweennesses will be actually computed to quickly train the model and the rest will be predicted) might impact the speed of execution. Since in each iteration some edge betweenness need to be computed, then the model needs to be trained (or fine-tuned) and then this same model is used to predict the rest of edge betweenness's, the process could be slower than the original algorithm. If a model is trained once and can directly be used in each iteration, the overall process should be faster. There is a middle ground solution, where the graph neural network model is only trained in the very first iteration of the Girvan-Newman algorithm and then in the subsequent steps it is just used for prediction. 
 
 
 
+\newpage
+\subsection{Compiled code function classification}
+
+
+\textbf{Preliminary test}
+
+The results of the graph classification task on the different datasets are show on the following table:
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|llccc|c}
+%\toprule
+\hline
+    Model &         Dataset &   CV F1-macro &   Accuracy &  F1-macro \\
+%\midrule
+\hline
+  GGNN1 &   REDDIT-BINARY   &     1.7587    &   0.75 &     0.7724 \\
+  GGNN1 &   QM9             &     0.730267  &   0.8 &      0.740979 \\
+  GGNN1 &   PROTEINS        &     0.735332    &   0.75 &   0.772433 \\
+%\bottomrule
+\hline
+\end{tabular}
+\label{preliminar_GN}\caption{Reproduced benchmark semi-supervised classification experiments on CORA dataset }
+\end{table}
+
+We observe that test accuracy is correct in all the models trained, successfully obtaining accuracies close to the ones in the experiments ( \cite{fey2019fast}, \cite{borgwardt2005protein}, \cite{dobson2003distinguishing}). Setup of the environment is also correctly verified. \\
+\\
+
+
+
+
+\textbf{Main experiment}
+
+The next results table show the performance of baseline  and Graph Neural Network models on the code function classification dataset in versions v1 and v3. The results are sorted by the obtained cross-validation score, in order to choose the best model without overfitting on the test set. The test set scores are just shown to verify that the validation scores are consistent and not overfit on the validation dataset split.
 
 % 2) Function Renaming:
 % results table: noisy dataset:   models | cv score | test score macro avg
@@ -139,8 +174,78 @@ Finally, for the Girvan-Newman algorithm, an inductive setup of the graph neural
 % results table: v2 dataset:   models | cv score | test score macro avg
 % results table: v3 dataset:   models | cv score | test score macro avg
 
-% conclusion on results
+\input{./tables/v1_results.tex}
 
+
+
+The models with best performance are
+\begin{itemize} 
+  \item an XGBoost with a gbtree booster and a maximum depth of 150, 
+  \item a Random forest with 4 estimators and a maximum depth of 150, 
+  \item and a Multi-layer perceptron with 3 fully connected layers with 94, 20 and 15 hidden units. 
+\end{itemize}
+Those 3 best models are trained using a version of the dataset with the Bag-of-words embedding and the topological features. The best graph neural network model is a Graph Isomorphism Network with 4 layers and 128 hidden units plus  a fully connected layer, trained only with the graph of each sample as the dataset, and its performance is the worst in that case. See the annex \ref{annex:models} for the exact parameters of the models and their training steps.
+
+
+\input{./tables/v3_results.tex}
+
+
+
+
+The models with best performance are:
+\begin{itemize} 
+  \item an XGBoost with a gbtree booster and a maximum depth of 150, 
+  \item a Random forest with 16 estimators and a maximum depth of 16, 
+  \item and a Multi-layer perceptron with 3 fully connected layers with 96, 20 and 15 hidden units. 
+\end{itemize} 
+One remarkable difference in this results table, is that the best performing model on the test set does not use the Bag-of-words embedding. The other 2 best models are trained using a version of the dataset with the Bag-of-words embedding and the topological features. The best graph neural network model is a Graph Isomorphism Network with 2 layers and 64 hidden units plus  a fully connected layer, trained for 500 epochs only with the graph of each sample as the dataset, and its performance is close to the top 3 models. See the annex \ref{annex:models} for the exact parameters of the models and their training steps.
+
+
+
+Results with the v2 dataset are not shown as the models where not performing better than random and their training took much more time than with v1 and v3 dataset versions.
+
+\textbf{Conclusion}
+% conclusion on results
+% best models of each type (and each feature type?), 
+% describe attributes of those models, but point to the annex
+
+As a conclusion, it has been proven that Graph Neural Network models can be used to classify snipets of assembler code by their corresponding graph of instructions, with a similar performance as the most common machine learning classification models.  However, their performance is not the best one, it seems that the Graph Neural Network models trained in this experiment lack some capacity when compared to the models with better performance. But to be completely fair, the Graph Neural Network models have attained similar performance as the baseline models that only use information form the graph. The baseline models that have a higher performance are using the semantic information derived from the code.
+
+% Dataset influence: 
+%         v1,v2, v3 comparison, v2 untrainable, v1 easier but probably more unrealistic
+%         Bag of word features vs topological, code and graph -> the signal carried by the different features of dataset is not the same, and this is the most important aspect.
+%          The take aways is that the semantic similarity that the Bag of words embedding expresses is more powerful than the isomorphism similarity or topological features similarity that the graph can express.
+Thus, an important result is that the amount of information with discriminative power that the dataset contains is the most influential aspect for obtaining a good classification model.
+The signal carried by the different features of the dataset is not the same. The semantic similarity information contained in the Bag-of-words embedding is the most discriminative feature in this experiment. It is more powerful than the isomorphism detection that is performed by Graph Neural Networks on the graph, or the topological features extracted from it.
+The different transformations of the original dataset, version v1 with 10 classes, version v2 with 120 classes and v3 with 23 classes also influence the final performance, the way the models are trained and the amount of resources they require. The version v1 and v3 turned out to be the most suitable versions for this tasks and the resources at hand. 
+
+
+
+
+% GNN training:
+%      - training GNNs is complex and delicate, the hyper-parameter search takes a lot of time because it is not easy to find the best configurations
+%     - training is also slow, compared to machine learning models I would say it is among the most time consuming, like svm's, big cnns, and lstms.
+% - It seems that well trained gnn can outperform the baseline models using graph features, and can get closer to models using bag of words.
+About the Graph Neural Networks, one key take aways is that their training is complex and delicate. Not all hyper-parameter configuration yields and acceptable result, and furthermore, the partition of the dataset plays a big role in the final performance of the model trained. It is advisable to use a higher number of folds in the cross-validation process to get a better idea of the generalization power of the model that is going to be selected. It is not easy to find the best configurations across the different dataset splits, because the search space is huge and the time it takes for training those models is high. They could be compared to training SVMs, big CNNs and LSTMs. Nonetheless, it seems that well trained Graph Neural Networks can attain similar performance than the best baseline models when using only information derived from the graph or the graph itself.
+
+
+%-----------------pending----------------------
+
+% The F1-score performance metric shows that the best models are the ones that use the bag of words embedding. They attain an f1-score (macro average) of 40.1\% in v1 dataset and 22.1\% in the v3 dataset. The graph neural networks model haven't been able to surpass the baseline models, with a maximum f1-score of 15\% on the v1 dataset (8 classes) and 8\% f1-score on the v3 dataset(24 classes). In fact, looking deeper into the results, many of the Graph Neural Network models only learn to classify the class with most samples in the training set. Further investigation of the dataset split mechanism and using architectures with more capacity could resolve this problem of low performance. 
+
+
+% %  mlp validation set overfitting------
+% Looking into the results of the v1 dataset, there seems to be a significant difference between cross validation score (f1-score average over the cross validation folds or splits) and the test score (the f1-score on the test split), probably there isn't enough data or some class imbalance is affecting the training and validation, making the models overfit the validation dataset split.
 
 
 % idea: polyorphism on code, hacking the art of exploitation chap5, even with xor or sub, a code can be rewritten => STRUCTURE IS NOT KEY TO FUNCTIONALITY ON CODE (but still I was hoping on some similar structure coming from similar compilers/programing languages/SO interfaces..)
+
+
+
+
+
+\textbf{Improvements}
+
+As stated in the conclusion, the the discriminative power of the semantic similarity that can be computed from Bag-of-word embeddings seems to be higher than the one derived from the graph itself. So the obvious next step is to include the semantic information into the graph or to combine it with the Graph Neural Network output embedding into the final fully connected layers to build a classifier that outperforms the baselines models shown so far. The former approach could be the most powerful and the latter seems to be the easiest one to implement.
+
+A key aspect to improve in this second task is the dataset labeling. The labels of the data set had to be created from scratch, and this procedure might have room for improvement. Also the dataset is very noisy and has a lot of class imbalance. Improving the dataset class distribution, hopefully with more samples could also be studied. One take away of this second experiment is that this task was too ambitious, and probably a more focused approach could be better. For example the model could be trained for classifying snippets of code with a certain maximum length in order to detect loops, branches and function calls as a building block for later detecting bigger compounded code structures.

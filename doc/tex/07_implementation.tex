@@ -8,26 +8,29 @@
 % organization: the tasks selected are G-N approximation and  
 The goal of this master's thesis is to apply Graph Neural Network models to different problems to create a novel solution. The idea is to get to know how Graph Neural Networks are used in each situation. Two problems are explored: Girvan-Newman algorithm approximation and compiled code function classification. They correspond to the two main tasks that Graph Neural Network perform with success, semi-supervised learning of nodes on a graph and supervised graph classification. 
 
-This section will present the configuration of the experiments performed in the thesis. First, the Girvan-Newman approximation experiment is explained. Then the compiled code function classification experiment is described last. In each case, context, goals and motivation are described first. Then a preliminary test is performed on well-known benchmark datasets to verify the in use works correctly in the computer without any problem. Then the process of data preparation is explained and finally how the part of training a model is executed is summarized.
+This section will present the configuration of the experiments performed in the thesis. First, the Girvan-Newman approximation experiment is explained. Then the compiled code function classification experiment is described last. In each case, context, goals and motivation are described first. Then a preliminary test is performed on well-known benchmark datasets to verify the software libraries and setup in use work correctly in the computer without any problem. Then the process of data preparation is explained and finally how the part of training a model is executed is summarized.
 
 % 2) Girvan-Newman approximation
 \subsection{Girvan-Newman algorithm approximation}
 
+
+\subsubsection{Experiment overview}
+
 % 2.1) Girvan-Newman: description (review state of the art quickly),
-\textbf{Context} 
+\textbf{Context} \\
 The Girvan-Newman algorithm is a clustering based approach to perform community detection. It proposed a divisive algorithm based on edge-betweenness for a graph with undirected and unweighted edges. The algorithm focused on edges that are most "between" the communities and communities are constructed progressively by removing these edges from the original graph. It iteratively isolates groups of nodes of a graph by removing the edges that poses the greater edge betweenness value. The worst-case for time complexity of the edge-betweenness algorithm is $O(m^2n)$ and is $O(n^3)$ for sparse graphs, with $m$ being the number of edges and $n$ the number of vertices. 
 
-\textbf{Goal}
+\textbf{Goal}\\
 %          goal (approximate it), 
 The goal of this experiment is to find a novel way to approximate the Girvan-Newman algorithm that is faster than the original.
 
 
-\textbf{Motivation}
+\textbf{Motivation}\\
 % motivation find a good balance point between speed and accuracy, 
 Community detection is a popular task with applications in many areas related to social network analysis. An approximated but faster implementation could impact on tasks that need to detect community on large graphs, like the ones extracted from social networks, citation networks, and the like.
 
 
-\textbf{Experiment overview}
+\textbf{Experiment}\\
 %actual ideas for approximation
 To be more precise, the function to approximate will be the computation of the edge betweenness for each edge of the graph in each iteration of the algorithm. Thus, the experiments will focus solely on finding a Graph Neural Network that approximates the computation of the edge betweenness of all edges of a graph with a reasonable performance.
 
@@ -46,23 +49,23 @@ The second approach, by using semi-supervised learning, one can compute the edge
 The give a bit more of context on the second approach to approximate the Girvan-Newman algorithm, the steps would be the following:
 \begin{itemize}
 	\item \textbf{1. Compute the edge betweenness of some edges of the graph:} One advantage is that we could limit how many edge betweenness's are computed by time. Let's say we allow for 10 seconds edge betweenness computations.
-	\item \textbf{2. Approximate the edge betweenness of the rest of edges of the graph:} this steps would use a Gran Neural Network in a semi-supervised and transductive setting. This means that the Graph Neural Network should be trained on the actual graph or similar graphs before using it. It could also have another implication, that the graph neural network training can benefit from having a representative sample of the total population of edge betweennesses of the graph. However, this can only be approximated with some heuristic. For example, one could use for training severeal edges connected to nodes with a high degree and several edges connected to nodes with a low degree.
+	\item \textbf{2. Approximate the edge betweenness of the rest of edges of the graph:} this steps would use a Gran Neural Network in a semi-supervised and transductive setting. This means that the Graph Neural Network should be trained on the actual graph or similar graphs before using it. It could also have another implication, that the graph neural network training can benefit from having a representative sample of the total population of edge betweennesses of the graph. However, this can only be approximated with some heuristic. For example, one could use for training several edges connected to nodes with a high degree and several edges connected to nodes with a low degree.
 	\item \textbf{3. Selection of the most central edge:} this step would gather all edge betweenness values from previous steps and decide which edge to remove from the graph(the one with maximum edge betweenness). The rest of steps of the algorithm would go unchanged.
 \end{itemize}
 
 
 
 
-\textbf{Preliminary test}
+\subsubsection{Preliminary test}
 
 As a way to verify that available code from published research works correctly on computer on which the experiments will be performed, a published experiment is reproduced. A task of semi-supervised classification is reproduced locally, training a set of GCN, ChebNet, GAT , SG and APPNP models. The Cora dataset is used for this task.  The Cora dataset(\cite{sen2008collective} consists of 2708 scientific publications classified into one of seven classes. The goal is to verify that the computer that will support the experiments can train those models without memory problems or other types of problems. Also it is a way to check that some configurations of hyper-parameters yield good results for later comparison with the real experiments. 
 
 
 % 2.2) data gathering process
-\textbf{data preparation:}
+\subsubsection{Dataset}
 
 
-\textbf{Datasets used}
+\textbf{Datasets used}\\
 %  collection process(Pytorch Geometric dataloader)
 %  types of graphs used
 For the Girvan-Newman aproximation experiment, well known datasets available from Pytorch Geometric library are considered and inspected:
@@ -78,7 +81,6 @@ From all of the graphs in those databases, the ones that show a larger number of
 \textbf{Data preparation}
 %  data inspection(None)
 %  precomputation of the edge-betweennes for target preparation
-
 
 The first step in data preparation is to compute the actual edge betweenness of each edge of the graph, and save all those in the target (or ground true) vector. To compute the edge betweenness, the Python library NetworkX is used. First, the graph is transformed from the Pytorch Geometric Dataset format to a list of edges on a file on disk. This list of edge is then read by the NetworkX library to transform it into a NetworkX graph object. Then, the edge betweenness function of NetworkX is called. The result is a dictionary (key-value map) with the edge betweenness of each edge.
 
@@ -111,7 +113,7 @@ For the setup of the dataset splits, the approach has been to generate small siz
 
 
 
-\textbf{Model training}
+\subsubsection{Model training}
 % 2.3) Experiments list (main task and side analysis)
 %  GCN training
 %  graphSage training
@@ -142,17 +144,17 @@ Since the dataset splits could have a high impact on the performance of the trai
 
 %A complementary experiment performed is to try to approximate other centrality measures from a graph. Betweenness centrality(for nodes) and PageRank have been used to train models to approximate them. The types of models include GCN, GraphSage and the spectral-based ChebNet \cite{}defferrard2016convolutional}.
 
-\textbf{Evaluation procedure}
+\textbf{Evaluation procedure}\\
 %  inspecting the distribution of results
 To evaluate the results, the performance metric used is the accuracy. We could use the F1-score in macro or micro averages, but since the bucketization process is intented to remove class imbalance, the accuracy is still valid.
 
 
-As a complement to understand how much performance a model attains, the distribution of predicted values versus their true target values is compared in a scatter plot. The cloud of points is plotted in the 2D, to be able to see if if deviates from the 45º line (y=x line). An histogram and a boxplot are also used to inspect the distribution of predicted values versus the target values. All of them are compared with the target values in buckets and also compared with the real values of the edge betweenness \\
+As a complement to understand how much performance a model attains, the distribution of predicted values versus their true target values is compared in a scatter plot. The cloud of points is plotted in the 2D, to be able to see if it deviates from the 45º line (y=x line). An histogram and a boxplot are also used to inspect the distribution of predicted values versus the target values. All of them are compared with the target values in buckets and also compared with the real values of the edge betweenness \\
 \\
 
 
 
-
+\newpage
 \subsection{Compiled code function classification}
 % 3) Function renaming
 
@@ -161,6 +163,7 @@ As a complement to understand how much performance a model attains, the distribu
 \textbf{Context}
 % 3.1) Function renaming: 
 %  description: quick recap of sota about code2vec and varnaming tasks
+
 There have been some research publications related to the topic of program analysis. As mentioned in the section 2, there have been approaches to classify code snippets \cite{code2vec} and variables \cite{139} and their usage so that a name can be assigned to them. 
 
 \textbf{Goal}
@@ -179,8 +182,9 @@ It is estimated that having an indication of the main functionality that a code 
 
 \textbf{Experiment}
 %  overview of the process: building the dataset, transform it, label it, preprocessing, then training the models
+
 The experiment consists in several complex steps.
-First, building a dataset that is suitable for training a model on classifying code on a set of predefined classes. Some binaries that contains functions related to the chosen predefined classes are collected from open source software.  
+First, building a dataset that is suitable for training a model on classifying code on a set of predefined classes. Some binaries that contain functions related to the chosen predefined classes are collected from open source software.  
 Next, those binaries and their functions are analyzed by a program that translates machine code to assembler language. This kind of tool is called a disassembler.
 Then, different representations of those functions in assembler have to be generated: a graph for each function and some features related to the assembler code itself and to the structure of the graph.
 After that, the collected dataset must be correctly labeled. Since the intent is to train a model in a supervised setting, each function (corresponding to a sample of the dataset) must be labeled with one of the predefined classes.
@@ -188,7 +192,14 @@ Finally, with the dataset correctly labeled and with all its features in place, 
 
 \subsubsection{Preliminary experiment}
 
-A reproduction of some of the results in graph classification tasks by Graph Neural Networks are replicated in this project to make sure that we are able to attain a similar performance with the tools at hand (Pytorch implementation of Graph Neural Network components). The graph classification tasks on the datasets Enzymes, Proteins, IMDB binary and QM9 are reproduced with different model architectures than the ones on the benchmarks of Pytorch Geometric library. The results are based on the f1-macro average score.
+A reproduction of some of the results in graph classification tasks by Graph Neural Networks are replicated in this project to make sure that we are able to attain a similar performance with the tools at hand (Pytorch implementation of Graph Neural Network components). The graph classification tasks on the datasets:
+\begin{itemize} 	
+	\item Proteins, 
+	\item REDDIT binary
+	\item and QM9 
+\end{itemize} 
+
+are reproduced with different model architectures than the ones on the benchmarks of Pytorch Geometric library. The results are based on the f1-macro average score.
 
 
 
@@ -203,6 +214,7 @@ Let's first review the complex data preparation process. There's no open source 
 \textbf{Data sources}
 % sources of compiled code: malware samples(why not?  unlabeled and on top of it obfuscated)
 %                           well-known softare: webservers, cryptographic libraries, disk utilis,  copyright protection software
+
 Since the main audience could be malicious software analysts, one possibility of getting data from would be to collect analyzed malicious code. It turns out that there's not many sources of analyzed malicious code, and also, malicious code is plenty of obfuscation techniques, which would be an entire different experiment to deal with. 
 
 Instead, the preferred strategy is to use well-known software that contains the functionality according to the predefined classes. A decision was need to be made on the set of labels that the dataset will contain. A set of main functionalities related to general purpose applications would be:
@@ -212,24 +224,25 @@ Instead, the preferred strategy is to use well-known software that contains the 
 	\item disk access
 	\item memory manipulation
 \end{itemize}
-According to that list, several open source tools and libraries are collected, in order to have at least several binaries in each of the previous categories. To that end, open source binaries from web servers, email clients, ftp servers and clients, cryptographic libraries, disk utilities and C library are collected.
+According to that list, several open source tools and libraries are collected, in order to have at least several binaries in each of the previous categories. To that end, open source binaries from web servers, email clients, ftp servers and clients, cryptographic libraries, disk utilities and C library are collected. The list of used software is detailed in the Annex \ref{annex:compilation}.
 
-
+To be able to later assign a label to each sample, where each sample is a function from the selected applications, there are a few options available. The first one is to consider all functions of a binary to be labelled with the main purpose of the binary. For example, all functions of a web server would be labelled network. This approach is too coarse grained and therefore may lead to useless classification models. A second approach would consist in obtaining the open source software sources and then compiling it with debugging information. This type of compilation maintains the original function names that developers assigned to functions. Examples of function names are \textit{asn1\_print\_fsname} and \textit{bio\_sock\_error}(see Annex \ref{annex:compilation}).
 
 
 
 \textbf{Data transformation}
 % data transformation: plugin to extract assembly code as a graph. 
-For generating the dataset, a plugin in Python programming language has been developed to be used inside a disassembler program, namely the free version of IDA, a popular professional disassembler program.
+
+For generating the dataset, a plugin in Python programming language has been developed to be used inside a disassembler program, namely the free version of IDA (\href{https://www.hex-rays.com/products/ida/support/download\_freeware.shtml}{IDA Freeware version}), a popular professional disassembler program but in its freeware version. As introduced in the context of this experiment, a disassembler is a program that reads compiled binaries and converts machine instructions to assembler instructions, and its main purpose is to reverse engineer software for debugging purposes.
 
 
 % abstract idea - each instruction/register/memaddr... is a node
 % in which instruction it is used is a vertex
 % 									  order of executions of instructions form vertex between then + branchs/calls/loops...
 %									NetworkX format from txt files 
-This plugin visits all the functions detected in a binary and extracts the information of instructions, operands and cross-references to generate a graph of the relationship between them. Every instruction, operand, memory address or constant is a node of the graph. Every relationship between them is a vertex of that graph. There's worth mentioning that instructions are executed one after another and so usually an instruction will be linked to its previous and next instruction in the execution flow. However, sometimes loops, conditional branches and function calls modify this sequential execution flow.
+This plugin visits all the functions detected in a binary and extracts the information of instructions, operands and cross-references to generate a graph of the relationship between them. Every instruction, operand, memory address or constant is a node of the graph. Every relationship between them is a vertex of that graph. There's worth mentioning that instructions are executed one after another and so usually an instruction will be linked to its previous and next instruction in the execution flow. However, sometimes loops, conditional branches and function calls modify this sequential execution flow by adding extra edges.
 
-The graph is saved in a format suitable for the Python library NetworkX to read it and import it. The format consists of 2 text files, one with the list of nodes and their attributes, the other with the list of edges and their attributes.
+The graph is saved in a format suitable for the Python library NetworkX to read it and import it. The format consists of 2 text files, one with the list of nodes and their attributes, the other with the list of edges and their attributes. For more details, see Annex \ref{annex:graph_from_code}.
 
 
 
@@ -241,19 +254,16 @@ The graph is saved in a format suitable for the Python library NetworkX to read 
 		%            rules: topics and tasks, 
 		%            final sets of labels v1,v2,v3
 
-
-In the first approach, it was decided that all functions of a binary will be labelled with the main purpose of the binary. For example, all functions of a web server would be labelled network. This approach is too coarse grained and therefore may lead to useless classification models.
- 
-A second approach would consist in obtaining the open source software sources and then compiling it with debugging information. This type of compilation maintains the original function names that developers assigned to functions. Then after obtaining the assembler code of each functions and its original name, some simple rule where created to derive a label from the function name. Basically the appearance of keyword would drive this process. Additionally,human supervision has been applied to improve the labeling assignments. 
+After obtaining the assembler code of each functions and its original name, some simple rules where created to derive a label from the function name in a programatic way. Basically the appearance of keywords would drive this process. Additionally, human supervision has been applied to improve the labeling assignments. 
 
 Four different versions of the dataset have been generated:
 \begin{itemize}
-	\item v0: each binary and all its functions have the same label. A coarse grained and noisy approach
-	\item v1: 10 different labels have been chosen, and function labels has been assigned by keyword appearance in the debugging information (original function name)
-	\item v2: a list of topic and tasks has been compiled and combined to generate 120 different labels. Keyword appearance rules and human supervision have been used to assign labels
-	\item v3: a reduced list of topic and tasks has been compiled and combined to generate 24 different labels. Keyword appearance rules and human supervision have been used to assign labels
+	\item v0: each binary and all its functions have the same label. This is a coarse grained and unrealistic approach. It is suspected that the models would learn spurious relations with this dataset.
+	\item v1: 10 different labels have been chosen, and function labels has been assigned by keyword appearance in the debugging information (original function name).
+	\item v2: a list of topic and tasks has been compiled and combined to generate 120 different labels. Keyword appearance rules and human supervision have been used to assign labels.
+	\item v3: a reduced list of topic and tasks has been compiled and combined to generate 24 different labels. Keyword appearance rules and human supervision have been used to assign labels.
 \end{itemize}
-The idea was to find the correct granularity of the dataset. Trained models tend to perform better in the smaller sets of labels (v0 and v1), but there is the risk that the model does not capture any of the information of interest. 
+The idea was to find the correct granularity of the dataset. Trained models tend to perform better in the smaller sets of labels (v0 and v1), but there is the risk that the model does not capture any of the information of interest. More detail can be found in Annex \ref{annex:labels}.
 
 
 
@@ -264,9 +274,7 @@ The idea was to find the correct granularity of the dataset. Trained models tend
 
 % data transformation for baseline models: summary statistics of graphs, and other topological features
 % data transformation for nlp models: Bag of words with TF-IDF
-Besides from the graph representation of each function of a binary file, the attributes that will be used by baseline models are also generated. There are topological features from the graphs and features extracted directly from the code itself, like the Bag of Words embedding (fined tuned by TF-IDF).
-
-
+Besides the graph representation of each function of a binary file, the attributes that will be used by baseline models are also extracted or generated. There are topological features from the graphs and features extracted directly from the code itself, like the Bag of Words embedding (fined-tuned by TF-IDF). The topological features include the most common statistics on graph structure like diameter, average degree, average clustering, average shortest path length and assortativity coefficient. The code features, besides the Bag of words embedding from the words on the code itself, include number of registers, number of instructions, number of functions called, etc. The complete list can be found in the Annex \ref{annex:feature_engineering}.
 
 
 \begin{figure}[H]
@@ -275,7 +283,23 @@ Besides from the graph representation of each function of a binary file, the att
     \caption{Features exracted from the dataset samples and their relationship with the models trained}\label{fig:Features_diagram}
 \end{figure}
 
-All of these features and graph representation will be transformed into a Dataset module from Pytorch Geometric library, \cite{fey2019fast}. This will allow the training of Graph Neural Network models to use the complete ecosystem of PyTorch Geometric for loading graphs, training models and test their performance.
+All of these features and graph representation will be transformed into a Dataset module from Pytorch Geometric library, \cite{fey2019fast}. This will allow the training of Graph Neural Network models to use the complete ecosystem of PyTorch Geometric for loading graphs, training models and test their performance. For the baseline models, the topological features and code features will be transformed into tensors of floats. And for the models that use bag of words embedding, the bag of words is not exactly generated in this stage, but it is rather fed by the string that contains all the code listing, during training time, to adjust the words to be taken into account by testing different maximum and minimum frequencies. Once the model is trained, it has also decided the best version of the bag of words embedding. In any case, the output of the bag of words is an embedding that is fed to the downstream machine learning models.
+
+An initial distribution analysis is performed on the different code and topological features to see if the features carry any discriminative power within its signal. The analysis confirms there is a significant amount of signal in the data (\ref{annex:feature_engineering}).
+
+
+
+\begin{figure}[H]
+\minipage{0.5\textwidth}%
+  \centering
+    \includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_average_shortests_path_length.png}
+\endminipage
+\minipage{0.5\textwidth}%
+  \centering
+    \includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_distinct_registers.png}
+\endminipage
+\caption{Boxplots of the distribution of the data for several features}\label{fig:distribution_analysis}
+\end{figure}
 
 
 
@@ -305,23 +329,26 @@ The set of baseline models used are:
 	\item MLP (Multi-layer perceptron)
 \end{itemize}
 
-The set of Bag-of-words models consists of the baseline models of the previous list, but using the bag-of-word tfidf embedding as an input. There will also be mixed features from topological features or code features, concatenated with the embeddinf from tfidf.
+The set of Bag-of-words models consists of the baseline models of the previous list, but using the bag-of-word tfidf embedding as an input. There will also be mixed features from topological features or code features, concatenated with the the Bag of words tfidf embedding.
 
 The set of Graph Neural Networks used consists of combinations of:
 \begin{itemize}
 	\item pooling layers to reduce dimensionality
-	\item GCN, GraphSage or Gated Graph Neural Networks
-	\item global pooling to extrat a graph level set of attributes
+	\item GCN, GraphSage, Gated Graph Neural Networks, MetaLayer(Message Passing Neural Network) and Graph Isomorphism Network (GIN)
+	\item global pooling to extract a graph level set of attributes
 	\item some fully connected layers at the end
 \end{itemize}
 
 Based on this architecture, different adjustments on the number of layers, the number of units of layers, and other hyper parameters will be modified during hyper-parameter search.
 
 
+\begin{figure}[H]
+    \centering
+        \includegraphics[width=0.85\linewidth]{img/GN_exp2_GIN.png}
+    \caption{Architecture of the Graph Isomorphism Network (GIN) model}\label{fig:gin_diagram}
+\end{figure}
+
+
 
 \textbf{Evaluation}
-To evaluate model performance, the f1-score with a macro average will be used. F1-score allows to measure precision and recall at the same time (it's the harmonic mean). Macro averages in an imbalanced context allow for the performance to be measure as if all classes should be equally performant. Macro averages protect the training of the model from the possibility that it learns to classify only the majority class.
-
-\textbf{Improvements}
-
-Models that mix the input features could be tested to see if there's room for improving the performance of the models.
+To evaluate model performance, the f1-score with a macro average will be used. F1-score allows to measure precision and recall at the same time (it's the harmonic mean). To tackle the class imbalance present in the data, an undersample strategy on the training set has been applied to re-balance the classes, and then the Macro averages are used as the performance measure. Restoring class balance protects the training of the model from the possibility that it learns to classify only the majority class.

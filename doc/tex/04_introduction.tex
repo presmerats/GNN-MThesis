@@ -3,14 +3,14 @@
 
 
 % context of appearance of Graph Neural Networks
-Data structured as graphs exists in many domains like biology, chemistry, image processing, recommender systems and social networks analysis to name a few. Using this data in a machine learning model has proven to be difficult due to the high dimensionality and non-Euclidean property of graph data. Over the years, several approaches to train machine learning models on graph structured data by summarizing or representing the information in a simplified way have been used. However, those approaches are used as a preprocessing step, not being part of the training process. Graph Neural Networks, a recent novel technique, allows to create an end to end machine learning model that is simultaneously trained to learn a representation of graph structured data and to fit a predictive model on it. 
+Data structured as graphs exists in many domains like biology, chemistry, image processing, recommender systems and social networks analysis to name a few. Using this data in a machine learning model has proven to be difficult due to the high dimensionality and non-Euclidean properties of graph data. Over the years, several approaches to train machine learning models on graph structured data by summarizing or representing the information in a simplified way have been used. However, those approaches are used as a preprocessing step, not being part of the training process. Graph Neural Networks, a recent novel technique, allows to create an end to end machine learning model that is simultaneously trained to learn a representation of graph structured data and to fit a predictive model on it. 
 
 
 % quick Graph Neural Network definitioni
 % what: embedding of the nodes or the graph
 % how: 2 basic methods matrix factorization and distance methods
 % why: used in node and graph regression/classification. Promiment applications are semi-supervised node classification in big size graphs and graph classification for proteins
-Graph Neural Networks \cite{scarcelli} learn a representation of the graph in a way that it creates an embedding of the nodes of graph in a low dimensional space. The end to end training allows this representation to be learned with the purpose of reflect the structural properties of the graph that are of interest for the problem at hand. The representation of nodes as an embedding is created in an iterative way by aggregating information from the neighbors of each node. This process is computationally costly, so modern implementations improve the speed by limiting the number of iterations or by using sampling techniques. 
+Graph Neural Networks \cite{scarcelli} learn a representation of the graph in a way that it creates an embedding of the nodes of graph in a low dimensional space. The end to end training allows this representation to be learned with the purpose of reflecting the structural properties of the graph that are of interest for the problem at hand. The representation of nodes as an embedding is created in an iterative way by aggregating information from the neighbors of each node. This process is computationally costly, so modern implementations improve the speed by limiting the number of iterations or by using sampling techniques. 
 % regress classif
 % node level
 % graph level

@@ -2,7 +2,37 @@
 \section{Conclusion}
 
 
+% summarize goal of the master thesis: exploration of the Graph Neural Network models and it's applications
+The goal of this master's thesis was to explore the some of the most common Graph Neural Network models and their applications. There is more than enough information in current published research papers and surveys about this topic. It has been a real pleasure to learn about this novel techniques and their internals. The applications of those models are wide and exciting, even thought it must be stressed that they are not general purpose machine learning algorithms. But in the end, a lot of data can be expressed in a graph structure. The feeling is that these types of models will continue to be explored and become very successful in some areas.
 
-reasons why ggnn < tfidf:
-* polymorphism, graph structure is not so much related to function result as expected. We know that any func in assembly can be rewritten just with SUB instructions (reference to hacking, the art of exploitation) , because in the end the result is in the data manipulation.
-* GPU memory -> GGNN need a lot of memery, O(n^?), and function graphs are bigger than protein graphs
+
+As part of the research of this master's thesis, two different tasks have been tackled with Graph Neural Networks, approximating the Girvan-Newman clustering algorithm and building a classifier for compiled code functions renaming.
+
+% summarize the results of the experiment 1: explored a way to approximate edge betweenness for using it inside Girvan-Newman, experiments show it is possible to approximate it. 
+The first experiment aimed at an exciting modification of a powerful clustering algorithm, the Girvan-Newman algorithm. The task was to train a Graph Neural Network for edge attribute classification. Many interesting approaches have been applied to make the model obtain a decent performance. The model does approximate the edge betweenness in a transductive setting. This means that in each iteration of the Girvan-Newman algorithm it could be used in combination to computing the real edge betweenness of some of the edges of the graph. The goal was to discover or prove that this approximation was possible, by showing the performance of the model on computing the edge betweenness.
+
+% about implementation, goal stops in the previous phase, where model is trained and evaluated
+% next steps for experiment1: Further experiments could show if it improves the speed without harming the clustering results 
+The next steps that could be implemented are to perform more experiments to obtain a more precise prediction for the edges with highest edge betweenness in order to make the model more suitable for finding the edge with highest centrality. It also would be interesting to train this model in an inductive setting, where it could directly be used in all the iterations of the Girvan-Newman algorithm without retraining and for all edges. Finally, testing the different ways to combine this model that approximates the value of the edge betweenness and the Girvan-Newman model is a very interesting task, where the main point would be to find a good balance between overall time of the algorithm and precision of the approximation.
+
+% summarize the results of experiment 2:
+
+
+The second experiment aimed at building a model that could be applied code analysts and reverse engineers work. It consists of a  classification model for code fragments(subroutines or functions) from a compiled code binary. The class prediction could then be used to rename the functions and speed up the process of debugging or analyzing malicious unknown code. The task has been approached with basic machine learning models as well as Graph Neural Network models. Part of the excitement of this tasks was to represent a list of instructions in assembler language in a graph structure and also extract features related to it. 
+% idea 1%
+Different types of machine learning models have been trained. The Graph Neural Network models were able to attain same performance as baseline models using only graph related information. They have not been able to surpass the performance of the baseline models that used the bag-of-words embeddings derived from code itself.
+%The comparison with baseline models showed that the best features for this task are the ones related to word frequency in bag of words embedding, and that the Graph Neural Networks have not been able to surpass the performance of bag of words based models. 
+We conclude that the bag-of-words embedding carries more discriminative power than the graph derived from code or their topological features. Another take away is that the training of Graph Neural Networks is more costly and more complex than for other basic machine learning models. The highest impact on the performance of the trained model is caused by the way the split of the training, validation and testing dataset is chosen. Also the hyper-parameters have to be chosen carefully to avoid the perfomance to drop significantly.
+
+Improvements have been proposed to this task, consisting of combining the semantic similarity information carried in the bag-of-words embeddings with the graph information to train a more powerful Graph Neural Network. The combination could be done at the node or at the graph level. Another improvement proposed is to review the dataset generation and labeling in order to generate a less noisy dataset, probably changing the focus to a smaller set of classes but that could yield a model with better performance.
+
+
+% next steps for the experiment 2:
+
+
+
+
+
+% reasons why ggnn < tfidf:
+% * polymorphism, graph structure is not so much related to function result as expected. We know that any func in assembly can be rewritten just with SUB instructions (reference to hacking, the art of exploitation) , because in the end the result is in the data manipulation.
+% * GPU memory -> GGNN need a lot of memery, O(n^?), and function graphs are bigger than protein graphs
