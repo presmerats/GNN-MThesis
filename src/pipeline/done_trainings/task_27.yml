@@ -1,0 +1,5 @@
+booster: gbtree
+dataset: ./tmp/symbols_dataset_2_precomp_split_undersample_max_half/
+features: topo and code feats
+max_depth: 150
+model: XGBClassifier

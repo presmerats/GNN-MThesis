@@ -1,0 +1,7 @@
+---
+'booster': ['gbtree']
+'max_depth': [8,150]
+'features': ['x_topo_feats','topo and code feats']
+model: ['XGBClassifier']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max_third/','./tmp/symbols_dataset_3_precomp_split_undersample_max_half/','./tmp/symbols_dataset_2_precomp_split_undersample_max_third/','./tmp/symbols_dataset_2_precomp_split_undersample_max_half/','./tmp/symbols_dataset_1_precomp_split_undersample_max_third/','./tmp/symbols_dataset_1_precomp_split_undersample_max_half/','./tmp/symbols_dataset_3_precomp_split_undersample_max/','./tmp/symbols_dataset_2_precomp_split_undersample_max_third/','./tmp/symbols_dataset_1_precomp_split_undersample_max_third/',
+]

@@ -1,0 +1,9 @@
+---
+'d1': [85]
+'d2': [20]
+'d3': [15]
+'num_epochs': [30,100]
+'features': ['topo and code feats']
+model: ['mlp2']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max/','./tmp/symbols_dataset_2_precomp_split_undersample_max/','./tmp/symbols_dataset_1_precomp_split_undersample_max/'
+]

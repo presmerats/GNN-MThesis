@@ -1,0 +1,10 @@
+---
+'multi_class': ['ovr']
+'penalty': ['l2']
+'solver': ['newton-cg']
+'max_iter': [100,]
+'C': [1]
+'features': ['tfidf and topo feats']
+model: ['LogisticRegression']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max_third/','./tmp/symbols_dataset_3_precomp_split_undersample_max_half/','./tmp/symbols_dataset_2_precomp_split_undersample_max_third/','./tmp/symbols_dataset_2_precomp_split_undersample_max_half/','./tmp/symbols_dataset_1_precomp_split_undersample_max_third/','./tmp/symbols_dataset_1_precomp_split_undersample_max_half/',
+]

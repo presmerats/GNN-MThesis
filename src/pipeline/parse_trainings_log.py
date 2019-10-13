@@ -10,6 +10,7 @@ import inspect
 import pkgutil
 import traceback
 import json
+import pandas as pd
 
 
 
@@ -173,6 +174,50 @@ def times_summary():
                 except Exception as err:
                     traceback.print_exc()
                     print("problem with "+f)
+
+
+def report_latex(filename='results/V3_results.csv', label='FN_exp_v3',title='Function classification experiment results with dataset v3'):
+
+    pd.set_option("display.max_colwidth", 30)
+    report = pd.read_csv(filename)
+    print(report.columns)
+
+    report2 = pd.DataFrame(data={
+        'Model': report[' modeltype'],
+        #'parameters': report[' params'],
+        'Features': report[' features'],
+        'CV score': report[' cv_score'],
+        'Precision macro average': report[' macro_prec'],
+        'Recall macro average': report[' macro_recall'],
+        'F1-macro': report[' macro_f1'],
+        })
+
+
+
+    # add
+    #prefix="\\minipage\{1\\textwidth}\n\\\\\{\\footnotesize "
+    #suffix=" }\\endminipage"
+    # prefix="\\footnotesize "
+    # suffix=" "
+
+    # report2['parameters'] = report2.apply(lambda row: prefix + row['parameters'] + suffix, axis=1)
+
+    display(report2)
+
+    latex_str = report2.to_latex(index=False)
+
+    latex_str = latex_str.replace('\\textbackslash ','\\')
+    latex_str = latex_str.replace("llrrrr",'|llcccc|')
+    latex_str = latex_str.replace("\\toprule",'\\hline')
+    latex_str = latex_str.replace("\\midrule",'\\hline')
+    latex_str = latex_str.replace("\\bottomrule",'\\hline')
+    latex_str = "\\begin{table}[H]\n\\centering\n{\\footnotesize\n "+latex_str
+    caption = "}\\label{"+label+"}\\caption{"+title+"}\n\\end{table}"
+    latex_str = latex_str + caption
+
+
+    print(latex_str)
+    return latex_str
 
 
 

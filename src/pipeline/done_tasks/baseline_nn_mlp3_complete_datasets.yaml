@@ -1,0 +1,10 @@
+---
+'d1': [55]
+'d2': [10]
+'d3': [10]
+'d4': [5]
+'num_epochs': [30,100]
+'features': ['code feats']
+model: ['mlp3']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max/','./tmp/symbols_dataset_2_precomp_split_undersample_max/','./tmp/symbols_dataset_1_precomp_split_undersample_max/'
+]

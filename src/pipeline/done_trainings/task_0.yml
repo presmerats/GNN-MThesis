@@ -1,0 +1,14 @@
+aggr_type: mean
+batch_size: 8
+d1: 50
+d2: 20
+d3: 10
+dataset: ./tmp/symbols_dataset_1_precomp_split_undersample_max_third/
+epochs: 20
+features: ''
+k: 10
+learning_rate: 0.01
+model: SAGE01_sort01
+num_classes: num_classes
+num_layers: 2
+weight_decay: 1e-4

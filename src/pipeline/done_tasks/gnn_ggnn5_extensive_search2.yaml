@@ -1,0 +1,16 @@
+---
+'d1': [10]
+'d2': [5]
+'d3': [5]
+'d4': [4]
+'epochs': [50,80,100]
+'learning_rate': [0.1,0.0001,0.00001]
+'weight_decay' : [2e-4]
+'num_layers' : [2]
+'aggr_type' : ['mean']
+'batch_size' : [8]
+'num_classes' : [num_classes]
+'model': [ GGNN5]
+'features': ['']
+dataset: ['./tmp/symbols_dataset_1_precomp_split_undersample_max_third/'
+]

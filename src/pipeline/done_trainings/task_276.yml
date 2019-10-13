@@ -1,0 +1,8 @@
+C: 1
+dataset: ./tmp/symbols_dataset_3_precomp_split_undersample_max_third/
+features: tfidf and topo feats
+max_iter: 100
+model: LogisticRegression
+multi_class: ovr
+penalty: l2
+solver: newton-cg

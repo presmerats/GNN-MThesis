@@ -92,6 +92,21 @@ def pyTorchGeometricDatasetToNx(G,prefix = './temp/temp_aj_m',suffix=0):
     return g2
 
 
+def pytorch_geometric_dataset_to_Nx2(data, prefix='./temp/temp_edge_list'):
+
+    with open('temp/temp_to_nx.txt','w') as f:
+        edge_neighbors = data.edge_index.tolist()
+        for j in range(len(edge_neighbors[0])):
+            f.write(str(edge_neighbors[0][j]) + ' ' + str(edge_neighbors[1][j]) + '\n')
+                
+    
+        f.close()
+
+        g = nx.read_edgelist('temp/temp_to_nx.txt', nodetype=int)
+        return g
+
+    return None
+
 def inspectGraphDataset(dataset, name):
 
 
@@ -316,8 +331,8 @@ def shuffleTrainTestMasks_analysis(data, trainpct = 0.5):
     # print("train split: ",ytr_min,ytr_mean,ytr_median,ytr_max)
     # print("test split: ",yt_min,yt_mean,yt_median,yt_max)
 
-    #plt.boxplot([ytrains.tolist(),ytests.tolist()])
-    #plt.show()
+    plt.boxplot([ytrains.tolist(),ytests.tolist()])
+    plt.show()
 
     # sort then 
     ytrains,_ = torch.sort(ytrains)
@@ -878,6 +893,90 @@ def trainTestEval3(Net,dataset, epochs=1, batch_size=32, res_dict={}, seed=None)
         torch.cuda.empty_cache()
 
 
+def reporting_from_csv(filepath,label='results',title='Girvan Newman experiments results'):
+
+    pd.set_option("display.max_colwidth", 10000)
+    results = pd.read_csv(filepath, names=['Model','Parameters','Loss','Accuracy','Time(min)'])
+    latex_str = results.to_latex(index=False)
+    
+
+    #latex_str = latex_str.replace('\\\\','\\')
+    latex_str = latex_str.replace("llrlr",'|llllccc|')
+    latex_str = latex_str.replace("\\toprule",'\\hline')
+    latex_str = latex_str.replace("\\midrule",'\\hline')
+    latex_str = latex_str.replace("\\bottomrule",'\\hline')
+    latex_str = "\\begin{table}[H]\n\\centering\n"+latex_str
+    caption = "\\label{"+label+"}\\caption{"+title+"}\n\\end{table}"
+    latex_str = latex_str + caption
+
+    latex_str = latex_str.replace('d4=','d')
+    latex_str = latex_str.replace('\_d5=','d')
+    latex_str = latex_str.replace('\_hus=','h')
+    latex_str = latex_str.replace('\_eus=','e')
+    latex_str = latex_str.replace('\_n1us=','n')
+    latex_str = latex_str.replace('\_n2us=','n')
+    latex_str = latex_str.replace('\_r=','r')
+    latex_str = latex_str.replace('\_epochs=','epochs')
+    latex_str = latex_str.replace('\_split-','\_')
+
+
+    latex_str = latex_str.replace("5r","5 & ")
+    latex_str = latex_str.replace("0r","0 & ")
+    latex_str = latex_str.replace("epochs","-")
+    latex_str = latex_str.replace("\_"," & ")
+    latex_str = latex_str.replace("Accu & racy",'Accuracy')
+    latex_str = latex_str.replace("Pa & ramete & rs",'Parameters')
+    latex_str = latex_str.replace("Parameters",'Paramteres  &  Runs\/Epochs  &  Splits')
+
+    display(results)
+
+    print(latex_str)
+
+
+    return latex_str
+
+def reporting_from_csv_f1macro(filepath,label='results',title='Girvan Newman experiments results'):
+
+    pd.set_option("display.max_colwidth", 10000)
+    results = pd.read_csv(filepath, names=['Model','Parameters','Loss','Accuracy','F1-macro','Time(min)'])
+    latex_str = results.to_latex(index=False)
+    
+
+    #latex_str = latex_str.replace('\\\\','\\')
+    latex_str = latex_str.replace("llrlr",'|llllccc|')
+    latex_str = latex_str.replace("\\toprule",'\\hline')
+    latex_str = latex_str.replace("\\midrule",'\\hline')
+    latex_str = latex_str.replace("\\bottomrule",'\\hline')
+    latex_str = "\\begin{table}[H]\n\\centering\n"+latex_str
+    caption = "\\label{"+label+"}\\caption{"+title+"}\n\\end{table}"
+    latex_str = latex_str + caption
+
+    latex_str = latex_str.replace('d4=','d')
+    latex_str = latex_str.replace('\_d5=','d')
+    latex_str = latex_str.replace('\_hus=','h')
+    latex_str = latex_str.replace('\_eus=','e')
+    latex_str = latex_str.replace('\_n1us=','n')
+    latex_str = latex_str.replace('\_n2us=','n')
+    latex_str = latex_str.replace('\_r=','r')
+    latex_str = latex_str.replace('\_epochs=','epochs')
+    latex_str = latex_str.replace('\_split-','\_')
+
+
+    latex_str = latex_str.replace("5r","5 & ")
+    latex_str = latex_str.replace("0r","0 & ")
+    latex_str = latex_str.replace("epochs","-")
+    latex_str = latex_str.replace("\_"," & ")
+    latex_str = latex_str.replace("Accu & racy",'Accuracy')
+    latex_str = latex_str.replace("Pa & ramete & rs",'Parameters')
+    latex_str = latex_str.replace("Parameters",'Paramteres  &  Runs\/Epochs  &  Splits')
+
+    display(results)
+
+    print(latex_str)
+
+
+    return latex_str
+
 def reporting_simple(d):
     df_original = pd.DataFrame(d['tables'])
     df = df_original.T
@@ -1414,3 +1513,5 @@ def experimentBlock_quick_old(dname, epochs=2, seed=35,nlayers=2,d1=15,d2=50,d3=
     del dataset
     torch.cuda.empty_cache()
     
+
+

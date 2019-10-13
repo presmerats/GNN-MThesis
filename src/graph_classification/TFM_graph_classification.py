@@ -844,23 +844,40 @@ def train_model_GGNN(model, loader, optimizer, train_loss_history):
     for batch in loader:
         data = batch.to(device)
 
-        #print("data.x",data.x)
+        # print("data.x")
+        # print(data.x.shape)
+        # pprint(data.x)
+        # print(data.y)
+        print(data.x.shape)
+        print(data.y.shape)        
+        
         #print("data.y",data.y)
         #print("data.edge_attr",data.edge_attr)
         #print("data.edge_index",data.edge_index)
         #print(dir(data))
 
-
+        # old version with just 1's in each node
         if data.x is None:
             x = torch.ones(data.num_nodes, 1)
             data.x = x.to(device)
             del x
 
+        # now add the one-hot encodings of node degree as a feature input
+        # done from the the import side?
+
+
         #print("data.x",data.x)
 
         optimizer.zero_grad()
+        
         out = model(data)
+        # print(out.shape)
+        # print()
         target = torch.squeeze(data.y)
+        if data.y.shape == (1,1):
+            target = torch.LongTensor([target]).to(device)
+            #target = target.view(1,-1)
+
         #print(out.shape)
         #print(out)
         #print(target.shape)
@@ -868,8 +885,12 @@ def train_model_GGNN(model, loader, optimizer, train_loss_history):
         #loss = F.nll_loss(nn.LogSoftmax(out), target)
         
         loss_func = nn.NLLLoss()
-        # m = nn.LogSoftmax(dim=1)
-        # loss = loss_func(m(out), target)
+        #m = nn.LogSoftmax(dim=1)
+        #loss = loss_func(m(out), target)
+        #out = torch.argmax(out, dim=1)
+        print("out", out.shape)
+        print("target", target.shape)
+        print()
         loss = loss_func(out, target)
         loss_train +=loss
         loss.backward()
@@ -1492,26 +1513,52 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             kwargs.update({'tfidf_indices':tfidf_indices})
 
 
+
         start2 = time.time()
         try:
-            model = modelclass(**kwargs) # model parameters are inside kwargs dict
-            model = model.to(device)
-            modeldict['model_instance'] = model
+            
             
 
             lr = modeldict['learning_rate']
             wd = modeldict['weight_decay']
             bs = modeldict['batch_size']
 
-            optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
+            
 
             for kfold in kfolds:
+
+
 
                 train = train_dataset[kfold[0]]
                 val = train_dataset[kfold[1]]
                 loader = DataLoader(train, batch_size=bs, shuffle=True)
                 loader_val = DataLoader(val, batch_size=bs, shuffle=True)
                 for epoch in range(epochs):
+                    print("epoch:",epoch)
+
+                    if 'thedataset' in kwargs.keys():
+                        modelclass = modeldict['model']
+                        kwargs = modeldict['kwargs']    
+                        kwargs['dataset']=train
+                        kwargs.pop('thedataset')
+                        try:
+                            kwargs.pop('num_features')
+                        except:
+                            pass
+                        # try:
+                        #     kwargs.pop('num_classes')
+                        # except:
+                        #     pass
+                        model = modelclass(**kwargs) # model parameters are inside kwargs dict
+                        model = model.to(device)
+                        modeldict['model_instance'] = model
+                    else:
+                        model = modelclass(**kwargs) # model parameters are inside kwargs dict
+                        model = model.to(device)
+                        modeldict['model_instance'] = model
+                        
+                    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
+
                     train_model(model, loader, optimizer, train_loss_history)
                     val_loss_model(model, loader_val, optimizer, val_history)
 
@@ -1528,6 +1575,7 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
                 modeldict['cv_val_accuracy']+=modeldict['accuracy']
                 modeldict['cv_val_microF1']+=modeldict['microF1']
                 modeldict['cv_val_macroF1']+=modeldict['macroF1']
+                print(modeldict['cv_val_macroF1'])
         
             modeldict['cv_val_loss']=modeldict['cv_val_loss']/len(kfolds)
             modeldict['cv_val_accuracy']=modeldict['cv_val_accuracy']/len(kfolds)
@@ -1538,6 +1586,7 @@ def modelSelection(model_list,k, train_dataset, balanced=True, force_numclasses=
             modeldict['cv_score']=modeldict['cv_val_macroF1']
             modeldict['score']='f1_macro'
             modeldict['model_instance'] = model.to('cpu')
+            print("cv_score:",modeldict['cv_score'],"----------------------------------------")
 
         except:
             print("Problem training model "+modeldict['model'].__name__)
@@ -1775,6 +1824,7 @@ def save_results_gnn(modelsdict, results_file=None, models_folder='models/gnn/')
         results_file = './results/training_GNN_'+d+'.json'
     
     with open(results_file, 'w') as outfile:
+        savedict['dataset']=''
         json.dump(savedict['best_models'], outfile)
         
 

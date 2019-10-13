@@ -291,7 +291,9 @@ def print_all_training_stats(dataset_version='v1', results_folder='baseline', re
     
 
 
-def balance_maximum_classes(dataset, max_count=-1):
+
+
+def balance_maximum_classes(dataset, max_count=-1,min_remove=-1, remove_classes=[]):
     """
         shuffle and then count items by class,
             use a threshold to remove classes with more items than the threshold
@@ -310,16 +312,20 @@ def balance_maximum_classes(dataset, max_count=-1):
     pprint(class_counts)
 
     undersample_classes = []
+    remove_mins= remove_classes
     for k,v in class_counts.items():
         if max_count>-1 and v>max_count:
             undersample_classes.append(k)
             print(" classes to undersample ",k)
-            
+        elif min_remove > -1 and v<min_remove:
+            remove_mins.append(k)        
+
 
     #max_class_count = min(class_counts.values())
     # deactivated feature by using now the max
     max_class_count = max_count if max_count > -1 else max(class_counts.values())
     print("max class count set to ", max_class_count)
+
 
     purged_list = []
     final_class_counts = {}
@@ -331,10 +337,14 @@ def balance_maximum_classes(dataset, max_count=-1):
         
         if final_class_counts[cl]>max_class_count:
             continue
+        
+        if cl in remove_mins:
+            continue
 
         final_class_counts[cl]+=1
         purged_list.append(i)
 
+    print("final class counts after trimming max and min classes")
     pprint(final_class_counts)
 
     #return purged_list 
@@ -1101,12 +1111,12 @@ def dataset_split_balanced_major_classes(dataset, features='all', max_count=-1):
     # return X_train, X_test, y_train, y_test, nclasses
 
 
-def dataset_split_balanced_major_classes_graph_version(dataset, features='all', max_count=-1):
+def dataset_split_balanced_major_classes_graph_version(dataset, features='all', max_count=-1,min_remove=-1, remove_classes=[]):
     """
     undersmaple major classes, min classes intact
     """
 
-    purged_list, nclasses = balance_maximum_classes(dataset,max_count)
+    purged_list, nclasses = balance_maximum_classes(dataset,max_count,min_remove, remove_classes=remove_classes)
     return dataset_split_core_graph_version(dataset, purged_list, nclasses)
     
 

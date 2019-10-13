@@ -1,0 +1,5 @@
+dataset: ./tmp/symbols_dataset_1_precomp_split_undersample_max_third/
+features: tfidf and topo feats
+max_depth: 8
+model: RandomForestClassifier
+n_estimators: 4

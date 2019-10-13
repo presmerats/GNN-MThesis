@@ -1,0 +1,9 @@
+d1: 55
+d2: 10
+d3: 10
+d4: 5
+d5: 5
+dataset: ./tmp/symbols_dataset_3_precomp_split_undersample_max_half/
+features: tfidf and topo feats
+model: mlp4
+num_epochs: 30

@@ -23,7 +23,21 @@ import torch
 from torch_geometric.data import Dataset
 from torch_geometric.data import Data
 from torch_geometric.data import DataLoader
+import torch_geometric.transforms as T
+from torch_geometric.utils import degree
 
+
+
+class NormalizedDegree(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, data):
+        deg = degree(data.edge_index[0], dtype=torch.float)
+        deg = (deg - self.mean) / self.std
+        data.x = deg.view(-1, 1)
+        return data
 
 def sanitize(json_str):
 
@@ -269,11 +283,25 @@ class FunctionsDataset(Dataset):
 
         """
         # new approach
-        return len(
-            list(
-                set(
-                    [self.get(j).y[0].item() for j in range(self.__len__() )]
-                    )))
+        try:
+            return len(
+                list(
+                    set(
+                        [self.get(j).y[0].item() for j in range(self.__len__() )]
+                        )))
+        except:
+
+            # return len(
+            #     list(
+            #         set(
+            #             [self.get(j).y[0] for j in range(self.__len__() )]
+            #             )))
+
+            list_classes = []
+            for j in range(self.__len__()):
+                list_classes.append(self.get(j).y)
+            return list(set(list_classes))
+
 
         # # old approach
         # k = len(self.my_classes)
@@ -294,9 +322,25 @@ class FunctionsDataset(Dataset):
         """
 
         graph0 = self.get(0)
+        print("num_features, data.x.shape")
+        pprint(graph0.x.shape)
         return graph0.x.shape[1]
         #return 4
     
+    @property
+    def y(self):
+        """
+        return a torch vector with all y of all graphs inside
+        """
+
+        y = torch.zeros(self.__len__(), dtype=torch.float)
+
+        for j in range(self.__len__()):
+            y[j]=self.get(j).y
+
+        return y
+    
+
     def __len__(self):
         return len(self.processed_file_names)
 
@@ -427,6 +471,7 @@ class FunctionsDataset(Dataset):
                     delattr(data,'x_topo_times')
                     delattr(data,'label')
                     delattr(data,'filename')
+                    delattr(data,'tfidf_vec')  # instead of useing tfidf_vec we use edge_attr as a workaround
                     if not isinstance(data.y,torch.Tensor):
                         data.y = torch.LongTensor([[data.y]])
                     #print(data.y[0].item())
@@ -1732,3 +1777,248 @@ def test_code_features(code_feats_dict, assembly_listing_file, nodes_file, edges
     result_1.update(result_3)
     result_1.update(result_4)
     pprint(result_1)
+
+
+
+def add_node_degree(dataset_folder):
+    print("loading", dataset_folder)
+    dataset = FunctionsDataset(root=dataset_folder)
+    print("num samples:",len(dataset))
+    #print("num classes:",dataset.num_classes)
+    print("num features:",dataset.num_features)
+
+
+    max_degree = 0
+    for j in range(len(dataset)):
+
+        # if j > 2:
+        #     break
+        data = dataset[j]
+        
+        # compute node degrees
+        elist1 = data.edge_index.tolist()[0]
+        elist2 = data.edge_index.tolist()[1]
+        edgelist = []
+        for k in range(len(elist1)):
+            edgelist.append((elist1[k],elist2[k]))
+        # just count how many times a value appears in one list = degree
+        g = nx.Graph(edgelist)
+
+
+        # get all node ids
+        node_ids = list(set(elist1))
+
+        # degrees
+        degrees = nx.degree(g)
+        # correct for unconnected nodes
+        node_ids = range(data.x.shape[0])
+        degrees_dict = dict(degrees)
+        for idx in node_ids:
+            if idx not in degrees_dict.keys():
+                degrees_dict[idx]=0
+
+        # transform to torch
+        degrees = torch.FloatTensor(list(degrees_dict.values()))
+        degrees = degrees.view(data.x.shape[0],-1)
+
+        # save max degree
+        current_max = max(list(degrees_dict.values()))
+        if max_degree < current_max:
+            max_degree = current_max
+
+
+    # redo with max_degree
+    T.OneHotDegree(max_degree)
+        
+    for j in range(len(dataset)):
+
+        # if j > 2:
+        #     break
+        data = dataset[j]
+        print("data.x")
+        pprint(data.x)
+        print("edge list", data.edge_index)
+
+
+        # compute node degrees
+        print("edge_list origins:")
+        pprint(data.edge_index.tolist()[0])
+        print("edge_list destinations:")
+        pprint(data.edge_index.tolist()[1])
+        elist1 = data.edge_index.tolist()[0]
+        elist2 = data.edge_index.tolist()[1]
+        edgelist = []
+        for k in range(len(elist1)):
+            edgelist.append((elist1[k],elist2[k]))
+        # just count how many times a value appears in one list = degree
+        g = nx.Graph(edgelist)
+
+
+
+        # get all node ids
+        node_ids = list(set(elist1))
+        print("node_ids",node_ids)        
+        print("node_ids from nx", g.nodes())
+
+        # degrees
+        degrees = nx.degree(g)
+        print("degrees")
+        pprint(degrees)
+        pprint(g.degree())
+
+        # correct for unconnected nodes
+        node_ids = range(data.x.shape[0])
+        degrees_dict = dict(degrees)
+        for idx in node_ids:
+            if idx not in degrees_dict.keys():
+                degrees_dict[idx]=0
+
+        print("node_ids",node_ids )
+        print("degrees keys", degrees_dict.keys())
+        print("degrees keys", degrees_dict.values(),"are they sorted?")
+
+
+
+
+        # transform to torch
+        print("degrees values()")
+
+        degrees = torch.FloatTensor(list(degrees_dict.values()))
+        pprint(degrees)
+        degrees = degrees.view(data.x.shape[0],-1)
+
+        # save max degree
+        current_max = max(list(degrees_dict.values()))
+        if max_degree < current_max:
+            max_degree = current_max
+
+
+        # add new column to x
+        data.x = torch.cat((data.x, degrees), dim=1)
+        print("transformed data.x")
+        pprint(data.x)
+
+        # save graph
+        dataset.save_changes(j,data)
+
+
+
+
+def add_node_degree_v2(dataset_folder):
+    """
+        follows PyG/benchmark/kernel/datasets.py indications
+        to use a T.OneHotDegree as a transform for the dataset
+
+    """
+    print("loading", dataset_folder)
+    dataset = FunctionsDataset(root=dataset_folder)
+    print("num samples:",len(dataset))
+    #print("num classes:",dataset.num_classes)
+    print("num features:",dataset.num_features)
+
+
+    max_degree = 0
+    degs = []
+    for data in dataset:
+        degs += [degree(data.edge_index[0], dtype=torch.long)]
+        max_degree = max(max_degree, degs[-1].max().item())
+
+    if max_degree < 2000:
+        dataset.transform = T.OneHotDegree(max_degree)
+    else:
+        deg = torch.cat(degs, dim=0).to(torch.float)
+        mean, std = deg.mean().item(), deg.std().item()
+        dataset.transform = NormalizedDegree(mean, std)
+
+    return dataset
+
+
+def add_node_degree_v3(dataset_folder):
+    dataset = add_node_degree_v2(dataset_folder)
+    for j in range(len( dataset)):
+        d = dataset[j]
+        pprint(d.x)
+        dataset.save_changes(j,d)
+
+
+def switch_dataset_class(cl_origin=0.0, cl_dest=1.0, root=''):
+    """
+        During training of v1, 
+        classes 0 and 9 have very low number of samples.
+        to balance dataset those clases are removed (samples of that classs are not taken into account)
+
+        but since mlps need the classes to be in order 0 to n-1, 
+        we need to mode class 0 to 8 , so in the end we remove examples of classes 8 and 9 only.
+
+    """
+    dataset = FunctionsDataset(root=root)
+
+    # for every sample in the dataset
+
+    for j in range(len(dataset)):
+        data = dataset[j]
+    
+        # if cl = cl_origin then change it to cl_dest
+        if data.y == int(cl_origin):
+            #print(" found graph ",j," with data.y=",data.y)
+            data.y = int(cl_dest)
+
+        # save changes to disk
+        dataset.save_changes(j,data)
+    
+
+def combine_bow_features_with_graph(cl_origin=0.0, cl_dest=1.0, root=''):
+    """
+        During training of v1, 
+        classes 0 and 9 have very low number of samples.
+        to balance dataset those clases are removed (samples of that classs are not taken into account)
+
+        but since mlps need the classes to be in order 0 to n-1, 
+        we need to mode class 0 to 8 , so in the end we remove examples of classes 8 and 9 only.
+
+    """
+    dataset = FunctionsDataset(root=root)
+
+    # for every sample in the dataset
+
+    for j in range(len(dataset)):
+        data = dataset[j]
+    
+        # add the corresponding row of the precomputed tfidf bow
+        # match symbols_dataset_3_precomp_splits_undersample_max2/training_set/processed 
+        # with
+        # symbols_dataset_3_precomp_splits_undersample_max2/X_train.pickle
+        # and 
+        # symbols_dataset_3_precomp_splits_undersample_max2/test_set/processed 
+        # with
+        # symbols_dataset_3_precomp_splits_undersample_max2/X_test.pickle
+
+        # extract the corresponding row for X_train or X_test...
+
+
+
+        # find column order!!!
+        #   topos = dataset[j].__getattribute__('x_topo_feats')
+
+        #   # get all the features
+        #   cfeats  =[d['document'],d['document_simplified'],d['list_funcs'], d['nregs'], d['num_distinct_regs'], d['ninstrs'], d['ndispls'], d['nimms'], d['nmaddrs'], d['num_funcs'],]
+        #       cfeats.extend(topos)
+
+        # then where is the embedding???? X_train_tfidf_document.pickle!
+        # is it in the first column like same order ? or is it somewhere else?
+
+        # find the row number is equivalent to the dataset value?
+
+
+        # save changes to disk
+        dataset.save_changes(j,data)
+    
+
+
+
+
+
+if __name__=='__main__':
+
+
+    add_node_degree_v3('./tmp/symbols_dataset_1')

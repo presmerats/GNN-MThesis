@@ -1,0 +1,17 @@
+---
+'d1': [20]
+'d2': [30]
+'d3': [20]
+'d4': [10]
+'d5': [5]
+'epochs': [50,100]
+'learning_rate': [0.01,0.001]
+'weight_decay' : [5e-4,1e-4]
+'num_layers' : [2,1]
+'aggr_type' : ['mean']
+'batch_size' : [16]
+'num_classes' : [num_classes]
+'model': [ GGNN6]
+'features': ['']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max_third/','./tmp/symbols_dataset_3_precomp_split_undersample_max_half/','./tmp/symbols_dataset_2_precomp_split_undersample_max_third/','./tmp/symbols_dataset_2_precomp_split_undersample_max_half/','./tmp/symbols_dataset_1_precomp_split_undersample_max_third/','./tmp/symbols_dataset_1_precomp_split_undersample_max_half/'
+]

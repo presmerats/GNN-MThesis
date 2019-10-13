@@ -1235,6 +1235,43 @@ def add_tfidf_to_dataset(dataset_folder):
         test_dataset.save_changes(j,data)
 
 
+def add_tfidf_to_dataset_with_a_trick(dataset_folder):
+    """
+    load tfidf form folder
+    then load dataset
+    loop dataset and add the corresponding tfidf row to data.tfidf_vec
+    then dataset.save_changes(idx,data)
+
+    instead of using data.tfidf_vec
+    we will use data.edge_attr, so the problem with gnn_mode_on() is not present,
+    but we can only use this in algorithms that do not make use of edge_attr
+
+    """
+    X_train_tfidf = pickle.load(open(os.path.join(dataset_folder,'X_train_tfidf_document.pickle'),'rb'))
+    X_test_tfidf = pickle.load(open(os.path.join(dataset_folder,'X_test_tfidf_document.pickle'),'rb'))
+    # y_train = pickle.load(open(os.path.join(dataset_folder,'y_train.pickle'),'rb'))
+    # y_test = pickle.load(open(os.path.join(dataset_folder,'y_test.pickle'),'rb'))
+    # nclasses = pickle.load(open(os.path.join(dataset_folder,'nclasses.pickle'),'rb'))
+
+
+    train_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'training_set'))
+
+    for j in range(len(train_dataset)):
+        tf_vec = X_train_tfidf[j,:]
+        data = train_dataset[j]
+        data.edge_attr = torch.FloatTensor(tf_vec)
+        train_dataset.save_changes(j,data)
+
+    test_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'test_set'))
+
+    for j in range(len(test_dataset)):
+        tf_vec = X_test_tfidf[j,:]
+        data = test_dataset[j]
+        data.edge_attr = torch.FloatTensor(tf_vec)
+        test_dataset.save_changes(j,data)
+
+
+
 def verify_tfidf_on_dataset(dataset_folder):
     train_dataset = FunctionsDataset(root=os.path.join(dataset_folder,'training_set'))
 

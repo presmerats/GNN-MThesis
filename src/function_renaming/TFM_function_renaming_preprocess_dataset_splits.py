@@ -130,6 +130,7 @@ def precompute_dataset_split(dataset_folder,
                              features,
                              split_type_name,
                              destination_folder,
+                             min_remove=None
                              ):
     """
         precompute datset splits and savign them to a folder.
@@ -144,7 +145,66 @@ def precompute_dataset_split(dataset_folder,
     if split_type_name == 'unchanged' or split_type_name == 'remove_min':
         X_train, X_test, y_train, y_test, nclasses, train_dataset, test_dataset = dataset_split_shared_splits_graph_version(dataset, features=features, min_count=min_count)
     elif split_type_name == 'undersample_max':
-        X_train, X_test, y_train, y_test, nclasses, train_dataset, test_dataset = dataset_split_balanced_major_classes_graph_version(dataset, features=features, max_count=min_count)
+        X_train, X_test, y_train, y_test, nclasses, train_dataset, test_dataset = dataset_split_balanced_major_classes_graph_version(dataset, features=features, max_count=min_count, min_remove=min_remove)
+
+    data_split_type=split_type_name
+    suffix = dataset_version + '-' + data_split_type
+    folder = destination_folder
+
+    pickle.dump(X_train,open(
+        os.path.join(folder,'X_train.pickle'),'wb+'))
+    pickle.dump(X_test,open(
+        os.path.join(folder,'X_test.pickle'),'wb+'))
+    pickle.dump(y_train,open(
+        os.path.join(folder,'y_train.pickle'),'wb+'))
+    pickle.dump(y_test,open(
+        os.path.join(folder,'y_test.pickle'),'wb+'))
+    pickle.dump(nclasses,open(
+        os.path.join(folder,'nclasses.pickle'),'wb+'))
+
+    # save dataset graph symlinks for train and test
+
+    # verify dataset contains root folder
+    print("Root folder verification: ", train_dataset.root)
+    print("Destination: ",os.path.join(destination_folder[4:],'training_set'))
+
+    # symlinks copies of the processed files
+    save_partial_dataset_symlinks(
+        train_dataset, 
+        new_name=os.path.join(destination_folder[4:],'training_set'))
+    save_partial_dataset_symlinks(
+        test_dataset, 
+        new_name=os.path.join(destination_folder[4:],'test_set'))
+
+
+
+
+
+def precompute_dataset_split2(dataset_folder,
+                             dataset_version, 
+                             min_count,
+                             features,
+                             split_type_name,
+                             destination_folder,
+                             min_remove=None,
+                             remove_classes=[]
+                             ):
+    """
+        precompute datset splits and savign them to a folder.
+        Actual work, all parametrized.
+
+        this new approach also removes classes
+    """
+    dataset = FunctionsDataset(root=dataset_folder)
+    dataset_version=dataset_version
+    print(len(dataset))
+    print(dataset.num_classes)
+    print(dataset.num_features)
+
+    if split_type_name == 'unchanged' or split_type_name == 'remove_min':
+        X_train, X_test, y_train, y_test, nclasses, train_dataset, test_dataset = dataset_split_shared_splits_graph_version(dataset, features=features, min_count=min_count)
+    elif split_type_name == 'undersample_max':
+        X_train, X_test, y_train, y_test, nclasses, train_dataset, test_dataset = dataset_split_balanced_major_classes_graph_version(dataset, features=features, max_count=min_count, min_remove=min_remove, remove_classes=remove_classes)
 
     data_split_type=split_type_name
     suffix = dataset_version + '-' + data_split_type

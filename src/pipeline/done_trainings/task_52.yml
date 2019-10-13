@@ -1,0 +1,8 @@
+d1: 55
+d2: 10
+d3: 10
+d4: 5
+dataset: ./tmp/symbols_dataset_2_precomp_split_undersample_max_third/
+features: topo and code feats
+model: mlp3
+num_epochs: 30

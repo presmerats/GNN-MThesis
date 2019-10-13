@@ -1,0 +1,13 @@
+---
+'d1': [30,60]
+'d2': [50]
+'epochs': [100,200,300]
+'learning_rate': [0.01]
+'weight_decay' : [5e-4]
+'num_layers' : [2]
+'aggr_type' : ['mean']
+'batch_size' : [32]
+'num_classes' : [num_classes]
+'model': [ GGNN1]
+'features': ['']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max/']

@@ -1,0 +1,9 @@
+---
+'multi_class': ['ovr']
+'penalty': ['l2']
+'solver': ['newton-cg']
+'max_iter': [50,]
+'C': [1]
+'features': ['x_topo_feats']
+model: ['LogisticRegression']
+dataset: ['./tmp/symbols_dataset_3_precomp_split_undersample_max/']

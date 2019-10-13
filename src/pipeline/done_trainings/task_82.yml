@@ -1,0 +1,14 @@
+aggr_type: mean
+batch_size: 16
+d1: 10
+d2: 5
+d3: 4
+d4: 4
+dataset: ./tmp/symbols_dataset_1_precomp_split_undersample_max_third/
+epochs: 50
+features: ''
+learning_rate: 0.001
+model: GGNN5
+num_classes: num_classes
+num_layers: 4
+weight_decay: 1e-4

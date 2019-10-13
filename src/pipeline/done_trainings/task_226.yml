@@ -1,0 +1,5 @@
+dataset: ./tmp/symbols_dataset_3_precomp_split_undersample_max_half/
+features: x_topo_feats
+max_depth: 150
+model: RandomForestClassifier
+n_estimators: 4

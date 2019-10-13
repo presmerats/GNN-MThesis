@@ -1,0 +1,5 @@
+booster: gbtree
+dataset: ./tmp/symbols_dataset_2_precomp_split_undersample_max_third/
+features: tfidf and topo feats
+max_depth: 8
+model: XGBClassifier
