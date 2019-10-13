@@ -55,7 +55,7 @@ The selected disassembler program, IDA free, allows for executing scripts writte
 
 % Plugin
 The python script is ran as a script, also known as "plugin", inside the disassembler program (IDA free). It takes advantage of series of exposed interfaces or methods that read the database that contains the information of the disassembled binary file and its instructions. The procedure followed by the python script is to process all the lines of code of each function contained in the binary file. For each function or subroutine that the disassembler has detected, the python script will write 2 separate text files that contain the list of elements found as nodes and the list of relationships between them as edges, conveniently following a file format that the python package NetworkX can read and import into a NetworkX graph representation. 
-The elements considered are all the types of elements that can appear in assembly code and that the disassembler detects: instructions, registers, memory addresses, immediate values, displacements and called functions. The edges represent relationships between them. For example, the instruction "mov eax, 0x0457AB" is related to the register "eax", the memory address "0x0457AB", as well as the previous and next instruction found in the code listing when following its execution flow. When the instruction is calling another function, for example "call another\_function\_address", an edge relating this instruction and the function another\_function\_address. 
+The elements considered are all the types of elements that can appear in assembly code and that the disassembler detects: instructions, registers, memory addresses, immediate values, displacements and called functions. The edges represent relationships between them. For example, the instruction "mov eax, 0x0457AB" is related to the register "eax", the memory address "0x0457AB", as well as the previous and next instruction found in the code listing when following its execution flow. When the instruction is calling another function, for example "call another\_function\_address", an edge relating this instruction and the function another\_function\_address must exist. 
 
 
 
@@ -353,6 +353,7 @@ The list of features from code is the following:
 The code features extraction implementation is tested on several assembly function code listings, by comparing the counts of instructions, registers, memory addresses and the like versus those values extracted by the code that reads the text files that list nodes and edges of the graph of the assembly function.
 
 
+
 % HOW TOPOLOGICAL FEATURES ARE EXTRACTED
 The features that are derived from the topological aspects of graphs, like assortativity and clustering coefficient, are obtained with the implementation included inside the NetworkX Python library.
 
@@ -372,11 +373,325 @@ The list of the topological features extracted is the following:
 \end{itemize}
 
 
+A distribution analysis is performed on all the features to see if they carry a considerable amount of discriminative power towards the different classes of the dataset. The analysis for dataset v1 is the following:
+
+\begin{figure}[H]
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_nregs.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_distinct_registers.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_instructions.png}
+\endminipage
+
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_displacements.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_immediates.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_addresses.png}
+\endminipage
+
+\caption{Boxplots of the distribution of the data for several features on v1 dataset}\label{fig:distribution_analysis1}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_functions.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_size.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_diameter.png}
+\endminipage
+
+\vfill 
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_radius.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_average_degree.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_density.png}
+\endminipage
+
+\caption{Boxplots of the distribution of the data for several features on v1 dataset}\label{fig:distribution_analysis2}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_connectivity.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_average_clustering.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_average_shortests_path_length.png}
+\endminipage
+
+\vfill
+
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_degree_assortativity.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_degree_pearson_correlation_coefficient.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_number_of_functions.png}
+\endminipage
+
+\caption{Boxplots of the distribution of the data for several features on v1 dataset}\label{fig:distribution_analysis3}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+
+
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v1_unbalanced_size.png}
+\endminipage
+
+
+\caption{Boxplots of the distribution of the data for several features on v1 dataset}\label{fig:distribution_analysis4}
+\end{figure}
+
+
+
+The analysis for dataset v3 is the following:
+
+\begin{figure}[H]
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_nregs.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_distinct_registers.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_instructions.png}
+\endminipage
+
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_displacements.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_immediates.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_addresses.png}
+\endminipage
+
+\caption{Boxplots of the distribution of the data for several features on v3 dataset}\label{fig:distribution_analysis5}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_functions.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_size.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_diameter.png}
+\endminipage
+
+\vfill 
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_radius.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_average_degree.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_density.png}
+\endminipage
+
+\caption{Boxplots of the distribution of the data for several features on v3 dataset}\label{fig:distribution_analysis6}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_connectivity.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_average_clustering.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_average_shortests_path_length.png}
+\endminipage
+
+\vfill
+
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_degree_assortativity.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_degree_pearson_correlation_coefficient.png}
+\endminipage
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_number_of_functions.png}
+\endminipage
+
+\caption{Boxplots of the distribution of the data for several features on v3 dataset}\label{fig:distribution_analysis7}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+
+
+
+\minipage{0.32\textwidth}%
+\centering
+\includegraphics[width=0.9\linewidth]{img/boxplots/v3_unbalanced_size.png}
+\endminipage
+
+
+\caption{Boxplots of the distribution of the data for several features on v3 dataset}\label{fig:distribution_analysis8}
+\end{figure}
+
+
+
+
+
+\section{Training Results}\label{annex:models}
+
+\subsection{Experiment 1}
+
+
+
+\subsection{Experiment 2}
+
+
+\input{./tables/v1_results.tex}
+
+
+% list of each model in the table, with the parameters and the training procedure
+The best models that have been trained in with the v1 dataset are, in order of appearance in the table:
+\begin{itemize}
+ \item and a Multi-layer perceptron with 3 fully connected layers with 94, 20 and 15 hidden units, trained on the bag-of-words embedding and the topological features
+  \item and a Multi-layer perceptron with 4 fully connected layers with 94, 10, 10 and 5 hidden units, trained on the bag-of-words embedding and the topological features
+  \item and a Multi-layer perceptron with 5 fully connected layers with 94, 10, 10, 5 and 5 hidden units,  trained on the bag-of-words embedding and the topological features
+  \item and a Multi-layer perceptron with 3 fully connected layers with 17, 20 and 15 hidden units,  trained on the bag-of-words embedding and the topological features
+  \item and a Multi-layer perceptron with 5 fully connected layers with 94, 10, 10, 5 and 5 hidden units, trained on the topological features and code attributes
+  \item an XGBoost with a gbtree booster and a maximum depth of 150, trained on the bag-of-words embedding and the topological features
+  \item a Random forest with 4 estimators and a maximum depth of 150,  trained on the bag-of-words embedding and the topological features
+  \item a Random forest with 4 estimators and a maximum depth of 8, trained on the topological features and code attributes
+  \item an XGBoost with a gbtree booster and a maximum depth of 150, trained on the topological features only
+  \item a Random forest with 16 estimators and a maximum depth of 150, trained on the topological features only
+  \item a Graph Isomorphism Network with 4 embedding layers, 128 hidden units, a batch size of 128, a learning rate of 0.005, a weight decay of 5e-4 and 100 epochs
+  \item a Gated Graph Neural Network with 1 embedding layer with mean aggregator, 2 fully connected layers of 30 and 20 hidden units, using batch size of 16, a learning rate of 0.001 and a weight decay of 5e-4 and trained during 50 epochs.
+  
+
+\end{itemize}
+
+
+\input{./tables/v3_results.tex}
+
+
+The best models that have been trained in with the v3 dataset are:
+\begin{itemize}
+    \item and a Multi-layer perceptron with 3 fully connected layers with 96, 20 and 15 hidden units, trained on the bag-of-words embedding and the topological feature
+    \item and a Multi-layer perceptron with 5 fully connected layers with 96, 10,10, 5 and 5 hidden units, trained on the bag-of-words embedding and the topological features
+    \item and a Multi-layer perceptron with 4 fully connected layers with 96, 10, 10 and 5 hidden units, trained on the bag-of-words embedding and the topological features
+    \item a Random forest with 16 estimators and a maximum depth of 8, trained on the bag-of-words embedding and the topological features
+    \item an XGBoost with a gbtree booster and a maximum depth of 150, trained on the topological features and code attributes
+    \item a Graph Isomorphism Network (GIN) with 2 layers and 64 hidden units plus  a fully connected layer, trained for 500 epochs only with the graph of each sample as the dataset
+    \item a Random forest with 16 estimators and a maximum depth of 150, trained on the topological features and code attributes
+    \item a Logistic Regression classifier with C of 1, trained with a maximum iterations of 100 in the Newton-Raphson solver algorithm, using multiclass one versus the rest type of classification regions with an L2 regularization
+    \item an XGBoost with a gbtree booster and a maximum depth of 150, trained on the topological features only
+    \item a Random forest with 16 estimators and a maximum depth of 150, trained on the topological features only
+    \item Gated Graph Neural Network with 4 embedding layer with mean aggregator, 4 fully connected layers of 10, 5, 4 and 4 hidden units, using batch size of 16, a learning rate of 0.001 and a weight decay of 5e-4 and trained during 50 epochs.
+\end{itemize}
+
+
+
+All models have been trained by searching the best hyper-parameter setup using cross-validation. THe performance metric used is the F1-score with macro average. For neural network models, the loss is used as a 
+
+The XGBoost and Random Forest (as well as other Logistic regression and Decision trees models) have been trained with cross-validation with 5 folds, with final retraining, with different sets of features as seen in the results table.  The library used is the Scikit-Learn Python library.
+
+The MLP models have been trained with cross-validation and a maximum of 100 epochs, but using the early stopping mechanism to end training when the loss on the validation set starts increasing instead of decreasing, in which case the model is overfitting to the training set. For the MLP training the library used is the Pytorch Python library for deep learning.
+
+The Graph Neural Network models, GIN and GGNN, have been trained with a longer procedure. To perform a successful hyper-parameter search, given the cost in time of epoch of training, has been split into several steps. The first step, has been to train for 5 or 10 epochs with most common models (GCN, GraphSAGE, GIN) with different learning rates, weight decays, number of hidden units, number of embedding  layers and batch size. Then, a training with 20-30 epochs has been performed with a bigger set of models (GCN, GraphSAGE, GIN, GGNN, GlobalAttention, Set2Set). Finally, with the selected model type and the selected hyper parameters, a training with different number of epochs has been performed (20, 50, 100, 200, 500 and even 1000 epochs). For each training, there is a cross-validation procedure, where for each fold combination, the selected number of epochs are used to feed the model and back propagate the result to update the weights. After all the fold combinations are trained by the number of epochs, the mean and standard deviation of the performance score is computed on the validation set as well as on the test set. The best model is selected by the best f1-score macro averaged on the different classes on the validation set.
+
+
+
+
+
 
 
 \section{Code repository}\label{annex:github}
 
-The code and jupyter notebooks used in this project can be found at \href{https://github.com/presmerats/GNN-MThesis}{https://github.com/presmerats/GNN-MThesis} .
+The code and jupyter notebooks used in this project can be found at \href{https://github.com/presmerats/GNN-Master-Thesis}{https://github.com/presmerats/GNN-Master-Thesis} .
 
 % explain the orgranization of the code repository
 %doc

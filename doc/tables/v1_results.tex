@@ -1,0 +1,41 @@
+\begin{table}[H]
+\centering
+{\footnotesize
+ \begin{tabular}{|llcccc|}
+\hline
+                   Model &               Features &  CV F1-macro &  Precision macro average &  Recall macro average &  F1-macro \\
+\hline
+
+MLP2 &   Code Bow and topological &     0.572 &                    0.350 &                 0.291 &     \textbf{0.299} \\
+
+MLP4 &   Code Bow and topological &     0.528 &                    0.252 &                 0.251 &     0.237 \\
+
+MLP2 &    Topological and code attr. &     0.420 &                    0.232 &                 0.203 &     0.186 \\
+
+XGBoost &   Code Bow and topological &     0.387 &                    0.470 &                 0.374 &     \textbf{0.401} \\
+                    
+Random Forest &   Code Bow and topological &     0.307 &                    0.297 &                 0.293 &     \textbf{0.290} \\
+
+Random Forest &    Topological and code attr. &     0.186 &                    0.246 &                 0.198 &     0.186 \\
+
+
+
+XGBoost &           Topological &     0.171 &                    0.203 &                 0.190 &     0.190 \\
+
+
+
+Random Forest  &           Topological&     0.164 &                    0.199 &                 0.187 &     0.186 \\
+
+
+GIN &                  Graph &     0.147 &                    0.122 &                 0.180 &     0.145 \\
+
+
+
+GGNN1 &                  Graph &     0.134 &                    0.052 &                 0.098 &     0.065 \\
+
+
+
+\hline
+\end{tabular}
+}\label{FN_exp_v3}\caption{Function classification experiment results with dataset v1}
+\end{table}

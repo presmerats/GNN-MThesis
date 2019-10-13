@@ -3,7 +3,7 @@
 
 
 % summarize goal of the master thesis: exploration of the Graph Neural Network models and it's applications
-The goal of this master's thesis was to explore the some of the most common Graph Neural Network models and their applications. There is more than enough information in current published research papers and surveys about this topic. It has been a real pleasure to learn about this novel techniques and their internals. The applications of those models are wide and exciting, even thought it must be stressed that they are not general purpose machine learning algorithms. But in the end, a lot of data can be expressed in a graph structure. The feeling is that these types of models will continue to be explored and become very successful in some areas.
+The goal of this master's thesis was to explore some of the most common Graph Neural Network models and their applications. It has been a real pleasure to learn about this novel techniques and their internals. The applications of those models are wide and exciting, even thought it must be stressed that they are not general purpose machine learning algorithms. But in the end, a lot of data can be expressed in a graph structure. The feeling is that these types of models will continue to be explored and become very successful in some areas.
 
 
 As part of the research of this master's thesis, two different tasks have been tackled with Graph Neural Networks, approximating the Girvan-Newman clustering algorithm and building a classifier for compiled code functions renaming.
@@ -22,12 +22,12 @@ The second experiment aimed at building a model that could be applied code analy
 % idea 1%
 Different types of machine learning models have been trained. The Graph Neural Network models were able to attain same performance as baseline models using only graph related information. They have not been able to surpass the performance of the baseline models that used the bag-of-words embeddings derived from code itself.
 %The comparison with baseline models showed that the best features for this task are the ones related to word frequency in bag of words embedding, and that the Graph Neural Networks have not been able to surpass the performance of bag of words based models. 
-We conclude that the bag-of-words embedding carries more discriminative power than the graph derived from code or their topological features. Another take away is that the training of Graph Neural Networks is more costly and more complex than for other basic machine learning models. The highest impact on the performance of the trained model is caused by the way the split of the training, validation and testing dataset is chosen. Also the hyper-parameters have to be chosen carefully to avoid the perfomance to drop significantly.
+We conclude that the bag-of-words embedding carries more discriminative power than the graph derived from code or their topological features. Another take away is that the training of Graph Neural Networks is more costly and more complex than for other basic machine learning models. The highest impact on the performance of the trained model is caused by the way the split of the training, validation and testing dataset is chosen. Also the hyper-parameters have to be chosen carefully to avoid the performance to drop significantly.
+
+% next steps for the experiment 2:
 
 Improvements have been proposed to this task, consisting of combining the semantic similarity information carried in the bag-of-words embeddings with the graph information to train a more powerful Graph Neural Network. The combination could be done at the node or at the graph level. Another improvement proposed is to review the dataset generation and labeling in order to generate a less noisy dataset, probably changing the focus to a smaller set of classes but that could yield a model with better performance.
 
-
-% next steps for the experiment 2:
 
 
 

@@ -37,74 +37,145 @@ We observe that test accuracy is correct in all the models trained, successfully
 
 \textbf{Main experiment}
 
-As detailed in the experiments section, the main experiment is to train a model to approximate the edge betweenness of part of the edges of a graph, in a semi-supervised manner. The results,  measured with the accuracy after transforming the edge betweenness values into a finite number of ranges (bucketization or discretization), are shown in the folling table:
+As detailed in the experiments section, the main experiment is to train a model to approximate the edge betweenness of part of the edges of a graph, in a semi-supervised manner. The performance is measured with the accuracy and F1-score macro averaged after transforming the edge betweenness values into a finite number of ranges (bucketization or discretization). Different number of discrete ranges have been tested and using 28 ranges is the most optimal. For generating the buckets(discrete ranges) the function qcut from Pandas Python library has been used to split the data by the desired number of percentiles. The results are shown in the following table:
+
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{|llllccc|}
+% \hline
+%  Model &                                                                        Parameters  &  Runs\/Epochs  &  Splits &    Loss &        Accuracy &  Time(min) \\
+% \hline
+%  META1 &          d19d16h10e19n16n15 & 1-2 & 20-500-1500 &  1.6367 &     0.239  &      0.069 \\
+%  META2 &       d19d16h10e19n16n15 & 100-20 & 20-500-1500 &  1.7550 &   0.296 ± 0.031 &      0.494 \\
+%  META3 &      d19d16h10e19n16n15 & 100-200 & 20-500-1500 &  2.7132 &   0.274 ± 0.019 &      3.518 \\
+%  META4 &      d19d16h10e19n16n15 & 100-20 & 20-500-10556 &  1.7508 &   0.293 ± 0.023 &      0.547 \\
+%  META5 &     d19d16h10e19n16n15 & 100-200 & 20-500-10556 &  2.8676 &   0.266 ± 0.013 &      3.743 \\
+%  META6 &     d19d16h10e19n16n15 & 100-20 & 20-4000-10556 &  1.7437 &   0.296 ± 0.026 &      0.528 \\
+%  META7 &    d19d16h10e19n16n15 & 100-200 & 20-4000-10556 &  2.8105 &   0.265 ± 0.016 &      3.704 \\
+%  META8 &    d19d16h10e19n16n15 & 100-20 & 300-4000-10556 &  1.1625 &   0.563 ± 0.067 &      0.506 \\
+%   META1 &   d19d16h10e19n16n15 & 100-20 & 300-4000-10556- &  0.9832 &   \textbf{0.621 ± 0.069} &      0.408 \\
+%  META9 &   d19d16h10e19n16n15 & 100-200 & 300-4000-10556 &  2.3160 &   0.409 ± 0.033 &      3.546 \\
+%  META10 &    d10d10h10e10n10n10 & 100-20 & 300-4000-10556 &  1.1565 &   0.537 ± 0.074 &      0.494 \\
+%  META11 &   d10d10h10e10n10n10 & 100-200 & 300-4000-10556 &  2.1036 &   0.374 ± 0.030 &      3.593 \\
+ 
+% \hline
+% \end{tabular}
+% \label{Experiment1}\caption{Edge betweenness approximation with a graph neural network experiment using 5 discrete ranges}
+% \end{table}
+
+
+% For increasing the number of buckets(discrete ranges) the function qcut from Pandas Python library has been used to be able to split the data by the desired number of percentiles.
+
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{|llllccc|}
+% \hline
+%  Model &  Parameters  &  Runs\/Epochs  &  Splits &    Loss &        Accuracy &  Time(min) \\
+% \hline
+%  META1 &        d19d16h10e19n16n15 & 100-20 & 20-500-1500- &  3.0321 &   0.136 ± 0.022 &      0.512 \\
+%  META1 &        d19d16h10e19n16n15 & 100-50 & 20-500-1500- &  3.3168 &   0.116 ± 0.021 &      0.959 \\
+%  META1 &       d19d16h10e19n16n15 & 100-100 & 20-500-1500- &  3.7570 &   0.107 ± 0.020 &      1.800 \\
+%  META1 &       d19d16h10e19n16n15 & 100-200 & 20-500-1500- &  4.5076 &   0.094 ± 0.014 &      3.585 \\
+%  META1 &       d19d16h10e19n16n15 & 100-250 & 20-500-1500- &  4.8326 &   0.089 ± 0.014 &      4.439 \\
+%  META1 &       d19d16h10e19n16n15 & 100-300 & 20-500-1500- &  5.3309 &   0.083 ± 0.013 &      5.290 \\
+%  META1 &       d19d16h10e19n16n15 & 100-350 & 20-500-1500- &  5.2242 &   0.088 ± 0.015 &      6.054 \\
+%  META1 &       d19d16h10e19n16n15 & 100-400 & 20-500-1500- &  5.7016 &   0.083 ± 0.014 &      6.846 \\
+%  META1 &       d19d16h10e19n16n15 & 100-450 & 20-500-1500- &  5.9954 &   0.082 ± 0.013 &      7.720 \\
+%  META1 &       d19d16h10e19n16n15 & 100-550 & 20-500-1500- &  6.2228 &   0.084 ± 0.013 &      9.396 \\
+%  META1 &       d19d16h10e19n16n15 & 100-600 & 20-500-1500- &  6.5450 &   0.081 ± 0.012 &     10.338 \\
+%  META1 &       d19d16h10e19n16n15 & 100-650 & 20-500-1500- &  6.5845 &   0.082 ± 0.014 &     11.119 \\
+% \hline
+% \end{tabular}
+% \label{Experiment1}\caption{Edge betweenness approximation with a graph neural network experiment using 28 discrete ranges}
+% \end{table}
+
+
+% The best models obtain have a respective maximum accuracy of is 62.3\% in the 5 discrete ranges setup and 8.1\% in the 28 discrete ranges setup. The second model is selected by looking at the scatter plot of predicted versus real values. The following plots show the distribution of predicted values compared to the real values, both for the discrete and real values.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|llllccc|}
 \hline
- Model &                                                                        Paramteres  &  Runs\/Epochs  &  Splits &    Loss &        Accuracy &  Time(min) \\
+ Model &                                                                          Paramteres  &  Runs\/Epochs  &  Splits &    Loss &        Accuracy &        F1-macro  \\
 \hline
- META1 &          d19d16h10e19n16n15 & 1-2 & 20-500-1500 &  1.6367 &     0.239  &      0.069 \\
- META2 &       d19d16h10e19n16n15 & 100-20 & 20-500-1500 &  1.7550 &   0.296 ± 0.031 &      0.494 \\
- META3 &      d19d16h10e19n16n15 & 100-200 & 20-500-1500 &  2.7132 &   0.274 ± 0.019 &      3.518 \\
- META4 &      d19d16h10e19n16n15 & 100-20 & 20-500-10556 &  1.7508 &   0.293 ± 0.023 &      0.547 \\
- META5 &     d19d16h10e19n16n15 & 100-200 & 20-500-10556 &  2.8676 &   0.266 ± 0.013 &      3.743 \\
- META6 &     d19d16h10e19n16n15 & 100-20 & 20-4000-10556 &  1.7437 &   0.296 ± 0.026 &      0.528 \\
- META7 &    d19d16h10e19n16n15 & 100-200 & 20-4000-10556 &  2.8105 &   0.265 ± 0.016 &      3.704 \\
- META8 &    d19d16h10e19n16n15 & 100-20 & 300-4000-10556 &  1.1625 &   \textbf{0.563 ± 0.067} &      0.506 \\
- META9 &   d19d16h10e19n16n15 & 100-200 & 300-4000-10556 &  2.3160 &   0.409 ± 0.033 &      3.546 \\
- META10 &    d10d10h10e10n10n10 & 100-20 & 300-4000-10556 &  1.1565 &   0.537 ± 0.074 &      0.494 \\
- META11 &   d10d10h10e10n10n10 & 100-200 & 300-4000-10556 &  2.1036 &   0.374 ± 0.030 &      3.593 \\
+ META1 &      d19d16h10e19n16n15 & 100-20 & 100-2000-10556- &  2.3561 &   0.280 ± 0.061 &   0.251 ± 0.060  \\
+ META1 &     d19d16h10e19n16n15 & 100-250 & 100-2000-10556- &  3.8995 &   0.139 ± 0.018 &   0.128 ± 0.020  \\
+ META1 &         d19d16h10e19n16n15 & 100-20 & 20-500-1500- &  3.0269 &   0.142 ± 0.027 &   0.127 ± 0.029  \\
+ META1 &        d19d16h10e19n16n15 & 100-250 & 20-500-1500- &  4.9482 &   0.093 ± 0.013 &   0.087 ± 0.017  \\
+ META1 &      d19d16h10e19n16n15 & 100-20 & 200-3000-10556- &  2.0677 &  \textbf{ 0.342 ± 0.078} &   \textbf{0.312 ± 0.076 } \\
+ META1 &     d19d16h10e19n16n15 & 100-250 & 200-3000-10556- &  3.3414 &   0.219 ± 0.027 &   0.208 ± 0.028  \\
+ META1 &    d19d16h10e19n16n15 & 100-600 & 200-3000-10556- &  3.7691 &   0.142 ± 0.037 &   0.124 ± 0.039  \\
+ META1 &    d19d16h10e19n16n15 & 100-2 & 20-500-10556- &  3.0165 &   0.112 ± 0.047 &   0.088 ± 0.052 \\
 \hline
 \end{tabular}
-\label{Experiment1}\caption{Edge betweenness approximation with a graph neural network experiment}
-\end{table}
-
-The maximum accuracy obtained is 56.3\% (out of 5 classes) by the model META8. The following plots show the distribution of predicted values compared to the real values, both for the discrete and real values.
+\label{Experiment1-v2}\caption{Edge betweenness approximation with a graph neural network experiment using 28 discrete ranges}
+\end{table} 
 
 
 
 
+% \begin{figure}[H]
+% \minipage{0.5\textwidth}%
+%   \centering
+%     \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-07_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_scatterplot.png}
+% \endminipage
+% \minipage{0.5\textwidth}%
+%   \centering
+%     \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-07_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_scatterplot_real_eb.png}
+% \endminipage
+% \caption{Scatter plot comparing target edge betweenness and predicted (discrete range and real values)}\label{fig:edgeb_exp1_scatter}
+% \end{figure}
+
+
+% \begin{figure}[H]
+% \minipage{0.5\textwidth}%
+%   \centering
+%     \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-08_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_histogram.png}
+% \endminipage
+% \minipage{0.5\textwidth}%
+%   \centering
+%     \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-08_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_histogram_real_eb.png}
+% \endminipage
+% \caption{histogram of target values versus predicted values of edge betweenness in both discrete and continuous display }\label{fig:edgeb_exp1_histogra}
+% \end{figure}
 
 \begin{figure}[H]
-\minipage{0.5\textwidth}%
+\minipage{0.32\textwidth}%
   \centering
-    \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-07_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_scatterplot.png}
+    \includegraphics[width=0.9\linewidth]{img/GN_exp1/28bins/scatter_plot_20epochs.png}
 \endminipage
-\minipage{0.5\textwidth}%
+\minipage{0.32\textwidth}%
   \centering
-    \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-07_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_scatterplot_real_eb.png}
+    \includegraphics[width=0.9\linewidth]{img/GN_exp1/28bins/histogram_20epochs.png}
 \endminipage
-\caption{Scatter plot comparing target edge betweenness and predicted (discrete range and real values)}\label{fig:edgeb_exp1_scatter}
+\minipage{0.32\textwidth}%
+  \centering
+    \includegraphics[width=0.9\linewidth]{img/GN_exp1/28bins/boxplot_20epochs.png}
+\endminipage
+\caption{Predictions compared to target values in an approximation of the edge betweenness using 28 discrete ranges and 20 epochs of training (best accuracy model) }\label{fig:edgeb_exp1_10bins}
 \end{figure}
 
 
-\begin{figure}[H]
-\minipage{0.5\textwidth}%
-  \centering
-    \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-08_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_histogram.png}
-\endminipage
-\minipage{0.5\textwidth}%
-  \centering
-    \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-08_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_histogram_real_eb.png}
-\endminipage
-\caption{histogram of target values versus predicted values of edge betweenness in both discrete and continuous display }\label{fig:edgeb_exp1_histogra}
-\end{figure}
-
+The best model is the one trained for 20 epochs, with a dataset split of 200, 3000 and 10556 train, validation and testing number of samples respectively. It attains a 34.3\% of accuracy as well as a 31.2\% f1-score macro averaged. However, when looking  into the scatter plots of predicted values versus target values, a trained model with 250 or 600 epochs seems to be better fitting the real values on some of the runs. For each model we want to train, given that the dataset split is critical to the model performance, we must run it for several times (100 in this case) and average the performance metrics to get a more realistic model performance. In the end, even if for some dataset splits the models fitted have a better performance, it is the average performance over all the splits that counts. We want the model to be able to generalize.
 
 
 \begin{figure}[H]
-\minipage{0.5\textwidth}%
+\minipage{0.32\textwidth}%
   \centering
-    \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-08_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_boxplot.png}
+    \includegraphics[width=0.9\linewidth]{img/GN_exp1/28bins/scatter_plot_20epochs.png}
 \endminipage
-\minipage{0.5\textwidth}%
+\minipage{0.32\textwidth}%
   \centering
-    \includegraphics[width=0.9\linewidth]{img/GN_exp1/2019-09-28_22-02-08_META1_d4=19_d5=16_hus=10_eus=19_n1us=16_n2us=15_r=100_epochs=20_split-300-4000-10556-_boxplot_real_eb.png}
+    \includegraphics[width=0.9\linewidth]{img/GN_exp1/28bins/scatter_plot_250epochs.png}
 \endminipage
-\caption{Boxplot of target values versus predicted values of edge betweenness in both discrete and continuous display }\label{fig:edgeb_exp1_boxplot}
+\minipage{0.32\textwidth}%
+  \centering
+    \includegraphics[width=0.9\linewidth]{img/GN_exp1/28bins/scatter_plot_600epochs.png}
+\endminipage
+\caption{Predictions compared to target values in an approximation of the edge betweenness using 28 ranges with 20, 250 and 650 epochs of training}\label{fig:edgeb_exp1_20bins}
 \end{figure}
+
+
 
 
 
@@ -112,23 +183,32 @@ The maximum accuracy obtained is 56.3\% (out of 5 classes) by the model META8. T
 % conclusion on results
 
 % value the results, how good is this accuracy vs random model
-The trained model for predicting the edge betweenness obtains a 56.3\% accuracy on a 5 classes classification model(edge betweenness real values are grouped into buckets that conform the set of classes). A random classifier would have a 20\% accuracy if classes where balanced. We can conclude that the model is not bad as it obtains a 36.3\% uplift on accuracy versus a random model.
+%The best models obtain have a respective maximum accuracy of is 62.3\% in the 5 discrete ranges setup and 8.1\% in the 28 discrete ranges setup.
+The best trained model for predicting the edge betweenness obtains a 34.3\% of accuracy as well as a 31.2\% f1-score macro averaged in the 28 discrete ranges setup.
+
+One important negative aspect of the models trained so far in this experiment, is that the predictive model will not predict which edge has maximum value of edge betweenness but a whole group or bucket. The final goal of the experiment is to use the model for the Girvan-Newman algorithm which needs to find the edge with highest edge betweenness. Since the model uses buckets, all edge betweennesses predicted to belong to a bucket will have all the same value. 
+
+For the task at hand, the most important predictions are those of the edges with high edge betweenness. In that aspect, the more granular model (the one with 28 discrete ranges) is more precise and the high value predictions are less noisy than other more coarse grained models tested. A more granular model, would return a smaller set of edges that are predicted to have the highest edge betweenness, and so the subsequent tasks to refine this prediction would be faster.
 % problems that this model could exhibit: higher range has more variability than others, which for finding the maximum value is problematic.
-One important negative aspect of the models trained so far in this experiment, is that the predictive model will not predict which edge has maximum value of edge betweenness but a whole group or bucket. The final goal of the experiment is to use the model for the Girvan-Newman algorithm which needs to find the edge with highest edge betweenness. Since the model uses buckets, all edge betweennesses predicted to belong to a bucket will have all the same value. The results presented used the minimum value of the bucket, to help accuracy.
+
 
 \textbf{Improvements}
 % Improvements.
 
-The first basic improvement that could be looked into is to perform a longer hyper parameter (and data partitioning configuration) search, to see if this kind of model can obtain a better accuracy. It could also be trained on a larger set of buckets or classes. 
+The first basic improvement that could be looked into is to perform a longer hyper parameter (and data partitioning configuration) search, to see if this kind of model can obtain a better accuracy. 
+
+%It could also be trained on a larger set of buckets or classes. -> already performed
 
 
 Also, it would be important to test its performance on several heterogeneous graphs, to get an idea of how stable this model training is.
 
 
 %higher values for the Girvan Newman
-To improve the usability for the Girvan-Newman approximation, the precision in high values should be increased. One naïve solution would be to give the samples in the bucket their maximum value, because the problem is to find the real maximum and not to increase the overall values of a bucket. In one hand, to have the model to predict higher values, a smaller range with the most higher values of the training set could be created. But, since this would introduce a great deal of class imbalance, the performance of the model would decrease. This trade-off should be tested thoroughly. A good approach to solve the class imbalance would be to use a weighted loss function during the training of the Graph Neural Network. This loss would have a weight associated with the inverse of the number of samples a bucket contains. Another thing to keep in mind, is that the loss function and the error function(metric score) should be changed to something more beneficial for finding the maximal values. One different approach to this problem would be to recompute the real edge betweenness of edges predicted to belong to the highest bucket. Depending on the size of the higher bucket, this process could harm the speed of the approximation of the Girvan-Newman algorithm.
+To improve the usability for the Girvan-Newman approximation, the precision in high values should be increased. One naive solution would be to give the samples in the bucket their maximum value, because the problem is to find the real maximum and not to increase the overall values of a bucket. In one hand, to have the model to predict higher values, a smaller range with the most higher values of the training set could be created. But, since this would introduce a great deal of class imbalance, the performance of the model would decrease. This trade-off should be tested thoroughly. A good approach to solve the class imbalance would be to use a weighted loss function during the training of the Graph Neural Network. This loss would have a weight associated with the inverse of the number of samples a bucket contains. Another thing to keep in mind, is that the loss function and the error function(metric score) should be changed to something more beneficial for finding the maximal values, for example to use the f1-score of the class with highest edge betweenness value.
 
-Finally, for the Girvan-Newman algorithm, an inductive setup of the graph neural network algorithm should be tested.  The current transductive setup (semi-supervised learning where a few edge betweennesses will be actually computed to quickly train the model and the rest will be predicted) might impact the speed of execution. Since in each iteration some edge betweenness need to be computed, then the model needs to be trained (or fine-tuned) and then this same model is used to predict the rest of edge betweenness's, the process could be slower than the original algorithm. If a model is trained once and can directly be used in each iteration, the overall process should be faster. There is a middle ground solution, where the graph neural network model is only trained in the very first iteration of the Girvan-Newman algorithm and then in the subsequent steps it is just used for prediction. 
+One different approach to this problem would be to recompute the real edge betweenness of edges predicted to belong to the highest bucket. Depending on the size of the higher bucket, this process could harm the speed of the approximation of the Girvan-Newman algorithm.
+
+Finally, for the Girvan-Newman algorithm, an inductive setup of the graph neural network algorithm should be tested. The current transductive setup (semi-supervised learning where a few edge betweennesses will be actually computed to quickly train the model and the rest will be predicted) might impact the speed of execution. Since in each iteration some edge betweenness need to be computed, then the model needs to be trained (or fine-tuned) and then this same model is used to predict the rest of edge betweenness's, the process could be slower than the original algorithm. If a model is trained once and can directly be used in each iteration, the overall process should be faster. There is a middle ground solution, where the graph neural network model is only trained in the very first iteration of the Girvan-Newman algorithm and then in the subsequent steps it is just used for prediction. 
 
 
 
@@ -166,7 +246,7 @@ We observe that test accuracy is correct in all the models trained, successfully
 
 \textbf{Main experiment}
 
-The next results table show the performance of baseline  and Graph Neural Network models on the code function classification dataset in versions v1 and v3. The results are sorted by the obtained cross-validation score, in order to choose the best model without overfitting on the test set. The test set scores are just shown to verify that the validation scores are consistent and not overfit on the validation dataset split.
+The next results tables show the performance of baseline  and Graph Neural Network models on the code function classification dataset in versions v1 and v3. The results are sorted by the obtained cross-validation score, in order to choose the best model without overfitting on the test set. The test set scores are just shown to verify that the validation scores are consistent and not overfit on the validation dataset split.
 
 % 2) Function Renaming:
 % results table: noisy dataset:   models | cv score | test score macro avg
@@ -226,8 +306,8 @@ The different transformations of the original dataset, version v1 with 10 classe
 %      - training GNNs is complex and delicate, the hyper-parameter search takes a lot of time because it is not easy to find the best configurations
 %     - training is also slow, compared to machine learning models I would say it is among the most time consuming, like svm's, big cnns, and lstms.
 % - It seems that well trained gnn can outperform the baseline models using graph features, and can get closer to models using bag of words.
-About the Graph Neural Networks, one key take aways is that their training is complex and delicate. Not all hyper-parameter configuration yields and acceptable result, and furthermore, the partition of the dataset plays a big role in the final performance of the model trained. It is advisable to use a higher number of folds in the cross-validation process to get a better idea of the generalization power of the model that is going to be selected. It is not easy to find the best configurations across the different dataset splits, because the search space is huge and the time it takes for training those models is high. They could be compared to training SVMs, big CNNs and LSTMs. Nonetheless, it seems that well trained Graph Neural Networks can attain similar performance than the best baseline models when using only information derived from the graph or the graph itself.
 
+About the Graph Neural Networks, one key take aways is that their training is complex and delicate. Not all hyper-parameter configuration yields and acceptable result, and furthermore, the partition of the dataset plays a big role in the final performance of the model trained. It is advisable to use a higher number of folds in the cross-validation process to get a better idea of the generalization power of the model that is going to be selected. It is not easy to find the best configurations across the different dataset splits, because the search space is huge and the time it takes for training those models is high. They could be compared to training SVMs, big CNNs and LSTMs. Nonetheless, it seems that well trained Graph Neural Networks can attain similar performance than the best baseline models when using only information derived from the graph or the graph itself.
 
 %-----------------pending----------------------
 
@@ -246,6 +326,6 @@ About the Graph Neural Networks, one key take aways is that their training is co
 
 \textbf{Improvements}
 
-As stated in the conclusion, the the discriminative power of the semantic similarity that can be computed from Bag-of-word embeddings seems to be higher than the one derived from the graph itself. So the obvious next step is to include the semantic information into the graph or to combine it with the Graph Neural Network output embedding into the final fully connected layers to build a classifier that outperforms the baselines models shown so far. The former approach could be the most powerful and the latter seems to be the easiest one to implement.
+As stated in the conclusion, the discriminative power of the semantic similarity that can be computed from Bag-of-word embeddings seems to be higher than the one derived from the graph itself. So the obvious next step is to include the semantic information into the graph or to combine it with the Graph Neural Network output embedding into the final fully connected layers to build a classifier that outperforms the baselines models shown so far. The former approach could be the most powerful and the latter seems to be the easiest one to implement.
 
 A key aspect to improve in this second task is the dataset labeling. The labels of the data set had to be created from scratch, and this procedure might have room for improvement. Also the dataset is very noisy and has a lot of class imbalance. Improving the dataset class distribution, hopefully with more samples could also be studied. One take away of this second experiment is that this task was too ambitious, and probably a more focused approach could be better. For example the model could be trained for classifying snippets of code with a certain maximum length in order to detect loops, branches and function calls as a building block for later detecting bigger compounded code structures.
