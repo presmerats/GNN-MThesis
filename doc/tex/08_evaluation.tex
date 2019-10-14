@@ -3,12 +3,12 @@
 
 This section presents the results and their respective conclusion on all the experiments and their preliminary tests.
 
-\subsection{Girvan-Newman approximation}
+
+\subsection{Preliminary tests}
 
 
-\textbf{Preliminary test}
 
-The results of the semi-supervised classification task on the CORA dataset are show on the following table:
+As a way of verifying that available code from published research works correctly on the computer on which the experiments will be performed, a published experiment is reproduced. A task of semi-supervised classification is reproduced locally, training a set of GCN, ChebNet, GAT , SG and APPNP models. The Cora dataset is used for this task.  The Cora dataset(\cite{sen2008collective} consists of 2708 scientific publications classified into one of seven classes. The goal is to verify that the computer that will support the experiments can train those models without memory problems or other types of problems. Also it is a way to check that some configurations of hyper-parameters yield good results for later comparison with the real experiments. We observe that test accuracy is correct in all the models trained, successfully replicating the experiments. Setup of the environment is also correctly verified. The results of the semi-supervised classification task on the CORA dataset are show on the following table:
 
 
 \begin{table}[H]
@@ -16,21 +16,48 @@ The results of the semi-supervised classification task on the CORA dataset are s
 \begin{tabular}{|llccc|c}
 %\toprule
 \hline
-    Model &           params &   Val Loss &   Test Accuracy &   Duration \\
+    Model &          Dataset &     Tested Accuracy &   Reported Accuracy \\
 %\midrule
 \hline
-   SGConv &   100\_epochs=200 &     1.7587 &   0.790 ± 0.018 &      0.585 \\
- ChebConv &   100\_epochs=200 &     0.8133 &   0.769 ± 0.027 &      5.049 \\
-    APPNP &   100\_epochs=200 &     0.8894 &   0.808 ± 0.017 &      0.984 \\
-  GATConv &   100\_epochs=200 &     0.8111 &   0.803 ± 0.016 &      1.967 \\
-  GCNConv &   100\_epochs=200 &     0.8864 &   0.789 ± 0.018 &      1.091 \\
+   SGConv &   CORA &      79.0 ± 0.018 &       81.7 ± 0.1\\
+ ChebConv &   CORA &      76.9 ± 0.027 &       81.4 ± 0.7\\
+    APPNP &   CORA &       80.8 ± 0.017 &       83.3 ± 0.6\\
+  GATConv &   CORA &      80.3 ± 0.016 &       83.1 ± 0.4\\
+  GCNConv &   CORA &      78.9 ± 0.018 &       81.5 ± 0.6\\
 %\bottomrule
 \hline
 \end{tabular}
-\label{preliminar_GN}\caption{Reproduced benchmark semi-supervised classification experiments on CORA dataset }
+\label{preliminar_GN}\caption{Reproduced benchmark semi-supervised classification experiments on CORA dataset with originally reported accuracy \cite{fey2019fast} }
 \end{table}
 
-We observe that test accuracy is correct in all the models trained, successfully replicating the experiments. Setup of the environment is also correctly verified.
+
+
+A reproduction of some of the results in graph classification tasks by Graph Neural Networks are replicated in this preliminary tests section to make sure that we are able to attain a similar performance with the tools at hand (Pytorch Geometric implementation of Graph Neural Network components). The graph classification tasks on the datasets Proteins and REDDIT binary are reproduced with different model architectures than the ones on the benchmarks of Pytorch Geometric library. We observe that test accuracy is correct in all the models trained, successfully obtaining accuracies close to the ones in the experiments ( \cite{fey2019fast}, \cite{borgwardt2005protein}). Setup of the environment is also correctly verified. The results of the graph classification task on the different datasets are shown on the following table:
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|llcccc|c}
+%\toprule
+\hline
+    Model &         Dataset &       Test Accuracy  &  Reported Accuracy  \\
+%\midrule
+\hline
+  GGNN1 &   REDDIT-BINARY   &      71.30\%  &  74.9\% to 92.1\%\\
+  %GGNN1 &   QM9             &     0.730267  &   80\% & \\
+  GGNN1 &   PROTEINS        &   76.23\%  &  72.33\% to 84.08\%\\
+%\bottomrule
+\hline
+\end{tabular}
+\label{preliminar_GN}\caption{Reproduced benchmark supervised graph classification experiments }
+\end{table}
+
+
+
+\newpage
+\subsection{Girvan-Newman approximation}
+
+
 
 
 
@@ -178,7 +205,7 @@ The best model is the one trained for 20 epochs, with a dataset split of 200, 30
 
 
 
-
+\newpage
 \textbf{Conclusion}
 % conclusion on results
 
@@ -214,32 +241,6 @@ Finally, for the Girvan-Newman algorithm, an inductive setup of the graph neural
 
 \newpage
 \subsection{Compiled code function classification}
-
-
-\textbf{Preliminary test}
-
-The results of the graph classification task on the different datasets are show on the following table:
-
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|llccc|c}
-%\toprule
-\hline
-    Model &         Dataset &   CV F1-macro &   Accuracy &  F1-macro \\
-%\midrule
-\hline
-  GGNN1 &   REDDIT-BINARY   &     1.7587    &   0.75 &     0.7724 \\
-  GGNN1 &   QM9             &     0.730267  &   0.8 &      0.740979 \\
-  GGNN1 &   PROTEINS        &     0.735332    &   0.75 &   0.772433 \\
-%\bottomrule
-\hline
-\end{tabular}
-\label{preliminar_GN}\caption{Reproduced benchmark semi-supervised classification experiments on CORA dataset }
-\end{table}
-
-We observe that test accuracy is correct in all the models trained, successfully obtaining accuracies close to the ones in the experiments ( \cite{fey2019fast}, \cite{borgwardt2005protein}, \cite{dobson2003distinguishing}). Setup of the environment is also correctly verified. \\
-\\
 
 
 

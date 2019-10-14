@@ -10,6 +10,10 @@ The goal of this master's thesis is to apply Graph Neural Network models to diff
 
 This section will present the configuration of the experiments performed in the thesis. First, the Girvan-Newman approximation experiment is explained. Then the compiled code function classification experiment is described last. In each case, context, goals and motivation are described first. Then a preliminary test is performed on well-known benchmark datasets to verify the software libraries and setup in use work correctly in the computer without any problem. Then the process of data preparation is explained and finally how the part of training a model is executed is summarized.
 
+
+
+
+
 % 2) Girvan-Newman approximation
 \subsection{Girvan-Newman algorithm approximation}
 
@@ -55,10 +59,6 @@ To give a bit more of context on the second approach to approximate the Girvan-N
 
 
 
-
-\subsubsection{Preliminary test}
-
-As a way of verifying that available code from published research works correctly on the computer on which the experiments will be performed, a published experiment is reproduced. A task of semi-supervised classification is reproduced locally, training a set of GCN, ChebNet, GAT , SG and APPNP models. The Cora dataset is used for this task.  The Cora dataset(\cite{sen2008collective} consists of 2708 scientific publications classified into one of seven classes. The goal is to verify that the computer that will support the experiments can train those models without memory problems or other types of problems. Also it is a way to check that some configurations of hyper-parameters yield good results for later comparison with the real experiments. 
 
 
 % 2.2) data gathering process
@@ -190,18 +190,6 @@ Then, different representations of those functions in assembler have to be gener
 After that, the collected dataset must be correctly labeled. Since the intent is to train a model in a supervised setting, each function (corresponding to a sample of the dataset) must be labeled with one of the predefined classes.
 Finally, with the dataset correctly labeled and with all its features in place, the models can be trained to classify assembler code functions. A set of baseline classification models, then some basic NLP models and finally a set of GNN models will be trained. 
 
-\subsubsection{Preliminary experiment}
-
-A reproduction of some of the results in graph classification tasks by Graph Neural Networks are replicated in this project to make sure that we are able to attain a similar performance with the tools at hand (Pytorch Geometric implementation of Graph Neural Network components). The graph classification tasks on the datasets:
-\begin{itemize} 	
-	\item Proteins, 
-	\item REDDIT binary
-	\item and QM9 
-\end{itemize} 
-
-are reproduced with different model architectures than the ones on the benchmarks of Pytorch Geometric library. The results are based on the f1-macro average score.
-
-
 
 
 \subsubsection{Dataset}
@@ -254,7 +242,7 @@ The graph is saved in a format suitable for the Python library NetworkX to read 
 		%            rules: topics and tasks, 
 		%            final sets of labels v1,v2,v3
 
-After obtaining the assembler code of each functions and its original name, some simple rules where created to derive a label from the function name in a programatic way. Basically the appearance of keywords would drive this process. Additionally, human supervision has been applied to improve the labeling assignments. 
+After obtaining the assembler code of each functions and its original name, some simple rules were created to derive a label from the function name in a programatic way. Basically the appearance of keywords would drive this process. Additionally, human supervision has been applied to improve the labeling assignments. 
 
 Four different versions of the dataset have been generated:
 \begin{itemize}
@@ -323,7 +311,7 @@ A set of trainings will be performed on baseline models, Bag-of-word models and 
 The set of baseline models used are:
 \begin{itemize}
 	\item Logistic Regression
-	\item Decition trees
+	\item Decision trees
 	\item Random Forest
 	\item XGBoost
 	\item MLP (Multi-layer perceptron)

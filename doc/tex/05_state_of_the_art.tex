@@ -33,11 +33,11 @@ This section will present the main advances in graph neural networks, showing th
 \subsection{Notation}
 
 % 	Graph definition (Wu)
-\textbf{Definition of a Graph:} A graph is defined as $G = (V,E,A)$ where $V$ is the set of nodes, $E$ is the set of edges and $A$ is the adjacency matrix. In a graph, let $ v_{i} \in V $ denote a node and $ e_{i,j} = (vi, vj) \in E $ denote an edge. The adjacency matrix A is a N x N matrix with $A_{i,j} = w_{i,j} > 0$ if $e_{i,j} \in E$ and $A_{i,j}=0$ if $e_{i,j} \notin E$. The degree of a node is the number of edges connected to it, formally defined as $ degree(v_i) = \sum A_{i,:}$
+\textbf{Definition of a Graph:} A graph is defined as $G = (V,E,A)$ where $V$ is the set of nodes, $E$ is the set of edges and $A$ is the adjacency matrix. In a graph, let $ v_{i} \in V $ denote a node and $ e_{i,j} = (vi, vj) \in E $ denote an edge. The adjacency matrix A is a N x N matrix with $N = |V|$ where $A_{i,j} = w_{i,j} > 0$ if $e_{i,j} \in E$ and $A_{i,j}=0$ if $e_{i,j} \notin E$. The degree of a node is the number of edges connected to it, formally defined as $ degree(v_i) = \sum A_{i,:}$
 
 A graph can be associated with node attributes X, where $X \in R^{N \times D}$ is a feature matrix with $X_i \in R^{D}$ representing the feature vector of node $v_i$. %In the case of $D = 1$, we replace $x \in R^N$ with X to denote the feature vector of the graph.
 
-\textbf{Definition of a directed graph:} A directed graph is a graph with all edges pointing from one node to another. For a directed graph, $ A_{i,j} \notequal A_{j,i} $. An undirected graph is a graph where all edges are bidirectional. For an undirected graph, $A_{i,j} = A_{j,i}$.
+\textbf{Definition of a directed graph:} A directed graph is a graph with all edges pointing from one node to another. For a directed graph, $ A_{i,j} \neq A_{j,i} $. An undirected graph is a graph where all edges are bidirectional. For an undirected graph, $A_{i,j} = A_{j,i}$.
 
 
 % 	Euclidean space definition (Wu, Powerful,pitfalls)
@@ -53,8 +53,9 @@ d(x,y) \leq d(x,z)+d(z,y) & \forall x,y,z
 An Euclidean distance $d$ between two points x and y is defined as $d^2(x,y)=(x-y)^T\matchcal{A}(x -y)$ where $\mathcal{A}$ is a positive definite matrix, called a metric.
 
 % 	Non-Euclidean space definition (powerful, pitfalls)
-Graph-structured data is considered to be non Euclidean for many reasons. First, there's not a clear definition of the norm of a vector, and so the distance between two nodes has to be defined on some other criteria. Usually the distance between two nodes is computed as the number of nodes that exist in the shorted path following edges between the node at the origin and the node at the destination. 
-Second, the distance between nodes, when computed that way, does not fulfill the triangle inequality (3rd condition in the previous definition). Finally, the similarity between nodes, as computed based on the node's attributes, does not need to comply with node distances (as defined by previous sentence ).
+Graph-structured data is considered to be non Euclidean. There's not a clear definition of the norm of a vector representing a node in the space defined by the graph itself. Consequently, the distance between two nodes has to be defined on some other criteria. Usually the distance between two nodes is computed as the number of nodes that exist in the shortest path following edges between the node at the origin and the node at the destination. 
+%Second, the distance between nodes, when computed that way, does not fulfill the triangle inequality (3rd condition in the previous definition). 
+Moreover, the similarity between nodes, as computed based on the node's attributes, does not need to comply with node distances (as defined by previous sentence ).
 
 
 \subsection{Original model}
@@ -71,7 +72,7 @@ $$ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(u) \}) ,$$
 $$ h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)}),$$
 
 where $h_v(k)$ is the feature vector of node $v$ at the $k$-th iteration/layer. The initialization consists in $h_v^{(0)} = X_v$, and $N(v)$ is a set of nodes adjacent to $v$. 
-The iterative aggregation process is computationally intensive. modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.  To ensure convergence, the recurrent function (the composition of $COMBINE$ and $AGGREGATE$) must be a contraction mapping. A contraction map shrinks the distance between two points after mapping. GNN use the Almeida-Pineda algorithm \cite{AlmeidaPineda} to train the model. The core idea is to run the propagation process to reach a convergence point and then perform the backward procedure given the converged solution.
+The iterative aggregation process is computationally intensive. Modern implementations try to speed up this convergence process, for example by limiting the number of iterations or by using random walks for processing the neighborhood.  To ensure convergence, the recurrent function (the composition of $COMBINE$ and $AGGREGATE$) must be a contraction mapping. A contraction map shrinks the distance between two points after mapping. GNN use the Almeida-Pineda algorithm \cite{AlmeidaPineda} to train the model. The core idea is to run the propagation process to reach a convergence point and then perform the backward procedure given the converged solution.
 
 % 2 tasks
 There are two types of tasks, where GNNs are used: node classification/regression and graph classification/regression.  Node classification or regression is when each node $v \in V$ has an associated label or target value $y_v$ and the goal is to learn a representation vector $h_v$ of $v$ such that $v$'s label or target values can be predicted as $y_v=f(h_v)$. Graph classification or regression is when given a set of graphs $\{ G1, ..., G_N\}$ and their labels or target values $\{y_1,...,y_N\}$ the goal is to learn a representation vector $h_G$ that helps to predict the label or target value of the entire graph $y_G=g(h_G)$.
@@ -109,7 +110,7 @@ The figure \ref{fig:GNN_schema} shows an example of a 2 layer Graph Neural Netwo
 
 
 % spatial versus spectral methods----------------(Wu)
-Early models try to learn a node's representation by propagating neighbor information in an iterative manner until convergence in all nodes is reached. This process is computationally intensive and so recently there has been several publications that try to make this process less costly. A large number of methods apply the characteristics of convolutional networks in the computer vision domain to graph data. They are called Graph Convolutional Networks (GCN).
+Early models try to learn a node's representation by propagating neighbor information in an iterative manner until convergence in all nodes is reached. This process is computationally intensive and so recently there have been several publications that try to make this process less costly. A large number of methods apply the characteristics of convolutional networks in the computer vision domain to graph data. They are called Graph Convolutional Networks (GCN).
 
 \textbf{Graph Convolutional network:}
 
