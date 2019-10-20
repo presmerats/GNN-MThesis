@@ -1,0 +1,23 @@
+
+\begin{table}[H]
+\adjustbox{max height=\dimexpr\textheight-5.9cm\relax,
+           max width=0.99\textwidth, center}{
+
+\centering
+\begin{tabular}{|llllccc|}
+\hline
+ Model &                                                                          Paramteres  &  Runs\/Epochs  &  Splits &    Loss &        Accuracy &        F1-macro  \\
+\hline
+ META1 &      d19d16h10e19n16n15 & 100-20 & 100-2000-10556- &  2.3561 &   0.280 ± 0.061 &   0.251 ± 0.060  \\
+ META1 &     d19d16h10e19n16n15 & 100-250 & 100-2000-10556- &  3.8995 &   0.139 ± 0.018 &   0.128 ± 0.020  \\
+ META1 &         d19d16h10e19n16n15 & 100-20 & 20-500-1500- &  3.0269 &   0.142 ± 0.027 &   0.127 ± 0.029  \\
+ META1 &        d19d16h10e19n16n15 & 100-250 & 20-500-1500- &  4.9482 &   0.093 ± 0.013 &   0.087 ± 0.017  \\
+ META1 &      d19d16h10e19n16n15 & 100-20 & 200-3000-10556- &  2.0677 &  \textbf{ 0.342 ± 0.078} &   \textbf{0.312 ± 0.076 } \\
+ META1 &     d19d16h10e19n16n15 & 100-250 & 200-3000-10556- &  3.3414 &   0.219 ± 0.027 &   0.208 ± 0.028  \\
+ META1 &    d19d16h10e19n16n15 & 100-600 & 200-3000-10556- &  3.7691 &   0.142 ± 0.037 &   0.124 ± 0.039  \\
+ META1 &    d19d16h10e19n16n15 & 100-2 & 20-500-10556- &  3.0165 &   0.112 ± 0.047 &   0.088 ± 0.052 \\
+\hline
+\end{tabular}
+}
+\label{Experiment1-v2}\caption{Edge betweenness approximation with a graph neural network experiment using 28 discrete ranges}
+\end{table} 
