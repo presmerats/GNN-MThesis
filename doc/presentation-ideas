@@ -1,0 +1,191 @@
+ok- front page
+	- thank you coming yo hear and evaluate my thesis
+	- present master's thesis presentation that has been done with the help and guidance of the supervisor the professor Marta Arias Vicente
+	- I hope to convey the excitement I felt when I learned that we could work with graph structured data 
+
+ok- TOC
+	- intro: 
+		introduce the project, goals and motivation
+	- state of the art: 
+		present GNN, basic concepts, to give context for later 2 experiments. Real state of the art is reflected in the thesis report. 
+	- experiments: 
+		present the 2 experiments, their goal, the design and the result
+	- conclusion: 
+		general key take aways of the thesis.
+
+
+ok- Introduciton 1
+	- first definition and presentation of what are graph neural network
+		- read definition
+		- introduce semi-supervised learning
+			supervised learning we have examples with the corresponding target value and we train the model to predict this target
+			in unsupervised we have just examples without any target, and we transform the data to reduce dimensionality or to cluster it.
+			In semi-supervised learning we have very few examples with the target value, and the rest of examples are unlabeled. The model needs to be trained with that few values and predict the target value for the rest
+	
+
+
+ok- intro - goals	
+	- motivation
+		% Graph Neural Networks seem to be a promising way of solving graph-related problems, with applications in many domains. 
+
+	    % data expressed as a graph is more exciting to me because it allows to express more complex real world phenomenon like 
+	    % complex network communications that have to be modelled by costly simulations or that have a huge combinatorial explosion when looking for solutions is overwhelming 
+	    % or knowledge that allow to represent knowledge and to reason about it
+
+	    % personal choice, kind of exciting to me, more than other machine learning tasks like for instance price forecasting, credit scoring
+
+	    % since there has been a lot of research in the last 2-3 years on that topic it seemed a good moment to look into thath
+
+	- organization
+		% one does semi-supervised learning
+	    % the other does graph classification
+	    % and this is a way to get to know how main gnn models work, 
+
+
+
+
+ok- state of the art - nomenclature
+	- basic definitions
+		we need to know the basic concepts related to graphs like the nomenclature, adjacency matrix and what is an isomorphism.
+
+
+		we need to agree on the notation to talk about Graphs, vertices, the edges that connect them, what is the adjacency matrix , what's a directed and undirected graph and what is the node degree, and what is an isomorphism.
+
+
+		we need to know some machine learning concepts like model, variable/attribtue, target value, class label, regression 
+		but more important, that graphs will have attributes, related to their structure or not.
+
+
+
+
+ok- sota - gnn overview I - V
+	- self explanatory
+
+
+ok- sota - GNN layer detail I
+	- READ 
+
+ok- sota - GNN layer detail II
+	- for each node (v), we will perform this operation 
+
+ok- sota - GNN layer detail IIi
+	- introduce the state of each node
+	- aggreg function
+	- combine 
+	- and readout for graph classification
+
+
+ok- sota - GNN types
+	- original model is waht we saw but iterated until convergence (final state does not vary over a certain small threshold)
+	- common approach : convolutional where parameter sharing appears
+	- first was a signal processing approach that depends on the matrix factorization of tha adjancency matrix
+		- drawback: depends on the structure of the graph, if changes the eigenvectors change and the result is different. no applicable to unseen structres
+		- drawback: must be in memory so not applicable to big graphs
+	- second and most famous: spatial-based approach
+		- neigborhood aggregation with a limit on the numebr of iterations.
+		- can be computed in batches of nodes so big graphs can be handled
+		- can be applied to generalize to unseen graphs structures
+
+
+ok- sota - GNN implementations
+
+	 GCN first famous spatial-based
+	 graphsage imeplments sampling of the neighborhood to handle large graphs
+	 gin imlpements the weisfeiler-lehman test to detect isomorphisms
+	 ggnn users gated recurrent units (a variant of rnn) to handle sequential data on the nodes
+	 mpnn is the original gnn idea with message passing being the iterative convergence phase.
+
+ok- alternatives
+	- precomputed : summary statistics, topological features...
+	- preconfigure: kernels, matrix factorization and random walks
+
+
+ 
+
+
+- exp 1
+
+	- exp1 - description
+		- girvan-newman definition, + edge betweenns + cost
+		- goal and motivation
+		- how would the approx be implemented: compute a few edge betwennesses then aproximating the rest to speed up the proces
+
+
+	- exp1 - results
+
+		- table + figures  
+		- strategy : discrete ranges by percentiles(balanced) (28) + classification 
+		- introduce runs for making sure it generalizes
+		- say the best model accuracy
+	
+	- exp1 - conclusions and improvements
+		- conclusions
+			- sensibility to dataset splits
+			- need improvement before continuing with the experiment
+		- improvements
+			which is my favourite performance metric acc of highest class instead of loss
+
+
+- exp2
+
+	- malware analysis
+		- present the task (one of the tasks of malware analysis)
+		- find clues Ip addresse, domain names, disk file names to detect infection in other computers
+
+
+	- reverse engineering
+		- machine code to assembler correspondence
+		- disassembler
+		- function names = address
+		- speed up by renaming the funciton with8 the main functionality?
+
+	- inspiration
+		2 papers: one function renaming without gnn the other variable usage verification with gnn
+		both on source code not compiled code
+
+	- description + goal + motivation
+		read quickly
+
+	- description I
+		components 
+			assemblu code to code features
+			asembly code to list of token from the code
+			assembly code to graph
+			graph to graph features
+
+	- dataset and labeling
+		- well known open source weservers and libraries
+
+		- we need labels <- derived from original function names (compilation with debuggin info)
+
+		- topic and acitons + keyword appearacne rules to v1,v2,v3
+
+	- features
+		- code tokens -> bag of word models
+		- code features counts of registers, instructions -> baselin models.
+		- graph generation explain
+			sequentialiy + branch(jump) and call
+		- graph topological features
+
+	- models 
+		- READ
+
+
+	- results
+		in v1 (10 clases) the best models get 
+			f1-macro on test of 40%
+
+			gnn gests to less than half this f1-score macro avg performance
+
+			f1-score macro averaged is a performance(quality) measure that takes precision and recall into account (harmonic mean)
+
+
+		in v3
+			22.1% but GNN get to 19.8%
+
+
+	- conclusions
+		read
+
+ -conclusions
+ 	read
