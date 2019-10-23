@@ -3,19 +3,25 @@
 \usepackage{comment}
 \usetheme{Madrid}
 \usepackage{wrapfig}
+\usepackage{natbib}
+\bibliographystyle{abbrvnat}
+\setcitestyle{authoryear,open={},close={}}
 
 
 \title{Graph Neural Network Applications}
 
 % A subtitle is optional and this may be deleted
-\subtitle{Master in Innovation and Research in Informatics - Master's Thesis}
+\subtitle{Master's Thesis}
 
-\author{Pau~Rodriguez}
+\author{Pau~Rodriguez~Esmerats}
+
 
 \institute[]
 {
-  Universitat Politecnica de Catalunya\\
-  MIRI - Data Science
+  Supervisor: Marta Arias Vicente\\
+  \\
+  Master in Innovation and Research in Informatics - Data Science\\
+   Universitat Politecnica de Catalunya\\
   }
 
 \date{October 2019}
@@ -44,111 +50,245 @@
   \titlepage
 \end{frame}
 
-\begin{frame}{Outline}
+\begin{frame}{Table of Contents}
   \tableofcontents
 \end{frame}
 
 
 
+
+
 %------------------------------------------------------------------------
 \section{Introduction}
-\begin{frame}{Introduction}
-    \begin{block}{What are Graph Neural Networks}
-    {
-     %Present a summarized view of Graph neural networks   
-     %Present trends       
-    }
-    \end{block}
-
+\begin{frame}{ }
+\huge{1. Introduction}
 \end{frame}
 
 
 %------------------------------------------------------------------------
-\begin{frame}{Introduction}
-    \begin{block}{What are Graph Neural Networks}
+\begin{frame}{Introduction}{Graph Neural Networks definition}
+    \begin{block}{What are Graph Neural Networks?}
     {
-    % Main papers and their applications in topics/areas list     
-    }
+Graph Neural Networks allow to create an end to end machine
+learning model that is simultaneously trained to learn a representation of graph structured data and to fit a predictive model on it.\\
+They achieved state-of-the-art performance on semi-supervised learning and supervised graph classification.
+}
     \end{block}
 
+
+Successful applications of Graph Neural Networks:
+\begin{itemize}
+    \item Recommender systems
+    \item Biochemistry
+    \item Communication Networks
+    \item Program verification
+    \item Social Network analysis
+\end{itemize}
+
 \end{frame}
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{Introduction}
+%     \begin{block}{What are Graph Neural Networks?}
+%     {
+%     % Main papers and their applications in topics/areas list 
+
+%     % initial 2005, 2009    
+%     % Bruan 
+%     % GCN
+%     % GraphSage
+%     % Gin
+%     % GGNN
+
+%     }
+%     \end{block}
+
+% \end{frame}
 
 
 %--------------------------------------------------------------------
-\begin{frame}{Introduction}
-    \begin{block}{Goals}
+\begin{frame}{Introduction}{Project definition}
+    \begin{block}{Goal}
     {
+    Explore Graph Neural Networks and apply them to different problems to create a novel solution. \\
+
      %The goal of this master’s thesis is to apply Graph Neural Network models to different problems to create a novel solution. The idea is to get to know how Graph Neural Networks are used in each situation. Two problems are explored: Girvan-Newmann algorithm approximation and compiled code function classification. They correspond to the two main tasks that Graph Neural Network perform with success, semi-supervised learning of nodes on a graph and supervised graph classification.        
     }
     \end{block}
+
     \begin{block}{Motivation}
     {
-    % Graph Neural Networks seem to be a promising way of solving graph-related problems, with applications in many domains. The time seems right to jump into learning about the most recent models since they have attained state-of-the-art performance on some of the tasks they have solved.
+    Graph Neural Networks seem to be a promising way of solving graph-related problems, with applications in many domains. 
+
+    % Graph Neural Networks seem to be a promising way of solving graph-related problems, with applications in many domains. 
+
+
+    % data expressed as a graph is more exciting to me because it allows to express more complex real world phenomenon like 
+    % complex network communications that have to be modelled by costly simulations or that have a huge combinatorial explosion when looking for solutions is overwhelming 
+    % or knowledge that allow to represent knowledge and to reason about it
+
+    % personal choice, kind of exciting to me, more than other machine learning tasks like for instance price forecasting, credit scoring
+
+    % since there has been a lot of research in the last 2-3 years on that topic it seemed a good moment to look into thath
+
+
+
+
     }
     \end{block}
+
+    Organization of the thesis:
+        \begin{itemize}
+            \item Overview of GNN (state of the art)
+            \item Experiment 1 - Girvan-Newman algorithm approximation
+            \item Experiment 2 - Compiled code function classification
+        \end{itemize}
+
+    % one does semi-supervised learning
+    % the other does graph classification
+    % and this is a way to get to know how main gnn models work, 
+
 \end{frame}
 
-%------------------------------------------------------------------------REMOVE? -> TOC IS THE SAME
-\begin{frame}{Introduction}
-    \begin{block}{Organization}
-    {
-%      %The thesis is organized in the following way: the next section will explain the state-of-the-art in Graph Neural
-% Network models by presenting the may models, their internals and the problems they have solved. Then, in
-% section three, the methodology followed in the experiments is presented. After that, section four will go through
-% an overview of the implementation of the experiments, whereas in section five the results of the experiments are
-% summarized. Finally, in section six the conclusion of the thesis is presented.       
-    }
-    \end{block}
+
+
+% %------------------------------------------------------------------------REMOVE? -> TOC IS THE SAME
+% \begin{frame}{Introduction}
+%     \begin{block}{Organization}
+%     {
+% %      %The thesis is organized in the following way: the next section will explain the state-of-the-art in Graph Neural
+% % Network models by presenting the may models, their internals and the problems they have solved. Then, in
+% % section three, the methodology followed in the experiments is presented. After that, section four will go through
+% % an overview of the implementation of the experiments, whereas in section five the results of the experiments are
+% % summarized. Finally, in section six the conclusion of the thesis is presented.       
+%     }
+%     \end{block}
     
-\end{frame}
+% \end{frame}
 
 
 
 %------------------------------------------------------------------------
 \section{State of the art}
+\begin{frame}{ }
+\huge{2. State of the art}
+\end{frame}
+
+
+%------------------------------------------------------------------------
 \begin{frame}{State of the art}{Nomenclature}
 % summarize Notation subsection from SOTA on report G,V,E,...
 
+\textbf{Graph related concepts}
+\vspace{15px}
+
+\textbf{Graph:}  $G = (V,E,A)$ where $V$ is the set of nodes, $E$ is the set of edges and $A$ is the adjacency matrix. In a graph, let $ v_{i} \in V $ denote a node and $ e_{i,j} = (vi, vj) \in E $ denote an edge. 
+
+
+\textbf{Adjacency matrix:} A is a $|V| \times |V|$ where $A_{i,j} = w_{i,j} > 0$ if $e_{i,j} \in E$ and $A_{i,j}=0$ if $e_{i,j} \notin E$.
+
+\textbf{Node degree:} is the number of edges connected to it, $ degree(v_i) = \sum A_{i,:}$
+
+And other related concepts: directed/undirected graph, isomorphism, etc.
+
+
+
+\end{frame}
+% \textbf{Directed graph:} all edges pointing from one node to another,  $ A_{i,j} \neq A_{j,i} $. 
+
+% \textbf{Undirected graph:} all edges are bidirectional, $A_{i,j} = A_{j,i}$.
+
+% \textbf{Isomorphism:} an isomorphism of graphs G and H is a bijection between the vertex sets of G and H $f:V(G) \to V(H)$ such that any two vertices u and v of G are adjacent in G if and only if f(u) and f(v) are adjacent in H (Wikipedia).
+
+% \textbf{Node attributes:} X, where $X \in R^{|V| \times D}$ is a feature matrix with $X_i \in R^{D}$ representing the feature vector of node $v_i$. %In the case of $D = 1$, we replace $x \in R^N$ with X to denote the feature vector of the graph.
+% We can also have edge attributes and graph-level atttributes.
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Nomenclature}
+%\begin{block}{ Machine learning concepts}{
+\textbf{Machine learning concepts}
+\vspace{15px}
+
+\textbf{Node attributes:} X, where $X \in R^{|V| \times D}$ is a feature matrix with $X_i \in R^{D}$ representing the feature vector of node $v_i$. %In the case of $D = 1$, we replace $x \in R^N$ with X to denote the feature vector of the graph.
+We can also have edge attributes and graph-level attributes.\\
+
+\textbf{State:} we will define the state based on the values of the attributes on each node, edge or graph.
+
+\textbf{Semi-supervised learning:} a supervised learning task with very few known target values. 
+
+%}\end{block}
+
+
 \end{frame}
 
 
 
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Euclidean space}
-% Euclidean space definition
-% why Graph are considered non Euclidean
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Euclidean space}
+% % Euclidean space definition
+% % why Graph are considered non Euclidean
 
-%avoid??
+% %avoid??
 
-\end{frame}
-
-
+% \end{frame}
 
 
 %------------------------------------------------------------------------
-\begin{frame}{State of the art}{Graph Neural Networks}
+\begin{frame}{State of the art}{Graph Neural Networks overview}
 
-% Graph Neural Network definitioin: Aggre, Combine, readout
-
-% alternatives quick mention: hand-engineerred features, kernel funcs, markov-random walk embeddings
-
-\end{frame}
-
-
-
-
-
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Graph Neural Networks}
-
-
+%\vspace{-10px}
+\textbf{Common Graph Neural Network architecture}
 % Usual architecture: embedding + downstream ML algorithm
+\begin{figure}
+    \includegraphics[scale=0.37]{./img/GNN_explanation_01b.png}
+\end{figure}
+
+\vspace{8px}
+Tasks:
+\begin{itemize}
+    \item supervised graph classification or regression
+\end{itemize}
+
+\end{frame}
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks overview}
+
+\textbf{Common Graph Neural Network architecture}
+% Usual architecture: embedding + downstream ML algorithm
+\begin{figure}
+    \includegraphics[scale=0.37]{./img/GNN_explanation_01.png}
+\end{figure}
 
 
 % tasks: node classif/regr, (sub)graph classif/regre 
 %       -> repr. learning
 % setupt: semi-supervised node repr. learning, and supervised graph repr. learning
 
+\vspace{-10px}
+Tasks:
+\begin{itemize}
+    \item supervised node classification/regression
+    \item semi-supervised node classification/regression
+\end{itemize}
+
+% \begin{figure}[H]
+% \minipage{0.5\textwidth}
+% \begin{itemize}
+%     \item supervised node classification/regression
+%     \item supervised graph classification/regression
+% \end{itemize}
+% \endminipage
+% \hfill
+% \minipage{0.5\textwidth}%
+% \begin{itemize}
+%     \item semi-supervised node classification/regression
+%     \item visualization 
+% \end{itemize}
+% \endminipage
+% \end{figure}
 
 
 \end{frame}
@@ -156,126 +296,424 @@
 
 
 
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Graph Convolutional Networks}
 
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks overview}
+
+\textbf{Common Graph Neural Network architecture}
+% Usual architecture: embedding + downstream ML algorithm
+\begin{figure}
+    \includegraphics[scale=0.37]{./img/GNN_explanation_02.png}
+\end{figure}
+\vspace{-10px}
+Tasks:
+\begin{itemize}
+    \item supervised node classification/regression
+    \item semi-supervised node classification/regression
+\end{itemize}
+
+\end{frame}
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks overview}
+
+\textbf{Common Graph Neural Network architecture}
+% Usual architecture: embedding + downstream ML algorithm
+\begin{figure}
+    \includegraphics[scale=0.37]{./img/GNN_explanation_03.png}
+\end{figure}
+\vspace{-10px}
+Tasks:
+\begin{itemize}
+    \item supervised node classification/regression
+    \item semi-supervised node classification/regression
+\end{itemize}
+
+\end{frame}
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks overview}
+
+\textbf{Common Graph Neural Network architecture}
+% Usual architecture: embedding + downstream ML algorithm
+\begin{figure}
+    \includegraphics[scale=0.37]{./img/GNN_explanation_04.png}
+\end{figure}
+\vspace{-10px}
+Tasks:
+\begin{itemize}
+    \item supervised node classification/regression
+    \item semi-supervised node classification/regression
+\end{itemize}
+
+\end{frame}
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks overview}
+
+\textbf{Common Graph Neural Network architecture}
+% Usual architecture: embedding + downstream ML algorithm
+\begin{figure}
+    \includegraphics[scale=0.35]{./img/GNN_explanation_05.png}
+\end{figure}
+\vspace{-10px}
+Tasks:
+\begin{itemize}
+    \item supervised node classification/regression
+    \item semi-supervised node classification/regression
+\end{itemize}
+
+\end{frame}
+
+
+
+
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks internals}
+
+\textbf{Basic Graph Neural Network Layer Definition}
+\begin{figure}
+    \includegraphics[scale=0.35]{./img/GNN_internals_01.png}
+\end{figure}
+\vspace{20px}
+Let's look into the internals of Graph Neural Network layers alone.
+\textbf{Observation:} a GNN layer corresponds to one iteration of the whole representation generation process. 
+\end{frame}
+
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks internals}
+
+\textbf{Basic Graph Neural Network Layer Definition}
+
+\begin{columns}
+\column{0.5\textwidth}
+\begin{figure}
+    \includegraphics[scale=0.35]{./img/GNN_internals_02.png}
+\end{figure}
+
+
+\column{0.5\textwidth}
+$ v $ is the current node that we are updating\\
+$ u \in N(v)$ is the set of neighbor nodes of $v$\\
+
+
+\end{columns}
+
+\vspace{20px}
+Generating the representation(embedding) of the nodes/graph:
+
+\begin{enumerate}
+    \item $ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(v) \}) ,$
+    \item $ h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)}),$
+    \item $ h_G = READOUT(\{h_v^{(K)} | v \in G\})$  for graph level representation
+\end{enumerate}
+\vspace{20px}
+Originally, those steps are iterated until convergence.
+\end{frame}
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Networks internals}
+
+\textbf{Basic Graph Neural Network Layer Definition}
+
+\begin{columns}
+\column{0.5\textwidth}
+\begin{figure}
+    \includegraphics[scale=0.35]{./img/GNN_internals_03.png}
+\end{figure}
+
+
+\column{0.5\textwidth}
+$ v $ is the current node that we are updating\\
+$ u \in N(v)$ is the set of neighbor nodes of $v$\\
+$h_u(k)$ is the state of node u at step(layer) $k$\\
+
+
+\end{columns}
+
+\vspace{20px}
+Generating the representation(embedding) of the nodes/graph:
+
+\begin{enumerate}
+    \item $ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(v) \}) ,$
+    \item $ h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)}),$
+    \item $ h_G = READOUT(\{h_v^{(K)} | v \in G\})$  for graph level representation
+\end{enumerate}
+\vspace{20px}
+Originally, those steps are iterated until convergence.
+\end{frame}
+
+
+
+
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{State of the art}{Graph Neural Network types}
+
+These are the basic types of Graph Neural Networks:
+
+
+\begin{itemize}
+    \item \textbf{Original model}: iterates until convergence and no parameter sharing ( \citet{gori} , \citet{scarcelli}  )
+    \item \textbf{Convolutional approach}: parameter sharing and limiting the iteration steps
+        \begin{itemize}
+            \item \textbf{Spectral-based methods}: matrix factorization approach (\citet{bruna}  )
+            \item \textbf{Spatial-based methods}: neighborhood aggregation approach (\citet{gcn} , \citet{graphsage} )
+        \end{itemize}
+\end{itemize}
+\end{frame}
 % p6 sota GCN definition
 
 % clarification: Kipf GCN versus broad type of convolutional networks
 % convolution: sharing parameters
 
 
-\end{frame}
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spectral methods}
+
+% % spectral methods characteristics pros and cons
+% Spectral-based graph convolution methods are created like signal processing filters.
+% \begin{itemize}
+%     \item Based on the eigen-decomposition of the Laplacian matrix.
+%     \item Drawback: any modification of the graph changes the eigenvector basis, can only be applied to graphs with same structure.
+%     \item Drawback: all the graph must be in memory (scalability problem).
+%     \item Drawback: limited to work on undirected graphs
+% \end{itemize}
+% %graph convolution operation is interpreted as removing noise from graph signals.
+% %They rely on the eigen-decomposition of the Laplacian matrix. This has the drawback that any perturbation of
+% %a graph results in a change of eigen basis, and the learned filters are domain dependent so they can’t be applied
+% %to a graph with a different structure.
+
+% \end{frame}
 
 
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spatial methods}
+% % spatial methods pros and cons
 
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spectral methods}
+% Spatial-based graph convolutions are based on the aggregation of nodes's spatial relations(neighbors).
+% \begin{itemize}
+%     \item Advantage: some spatial-based methods can generalize to unseen graph structures.
+%     \item Advantage: aggregation of neighbors allows for processing large graphs by batches of nodes
+%     \item Advantage: can be used on directed and undirected graphs.
+% \end{itemize}
 
-% spectral methods characteristics pros and cons
-
-
-\end{frame}
-
-
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spatial methods}
-% spatial methods pros and cons
-\end{frame}
-
-
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spatial methods - GCN}
-
-%highlights 
-%formula
-
-\end{frame}
-
-
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spatial methods - MPNN}
-
-%highlights 
-%formula
-
-\end{frame}
-
-
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spatial methods - GraphSage}
-
-%highlights 
-%formula
-
-\end{frame}
-
-
-
-%------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spatial methods - GGNN}
-
-%highlights 
-%formula
-
-\end{frame}
+% \end{frame}
 
 
 
 
 
 %------------------------------------------------------------------------
-\begin{frame}{State of the art}{Spatial methods - GIN}
+\begin{frame}{State of the art}{Graph Neural Network Implementations}
 
-%highlights 
-%formula
+\textbf{The most common Graph Neural Network implementations are:}
+\begin{itemize}
+    \item Graph Convolutional Network (GCN)
+    \item GraphSage
+    \item Graph Isomorphism Network (GIN)
+    \item Gated Graph Neural Network (GGNN)
+    \item Message Passing Neural Network (MPNN)
+\end{itemize}
+
 
 \end{frame}
+
+
 
 
 %------------------------------------------------------------------------
-\begin{frame}{State of the art}{Other GNNs}
+\begin{frame}{State of the art}{Graph Neural Networks Alternatives}
+\textbf{There are mainly 3 alternatives:}
+% alternatives quick mention: hand-engineerred features, kernel funcs, markov-random walk embeddings
+\begin{itemize}
+    \item Summary graph statistics (topological features)
+    \item Kernel functions
+    \item Network embeddings: matrix factorization and random walks
+\end{itemize}
+\vspace{15px}
+They are precomputed or preconfigured. They don't adapt to the data!
 
-% G attention networks
-% G AUto-encoders
-% G Generative Networks
-% G spatial-temporal networks
 \end{frame}
+
+
+
+
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spatial methods - GIN}
+
+% %highlights
+% \textbf{Graph Isomorphism Network:} implements the Weisfeiler-Lehman algorithm on graphs, used to detect isomorphisms (\citet{powerful}).
+ 
+% %formula
+% The node states are computed by:
+% $$H^{(k)} = f(H^{(k-1)},A) =  \sigma(AH^{(k-1)}W^{(k-1)}),$$
+
+% where $W^{(k)}$ is a weight matrix for the lth neural network layer and  $\sigma()$ is a non-linear activation function.
+
+
+% \begin{figure}[H]
+%     \centering
+%         \includegraphics[width=0.75\linewidth]{img/GN_exp2_GIN.png}
+%     \caption{Architecture of the Graph Isomorphism Network (GIN) model}\label{fig:gin_diagram}
+% \end{figure}
+
+
+% % what each layer represents (iterative steps)
+
+
+
+% \end{frame}
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spatial methods - GCN}
+
+% %highlights 
+% \textbf{Graph Convolutional Network:} uses filter parameters $W^{(k)}$ that are shared over all locations in the graph (\citet{gcn}).
+
+% %formula
+% $$ h^{(k)}_{v_i} = \sigma(\sum_j \frac{1}{c_{ij}}h^{(k-1)}_{v_j}W^{(k-1)})$$
+
+% where j indexes the neighboring nodes of $v_i$, and $c_{ij}$ is a normalization constant for the edge $(v_i,v_j)$.
+
+
+% % generality of the GIN vs the constrained GCN
+% % conditions that make GCN work
+% % notes on where to look for specific explanations
+
+% \end{frame}
+
+
+
+
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spatial methods - MPNN}
+
+% %highlights 
+% \textbf{Message Passing Neural Networks (MPNN):} The MPNN model generalizes several existing graph convolution networks into a unified framework named Message Passing Neural Network (\citet{mpnn}.
+
+% %formula
+% $$ h_v^t = U_t(h_v^{(t-1)}, \sum_{w \in N(v)} M_t(h_v^{t-1}, h_w^{t-1}, e_{vw}))$$
+
+
+% \begin{figure}
+%     \includegraphics[width=0.6\linewidth]{img/GN_exp1_metalayer2.png}
+% \caption{MPNN implementation as the MetaLayer model in Pytorch Geometric}
+% \end{figure}
+
+% % the implementation used effectively recreates the spatial based convolutional model on edge attributes and node attributes. But any other approach could be taken
+
+% \end{frame}
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spatial methods - GraphSage}
+
+% %highlights 
+% %formula
+
+% \end{frame}
+
+
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Spatial methods - GGNN}
+
+% %highlights
+% \textbf{Gated Graph Neural Networks (GGNN):} emplois the gated recurrent units (GRU) \citet{GRU} as the recurrent function, reducing the recurrence to a fixed number of steps. The spatial graph convolution of GGNNs is defined as:
+
+% %formula
+% $$ h_v^t = GRU(h_v^{(t-1)}, \sum_{u \in N(v)} Wh_u^t) $$ 
+
+% Uses back-propagation through time (BPTT) to learn the parameters.\\
+% Costly and especially problematic for large graphs. 
+
+
+% \end{frame}
+
+
+
+
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Other GNNs}
+
+% % G attention networks
+% % G AUto-encoders
+% % G Generative Networks
+% % G spatial-temporal networks
+% \end{frame}
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{State of the art}{Successful applications of GNN}
+
+% %CV
+% %Recsys
+% % BIochemistry
+% % Communication Networks modelling
+% % Program verification
+% \end{frame}
+
+
 
 
 %------------------------------------------------------------------------
-\begin{frame}{State of the art}{Successful applications of GNN}
-
-%CV
-%Recsys
-% BIochemistry
-% Communication Networks modelling
-% Program verification
-\end{frame}
-
-
-
 \section{Experiments}
-%------------------------------------------------------------------------REMOVE(go directly to first experiment)
-\begin{frame}{Experiments}
-    \begin{block}{General goal}{
-    % Apply GNN to 2 experiments: one covering semi-supervised node regression(classification)
-    % the other covering supervised graph classification in the domain :
-
-    }\end{block}
-    \begin{block}{General motivation}{
-        % Make use of those great GNN algorithms in novel ways by applying them to new areas
-
-    }\end{block}
-    \begin{block}{Methodology}{
-        % adaptation of CRIPS-DM without business understanding and deployment
-        % for model selection & evaluation: hyper-parameter search with cross-validation for each type of model
-        % types of models: from simple baselines to more complex ones
-    }\end{block}
-
-
-
+\begin{frame}{ }
+\huge{3. Experiments}
 \end{frame}
+
+
+
+
+% %------------------------------------------------------------------------REMOVE(go directly to first experiment)
+% \begin{frame}{Experiments}
+
+
+% \begin{itemize}
+%     \item Experiment 1 - Girvan-Newman algorithm approximation
+%     \item Experiment 2 - Compiled code function classification
+% \end{itemize}
+
+%     % \begin{block}{General goal}{
+%     % % Apply GNN to 2 experiments: one covering semi-supervised node regression(classification)
+%     % % the other covering supervised graph classification in the domain :
+
+%     % }\end{block}
+%     % \begin{block}{General motivation}{
+%     %     % Make use of those great GNN algorithms in novel ways by applying them to new areas
+
+%     % }\end{block}
+%     % \begin{block}{Methodology}{
+%     %     % adaptation of CRIPS-DM without business understanding and deployment
+%     %     % for model selection & evaluation: hyper-parameter search with cross-validation for each type of model
+%     %     % types of models: from simple baselines to more complex ones
+%     % }\end{block}
+
+% \end{frame}
 
 
 
@@ -331,20 +769,6 @@
 \end{frame}
 
 
-%------------------------------------------------------------------------
-\begin{frame}{Experiment 1 - Girvan-Newman algorithm approximation }{ Description}
-
-
-A Graph Neural Network has been trained to approximate the edge betweenness computation with a \textbf{semi-supervised node classification} task.\\
-
-Discrete ranges of values of the edge betweenness are generated by percentiles.\\
-
-% better performance if doing classification
-
-\end{frame}
-
-
-
 
 %------------------------------------------------------------------------
 \begin{frame}{Experiment 1 - Girvan-Newman algorithm approximation }{ Description}
@@ -358,6 +782,23 @@ The implementation of the Girvan-Newman approximation would be:
 \end{itemize}
 
 \end{frame}
+
+
+
+
+%------------------------------------------------------------------------
+\begin{frame}{Experiment 1 - Girvan-Newman algorithm approximation }{ Description}
+
+
+A Graph Neural Network has been trained to approximate the edge betweenness computation with a \textbf{semi-supervised node classification} task.\\
+
+Discrete ranges of values of the edge betweenness are generated by percentiles.\\
+
+% better performance if doing classification
+
+\end{frame}
+
+
 
 
 
@@ -426,6 +867,8 @@ The implementation of the Girvan-Newman approximation would be:
 %------------------------------------------------------------------------
 \begin{frame}{Experiment 1 - Girvan-Newman algorithm approximation }{ Conclusion}
 
+
+\textbf{What are the key take aways?}
 % how good/bad is it?
 \begin{itemize}
     \item The best trained model obtains a 34.3\% accuracy in a 28 discrete ranges setup.
@@ -439,6 +882,9 @@ The implementation of the Girvan-Newman approximation would be:
 %------------------------------------------------------------------------
 \begin{frame}{Experiment 1 - Girvan-Newman algorithm approximation }{ Next steps}
 
+
+
+\textbf{How can the results be improved?}
 % ways to apply this to Girvan-Newman approximation
 \begin{itemize}
     \item Perform a longer hyper-parameter search.
@@ -549,12 +995,16 @@ MALWARE STATIC ANALYSIS: understanding functionalities and searching for artifac
 Is it possible to rename the functions to help the analyst in searching specific functionalities within the code?
 
 
+\begin{itemize}
+    \item code2vec: Learning distributed representations of code (\citep{code2vec} )
+    \item Learning to represent programs with graphs (\citep{139} )
+\end{itemize}
 
-\nocite{code2vec} \nocite{139} 
+% \nocite{code2vec} \nocite{139} 
 
-%\nocite{code2vec,129}
-\bibliographystyle{unsrt}
-\bibliography{references}
+% %\nocite{code2vec,129}
+% \bibliographystyle{unsrt}
+% \bibliography{references}
 
 
 %code2vec uses abstract syntax trees to generate embeddings of functions that allow for later classification and then renaming of functions. It is performed on more complex syntax programming languages, with examples from free available code on github.
@@ -578,7 +1028,7 @@ Is it possible to rename the functions to help the analyst in searching specific
         Classify snippets of assembler code (subroutines or functions) into well known general purpose functionalities (Network, Disk, Encryption,etc)
 
     }\end{block}
-    \begin{block}{M otivation}{
+    \begin{block}{Motivation}{
         Speed up the process of reverse engineering malicious code by adding some indications on the main functionality of assembler functions.
     }\end{block}
 \end{frame}
@@ -737,6 +1187,8 @@ Machine learning models
 \begin{frame}{Experiment 2 - Compiled code function classification}{Conclusion}
 
 
+
+\textbf{What are the key take aways?}
 % conclusion on why topological features don't give as much signal as code features
 % features vs classes boxplots?
 \begin{itemize}
@@ -751,6 +1203,7 @@ Machine learning models
 %------------------------------------------------------------------------
 \begin{frame}{Experiment 2 - Compiled code function classification}{Next steps}
 
+\textbf{How can the results be improved?}
 % improvements
 \begin{itemize}
     \item Combine graphs with Bag-of-words embedding (node or graph level?)
@@ -767,24 +1220,51 @@ Machine learning models
 \end{frame}
 
 
+%------------------------------------------------------------------------
 \section{Conclusion}
+\begin{frame}{ }
+\huge{4. Conclusion}
+\end{frame}
+
+
 %------------------------------------------------------------------------
-\begin{frame}{Conclusion}{Results summary}
+
+
+\begin{frame}{Conclusion}%{Results summary}
+
+\begin{itemize}
+    \item Exploration of some Graph Neural Network models was successfully performed.
+    \item Graph Neural Networks successfully applied to 2 problems. % even thought it has been methodologicaly proven that they were probably not the best models to use in both cases, plus experiment 2 problem was ill-posed or too ambitious and training resources were not enought for some kind
+    \item The complexity of Graph Neural Network training has been observed.
+    \item The need for a more thorough testing in experiment 1 has been stated.
+    \item The need for a more constrained problem definition in experiment 2 has been stressed out.
+
+\end{itemize}
 
 \end{frame}
 
 
 
-%------------------------------------------------------------------------
-\begin{frame}{Conclusion}{Next steps summary}
+\begin{frame}[allowframebreaks]{References}
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
 
 \end{frame}
+
+\end{document}
+
+
+
+% %------------------------------------------------------------------------
+% \begin{frame}{Conclusion}{Next steps summary}
+
+% \end{frame}
 
 
 
 % %\nocite{*}
-% \bibliographystyle{unsrt}
-% \bibliography{references}
 
 
 
@@ -1149,7 +1629,4 @@ Machine learning models
 % \end{itemize}
 % \end{block}
 % \end{frame}
-
-\end{document}
-
 

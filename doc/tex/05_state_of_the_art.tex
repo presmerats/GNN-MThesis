@@ -68,7 +68,7 @@ The idea of a graph neural network was first presented by Gori et al.(2005) \cit
 
 % generalised definition (Powerful)
 \textbf{Graph Neural Networks:} GNNs use the graph structure and node features $X_v$ for $v \in V$ to learn a representation vector of a node, $h_v$, or the entire graph $h_{G}$. Modern GNNs follow a neighborhood aggregation strategy, where they iteratively update the representation of a node by aggregating representations of its neighbors. After $k$ iterations of aggregation, a node's representation captures the structural information within it's $k$-hop network neighborhood. Formally, the $k$-th layer of a GNN is:
-$$ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(u) \}) ,$$ 
+$$ a_v^{(k)} = AGGREGATE^{(k)}(\{ h_u^{(k-1)} : u \in N(v) \}) ,$$ 
 $$ h_v^{(k)} = COMBINE^{(k)}(h_v^{(k-1)}, a_v^{(k)}),$$
 
 where $h_v(k)$ is the feature vector of node $v$ at the $k$-th iteration/layer. The initialization consists in $h_v^{(0)} = X_v$, and $N(v)$ is a set of nodes adjacent to $v$. 
